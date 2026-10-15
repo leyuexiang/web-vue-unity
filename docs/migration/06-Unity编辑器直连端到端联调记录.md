@@ -96,6 +96,8 @@ Unity 添加设备时，`InputDeviceChange.Added` 可能早于 Render Streaming 
 - 启动前端与测试 Launcher 后，固定 ClientID `web-unity-editor` 连接恢复，Video、Input、RPC、`editor.v1` 均就绪，Runtime 状态为 `ready`。
 - 添加基础体并切换“移动”，在视频画布命中 X 轴 Gizmo 拖拽；对象 X 从 `0` 更新为 `0.2779433`，撤销回到 `0`，重做恢复 `0.2779433`。
 - 浏览器运行时错误日志为空；本轮未改动 Unity 源码，仅验证已刷新程序集。
+- 受控切换真实 EXE Launcher 后，旧版 `CloudRender.exe`（2025-07-15）被拉起但未注册 Renderer，Launcher 于 11:31 上报渲染进程下线；旋转/缩放的画布手柄验收需等待包含当前 `editor.v1` 的新 EXE。
+- Web 协议侧已静态确认 `translate`、`rotate`、`scale` 三种模式均经过同一版本化 `editor.v1.gizmo.mode.set` 请求路径，单元测试覆盖旋转和缩放编码。
 
 ## 7. 下一步
 

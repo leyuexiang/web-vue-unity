@@ -34,7 +34,7 @@
 - 本机 Launcher 已构建并识别物理网卡 `BC:EC:A0:49:6E:15`；Unity Editor 直连时使用 Launcher 调试模式注册容量，不实际拉起 EXE。
 - `192.168.10.148:8923` 已部署单实例信令并设置 systemd 开机启动；HTTP、WebSocket、Launcher 注册、心跳和 Start/StopProcess 转发验证通过。
 - Unity Editor 直连已经验证 Renderer、SDP/ICE、首帧和 DataChannel；真实 Unity EXE 拉起作为后续 Launcher 生命周期验证，不再阻塞前端协议开发。
-- 真实 EXE 联调时已确认 Launcher 可启动并监听本机 `18080`，但当前 `CloudRender.exe` 仍是 2025-07-15 的旧构建；它返回 `PROTOCOL_VERSION_UNSUPPORTED`，随后前端收到 `SESSION_NOT_READY`。当前 Unity 工程的 `editor.v1` 改动已在编辑器程序集编译通过，尚未重新打包进 `CloudRender.exe`。
+- 真实 EXE 联调时已确认 Launcher 可启动并监听本机 `18080`，但当前 `CloudRender.exe` 仍是 2025-07-15 的旧构建；2026-10-15 11:29 受控拉起后未注册 Renderer，11:31 Launcher 上报渲染进程下线，前端保持等待/超时。此前该构建已确认返回 `PROTOCOL_VERSION_UNSUPPORTED`，随后前端收到 `SESSION_NOT_READY`。当前 Unity 工程的 `editor.v1` 改动已在编辑器程序集编译通过，尚未重新打包进 `CloudRender.exe`。
 - 调试模式 + Unity Editor Play Mode 已完成最小编辑器闭环验证：协议初始化、空场景加载、基础体加载、选择同步、移动/旋转/缩放模式切换、对象位置更新和 Unity 场景清空均返回成功。期间修复了协议版本数值比较、RPC 通道二进制帧误解析，以及 Vue 场景快照刷新时序问题。
 - 真实视频画布验收时发现新草稿运行时选择对象后未复用项目既有的相机聚焦逻辑；已在 `EditorDraftRuntime` 补上 `CameraMoveHelper.FocusTargetObj` 调用，Unity 编辑器已重新编译并实测对象可聚焦到视频画布中央。
 - 已追加相机飞行完成后的 `RefreshGizmoPosition`，并在程序集刷新后完成手柄命中复测。
