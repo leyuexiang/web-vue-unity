@@ -116,6 +116,13 @@ describe('JsonRpcUnityCloudRuntime', () => {
       'editor.v1.gizmo.mode.set',
       expect.objectContaining({ payload: { mode: 'rotate' } }),
     )
+
+    await runtime.setGizmoMode('scale')
+    expect(request).toHaveBeenNthCalledWith(
+      3,
+      'editor.v1.gizmo.mode.set',
+      expect.objectContaining({ payload: { mode: 'scale' } }),
+    )
   })
 
   it('rejects gizmo modes that Unity did not advertise', async () => {
