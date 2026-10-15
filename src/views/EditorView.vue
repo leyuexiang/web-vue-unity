@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import type { UnityGizmoMode } from '@/unity-runtime/protocol/types'
 import {
@@ -39,14 +39,14 @@ const viewportState = ref<'idle' | 'connecting' | 'ready' | 'loading' | 'reconne
 const viewportProgress = ref(0)
 const sceneError = ref('')
 const runtimeConfig = ref({
-  // 默认连接本机测试信令，部署环境通过 VITE_SIGNAL_URL 注入实际地址。
-  signalUrl: import.meta.env.VITE_SIGNAL_URL || 'ws://localhost:8923',
+  // 默认连接已部署的测试信令，其他环境通过 VITE_SIGNAL_URL 覆盖。
+  signalUrl: import.meta.env.VITE_SIGNAL_URL || 'ws://192.168.10.148:8923',
   appId: import.meta.env.VITE_UNITY_APP_ID || '1',
   sceneKey: import.meta.env.VITE_UNITY_SCENE_KEY || 'web-unity-gm1',
   connectionId: import.meta.env.VITE_UNITY_CLIENT_ID || 'web-unity-editor',
   macAddress: import.meta.env.VITE_RENDERER_MAC || '',
 })
-const viewportMessage = computed(() => `测试链路：${runtimeConfig.value.signalUrl}。当前先验证视频、输入和 rpc DataChannel，editor.v1 尚待 Unity 实现。`)
+const viewportMessage = computed(() => `测试链路：${runtimeConfig.value.signalUrl}。当前验证视频、输入、RPC DataChannel 和编辑器场景协议。`)
 let objectSequence = 0
 const unityTransformBaselines = new Map<string, SceneTransform>()
 
@@ -70,12 +70,13 @@ onMounted(() => {
 
 const saveRuntimeConfig = () => localStorage.setItem('web-unity.runtime-config', JSON.stringify(runtimeConfig.value))
 
-const loadFourPackages = (payload: SceneFourPackagePayload) => {
+const loadFourPackages = async (payload: SceneFourPackagePayload) => {
   const restored = deserializeSceneFromFourPackages(scene.value.id, payload)
   sceneStore.loadScene(restored)
   viewportProgress.value = 0
   sceneError.value = ''
-  void viewport.value?.loadScene()
+  await nextTick()
+  await viewport.value?.loadScene()
   return restored
 }
 
@@ -86,7 +87,7 @@ const importFourPackages = async (event: Event) => {
   if (!file) return
   try {
     const payload = JSON.parse(await file.text()) as SceneFourPackagePayload
-    loadFourPackages(payload)
+    await loadFourPackages(payload)
   } catch (error) {
     sceneError.value = error instanceof Error ? error.message : '四包场景加载失败'
   }
@@ -121,33 +122,41 @@ const selectedObject = computed(() =>
   selectedId.value ? scene.value.objects.find((item) => item.instanceId === selectedId.value) ?? null : null,
 )
 
-const createDemoObject = () => {
+const createDemoObject = async () => {
   objectSequence += 1
   const object: SceneObject = {
     instanceId: `demo-${Date.now()}-${objectSequence}`,
-    objectType: 'model',
-    name: `设备模型 ${scene.value.objects.length + 1}`,
+    // Unity 真实资源契约接入前使用基础几何体，保证演示对象可以独立加载。
+    objectType: 'primitive',
+    name: `演示立方体 ${scene.value.objects.length + 1}`,
     visible: true,
     locked: false,
     transform: createDefaultTransform(),
     resourceRefKeys: [],
-    properties: {},
+    properties: { primitiveType: 'cube' },
   }
   commandBus.execute(createObjectCommand(object))
+  // 等待 Vue 将最新场景快照传给 UnityViewport，避免先加载旧的空场景。
+  await nextTick()
+  await viewport.value?.loadScene()
   sceneStore.selectObject(object.instanceId)
+  viewport.value?.setSelection(object.instanceId)
 }
 
-const deleteSelected = () => {
+const deleteSelected = async () => {
   const object = selectedObject.value
   if (!object) return
   commandBus.execute(deleteObjectCommand(object))
+  await nextTick()
+  await viewport.value?.loadScene()
+  viewport.value?.setSelection(null)
 }
 
 const updateTransform = (before: SceneTransform, after: SceneTransform) => {
   if (!selectedId.value) return
   const instanceId = selectedId.value
   commandBus.execute(updateObjectTransformCommand(instanceId, before, after))
-  void viewport.value?.updateObject(instanceId)
+  void nextTick().then(() => viewport.value?.updateObject(instanceId))
 }
 
 const updateVisibility = (visible: boolean) => {
@@ -158,6 +167,7 @@ const updateVisibility = (visible: boolean) => {
     execute: (store) => store.upsertObject({ ...object, visible }),
     undo: (store) => store.upsertObject(object),
   })
+  void nextTick().then(() => viewport.value?.updateObject(object.instanceId))
 }
 
 const handleUnitySelection = (instanceId: string | null) => {
@@ -191,8 +201,8 @@ const handleUnityTransformCommitted = (instanceId: string, transform: SceneTrans
         <button type="button" :disabled="undoSize === 0" @click="commandBus.undo()">撤销 {{ undoSize }}</button>
         <button type="button" :disabled="redoSize === 0" @click="commandBus.redo()">重做 {{ redoSize }}</button>
         <span class="toolbar__divider" />
-        <button type="button" @click="createDemoObject">添加模型</button>
-        <button type="button" :disabled="!selectedObject" @click="deleteSelected">删除</button>
+        <button type="button" @click="void createDemoObject()">添加基础体</button>
+        <button type="button" :disabled="!selectedObject" @click="void deleteSelected()">删除</button>
       </nav>
       <div class="topbar__actions">
         <label class="button-secondary">

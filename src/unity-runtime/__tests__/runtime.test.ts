@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createEmptyScene } from '@/scene-core'
+import { createDefaultTransform, createEmptyScene } from '@/scene-core'
 import type {
   UnityEventEnvelope,
   UnityRuntimeCapabilities,
@@ -145,6 +145,39 @@ describe('JsonRpcUnityCloudRuntime', () => {
       sceneId: 'scene-1',
       sceneGeneration: 2,
       payload: {},
+    }))
+  })
+
+  it('sends selection and object transform edits against the current scene generation', async () => {
+    const { transport, request } = createTransport()
+    const runtime = new JsonRpcUnityCloudRuntime(transport)
+    const scene = createEmptyScene('scene-1')
+    const object = {
+      instanceId: 'object-1',
+      objectType: 'primitive' as const,
+      name: '演示立方体',
+      visible: true,
+      locked: false,
+      transform: createDefaultTransform(),
+      resourceRefKeys: [],
+      properties: { primitiveType: 'cube' },
+    }
+    scene.objects.push(object)
+
+    await runtime.connect()
+    await runtime.loadScene(scene)
+    runtime.setSelection(object.instanceId)
+    await runtime.updateObject({ ...object, transform: { ...object.transform, position: [1, 2, 3] } })
+
+    expect(transport.notify).toHaveBeenCalledWith('editor.v1.selection.set', expect.objectContaining({
+      sceneId: 'scene-1',
+      sceneGeneration: 1,
+      payload: { instanceId: 'object-1' },
+    }))
+    expect(request).toHaveBeenNthCalledWith(3, 'editor.v1.object.update', expect.objectContaining({
+      sceneId: 'scene-1',
+      sceneGeneration: 1,
+      payload: expect.objectContaining({ instanceId: 'object-1', transform: expect.objectContaining({ position: [1, 2, 3] }) }),
     }))
   })
 

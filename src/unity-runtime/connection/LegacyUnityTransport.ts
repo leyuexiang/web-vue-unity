@@ -311,7 +311,15 @@ export class LegacyUnityTransport implements UnityTransport {
   }
   private handleRpcJson(text: string, generation: number): void {
     if (!this.isCurrent(generation)) return
-    const value = JSON.parse(text) as Record<string, unknown>
+    const normalizedText = text.trim()
+    // 旧版 Unity 可能复用 RPC 通道发送 FBX 等二进制帧；非 JSON 帧不应让整个会话进入失败态。
+    if (!normalizedText.startsWith('{')) return
+    let value: Record<string, unknown>
+    try {
+      value = JSON.parse(normalizedText) as Record<string, unknown>
+    } catch {
+      return
+    }
     const id = typeof value.id === 'string' || typeof value.id === 'number' ? String(value.id) : undefined
     if (id && this.pending.has(id)) {
       const pending = this.pending.get(id)!
@@ -424,7 +432,8 @@ export class LegacyUnityTransport implements UnityTransport {
 
   private fail(message: string): void {
     if (this.stopped) return
-    void this.stopInternal(message, false).then(() => this.update({ state: 'failed', message }))
+    // 连接协商失败也要通知信令端释放固定 ClientID 对应的旧 Peer，避免下一次重连收到迟到的 SDP。
+    void this.stopInternal(message, true).then(() => this.update({ state: 'failed', message }))
   }
   async disconnect(): Promise<void> {
     await this.stopInternal()
