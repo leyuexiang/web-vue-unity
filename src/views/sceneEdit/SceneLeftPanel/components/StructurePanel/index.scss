@@ -1,0 +1,441 @@
+.scene-edit-structure-panel-scroll {
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
+  height: 0;
+  min-height: 0;
+}
+.scene-edit-structure-panel-scroll .el-scrollbar__wrap {
+  /*
+   * 结构内容只允许纵向滚动，并始终预留滚动条槽位。
+   * 这与系统资源面板保持一致，既不会产生横向位移，也不会在长短列表切换时挤动行尾按钮。
+   */
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+.scene-edit-structure-panel-scroll .el-scrollbar__view {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 100%;
+}
+.scene-edit-structure-panel {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+}
+.scene-edit-structure-panel__nav {
+  display: flex;
+  flex: 0 0 48px;
+  flex-direction: column;
+  align-items: center;
+  width: 48px;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+
+  /* 结构分类栏必须和系统资源分类栏使用同一主题底色，避免切换页签时产生灰色偏差。 */
+  background: var(--scene-edit-left-resource-rail-bg);
+}
+.scene-edit-structure-panel__nav-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 42px;
+  padding: 0;
+  cursor: var(--scene-edit-cursor-pointer, pointer);
+  background: transparent;
+  border: 0;
+  border-left: 2px solid transparent;
+  transition:
+    background-color 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.scene-edit-structure-panel__nav-item:hover {
+  background: rgb(29 42 53 / 60%);
+}
+.scene-edit-structure-panel__nav-item.is-active {
+  background: #1d2a35;
+  border-left-color: #5ab2a5;
+}
+.scene-edit-structure-panel__nav-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+.scene-edit-structure-panel__content {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  width: 0;
+  min-width: 0;
+  height: calc(100% - 20px);
+  min-height: 0;
+  margin: 10px 10px 10px 8px;
+  overflow: hidden;
+  color: var(--scene-edit-text-2);
+  background: var(--scene-edit-panel, #1c2c39);
+  border: 0;
+  border-radius: 0;
+}
+.scene-edit-structure-panel__body {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding-top: 4px;
+
+  /* 结构节点只用于选择和拖拽，禁止浏览器把名称识别为可搜索文本拖拽。 */
+  user-select: none;
+}
+.scene-edit-structure-panel__body img {
+  /* 图标不参与排序，关闭其原生图片拖拽，避免覆盖节点自身的拖拽手势。 */
+  -webkit-user-drag: none;
+}
+.scene-edit-structure-panel__search {
+  flex: 0 0 auto;
+}
+.scene-edit-structure-panel__group-header {
+  flex: 0 0 auto;
+  margin: 0 12px;
+}
+.scene-edit-structure-group + .scene-edit-structure-group {
+  margin-top: 16px;
+}
+.scene-edit-structure-group--scene-objects {
+  /*
+   * 模型与三维组件的“分组列表”和“未分组节点列表”拥有不同的拖拽数据源，不能为排序而合并。
+   * 使用固定的展示分区顺序可让全部分组稳定出现在未分组节点上方，同时不改变各自的拖拽与持久化逻辑。
+   */
+  display: flex;
+  flex-direction: column;
+}
+.scene-edit-structure-group-list {
+  order: -1;
+}
+.scene-edit-structure-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--scene-edit-line);
+}
+.scene-edit-structure-group__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--scene-edit-text);
+}
+.scene-edit-structure-create-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--scene-edit-text-2);
+  cursor: var(--scene-edit-cursor-pointer, pointer);
+  background: transparent;
+  border: 0;
+  border-radius: 2px;
+}
+.scene-edit-structure-create-group:hover:not(:disabled),
+.scene-edit-structure-create-group:focus-visible {
+  color: var(--scene-edit-accent);
+  outline: none;
+  background: rgb(96 196 184 / 10%);
+}
+.scene-edit-structure-create-group:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+.scene-edit-structure-create-group img {
+  width: 15px;
+  height: 15px;
+}
+.scene-edit-structure-layer-row + .scene-edit-structure-layer-row {
+  margin-top: 6px;
+}
+.scene-edit-structure-layer-row,
+.scene-edit-structure-group-node__child {
+  position: relative;
+}
+.is-widget-sort-gap-before::before,
+.is-widget-sort-gap-after::after {
+  position: absolute;
+  right: 8px;
+  left: 8px;
+  z-index: 4;
+  height: 0;
+  pointer-events: none;
+  content: '';
+  border-top: 1px dashed var(--scene-edit-accent);
+}
+.is-widget-sort-gap-before::before {
+  top: -4px;
+}
+.is-widget-sort-gap-after::after {
+  bottom: -4px;
+}
+.scene-edit-structure-item + .scene-edit-structure-item {
+  margin-top: 2px;
+}
+.scene-edit-structure-item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 6px 8px;
+  overflow: hidden;
+  color: var(--scene-edit-text-2);
+  cursor: var(--scene-edit-cursor-pointer, pointer);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  transition: 120ms ease-out;
+}
+.scene-edit-structure-item:hover {
+  background: rgb(255 255 255 / 4%);
+  border-color: transparent;
+}
+.scene-edit-structure-item.is-active {
+  color: var(--scene-edit-text);
+  background: rgb(96 196 184 / 10%);
+  border-color: transparent;
+  box-shadow: inset 2px 0 0 var(--scene-edit-accent);
+}
+.scene-edit-structure-item--group {
+  font-weight: 500;
+  background: rgb(255 255 255 / 3%);
+}
+.scene-edit-structure-item--group.is-widget-group-drop-target {
+  color: var(--scene-edit-text);
+  background: rgb(96 196 184 / 14%);
+  border-color: var(--scene-edit-accent);
+}
+.scene-edit-structure-item__main {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+.scene-edit-structure-item__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.scene-edit-structure-group-count {
+  flex: 0 0 auto;
+  min-width: 16px;
+  color: var(--scene-edit-text-3);
+  text-align: center;
+}
+.scene-edit-structure-actions {
+  /*
+   * 三个操作按钮使用固定列宽，名称再长也只能在左侧省略，不能推挤操作区或制造横向滚动。
+   * 固定列仍随所属行纵向移动，仅其横向位置始终锚定在结构行最右侧。
+   */
+  flex: 0 0 82px;
+  gap: 8px;
+  justify-content: flex-end;
+  width: 82px;
+  margin-left: 8px;
+  color: var(--scene-edit-text-3);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+.scene-edit-structure-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: inherit;
+  cursor: var(--scene-edit-cursor-pointer, pointer);
+  background: transparent;
+  border: 0;
+}
+.scene-edit-structure-action-button:hover:not(:disabled),
+.scene-edit-structure-action-button:focus-visible {
+  color: var(--scene-edit-accent);
+  outline: none;
+  background: rgb(96 196 184 / 10%);
+  border-radius: 2px;
+}
+.scene-edit-structure-action-button.is-danger:hover:not(:disabled) {
+  color: var(--scene-edit-danger);
+}
+.scene-edit-structure-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+.scene-edit-structure-action-image {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+.scene-edit-structure-item:hover .scene-edit-structure-actions,
+.scene-edit-structure-item:focus-within .scene-edit-structure-actions {
+  color: var(--scene-edit-text-2);
+  pointer-events: auto;
+  opacity: 1;
+}
+.scene-edit-structure-group-node__child,
+.scene-edit-structure-group-node__nested-groups {
+  padding-left: 20px;
+  margin-top: 6px;
+}
+.scene-edit-structure-empty {
+  padding: 10px;
+  font-size: 12px;
+  color: var(--scene-edit-text-3);
+  background: transparent;
+  border-radius: 2px;
+}
+.scene-edit-structure-empty--group {
+  padding-left: 28px;
+  border: 1px dashed var(--scene-edit-line);
+}
+.scene-edit-structure-expand {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  color: var(--scene-edit-text-3);
+  cursor: var(--scene-edit-cursor-pointer, pointer);
+  background: transparent;
+  border: 0;
+
+  /* Figma Down（下）图标默认朝下；收起时旋转为向右，展开时恢复朝下。 */
+  transform: rotate(-90deg);
+  transition: transform 120ms ease-out;
+}
+.scene-edit-structure-expand.is-expanded {
+  transform: rotate(0deg);
+}
+.scene-edit-structure-ghost {
+  opacity: 0.35;
+}
+
+/* 拖到组件行本体时表示建立父子关系，与普通上下排序使用不同的内描边反馈。 */
+.is-widget-hierarchy-drop-target > .scene-edit-structure-item {
+  background: rgb(90 178 165 / 14%);
+  box-shadow: inset 0 0 0 1px #5ab2a5;
+}
+.scene-edit-structure-widget-children {
+  position: relative;
+}
+.scene-edit-structure-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 132px;
+  padding: 4px 0;
+  background-color: rgb(38 41 46 / 96%);
+  border: 1px solid var(--scene-edit-line);
+  border-radius: 8px;
+  box-shadow: none;
+}
+.scene-edit-structure-menu__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 28px;
+  color: var(--scene-edit-text-2);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  transition:
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.scene-edit-structure-menu__item::before {
+  position: absolute;
+  inset: 0 4px;
+  content: '';
+  border-radius: 3px;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.scene-edit-structure-menu__item:hover {
+  color: var(--scene-edit-text);
+}
+.scene-edit-structure-menu__item:hover::before {
+  background-color: rgb(59 130 246 / 14%);
+}
+.scene-edit-structure-menu__icon {
+  z-index: 1;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+}
+
+/**
+ * 创建分组菜单的图标尺寸单独收口到这里，
+ * 这样后续即便用户再次替换 SVG 资源，也只需要微调这一处即可保持菜单布局稳定。
+ */
+.scene-edit-structure-menu__icon-image {
+  display: block;
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+.scene-edit-structure-menu__label {
+  z-index: 1;
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.scene-edit-structure-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.scene-edit-structure-widget-node,
+.scene-edit-structure-widget-children {
+  min-width: 0;
+}
+.scene-edit-structure-item--widget-child {
+  display: flex;
+  gap: 6px;
+  min-height: 28px;
+  padding-right: 8px;
+  color: var(--scene-edit-text-2);
+  border-left: 1px solid rgb(90 178 165 / 18%);
+}
+.scene-edit-structure-child-mark {
+  flex: 0 0 12px;
+  color: var(--scene-edit-header-primary);
+  text-align: center;
+}
+.scene-edit-structure-child-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

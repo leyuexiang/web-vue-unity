@@ -1,0 +1,5 @@
+<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Figma 节点 1:5397 的写作图标：使用 currentColor 让静态、悬浮和按下态继承共享按钮颜色。 -->
+  <path d="M1.225 13.355H3.7L12.775 4.28L10.3 1.805L1.225 10.88V13.355Z" stroke="currentColor" stroke-width="1.16667" stroke-linejoin="round"/>
+  <path d="M8.875 3.925L11.35 6.4" stroke="currentColor" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

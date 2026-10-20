@@ -1,0 +1,12 @@
+<!-- 原图缩略图：保留固定深色背景、两种绿色及发光轮廓。 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="670" height="546" viewBox="0 0 670 546" fill="none">
+<g filter="url(#outer)"><path d="M662.5 5.25V540.75H7V5.25H662.5Z" stroke="#4AC36A" stroke-width="0.5"/></g>
+<path d="M662.5 7.25V538.75H7V7.25H662.5Z" fill="url(#background)" stroke="#05A256" stroke-width="0.5"/>
+<g filter="url(#glow)"><path d="M26.75 7H6.75V27 M642.75 7H662.75V27 M26.75 539H6.75V519 M642.75 539H662.75V519" stroke="#4AC36A" stroke-width="1.5"/></g>
+<path d="M26.75 7H6.75V27 M642.75 7H662.75V27 M26.75 539H6.75V519 M642.75 539H662.75V519" stroke="#4AC36A" stroke-width="1.5"/>
+<defs>
+<filter id="outer" x="1.75" y="0" width="666" height="546" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="2.5"/></filter>
+<filter id="glow" x="0" y="0.25" width="669.5" height="545.5" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="3"/></filter>
+<linearGradient id="background" x1="334.75" y1="7.00013" x2="334.75" y2="539" gradientUnits="userSpaceOnUse"><stop stop-color="#1E1E1E" stop-opacity="0.6"/><stop offset="1" stop-color="#1E1E1E" stop-opacity="0.8"/></linearGradient>
+</defs>
+</svg>

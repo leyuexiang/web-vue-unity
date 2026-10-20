@@ -1,0 +1,3315 @@
+.manage-theme,
+.manage-app-shell,
+.manage-dialog,
+.manage-dropdown-popper,
+.manage-message-box {
+  /*
+   * 禁止浏览器合成设计稿没有声明的伪粗体和伪斜体，但这里不指定字体族。
+   * 思源黑体与机器人字体只在 main.css 全局注册，具体元素必须依据对应 Figma 节点显式调用，
+   * 避免管理根节点的继承规则把一种字体错误套用到整个页面和传送浮层。
+   */
+  font-synthesis: none;
+
+  /*
+   * MUI-101 语义主题底座：公共管理外壳、基础控件和浮层只消费这些变量。
+   * MUI-102 会在主题根选择器中覆盖变量值；卡片和分页专用变量留给后续任务。
+   */
+  --manage-color-shell-base: #08111f;
+  --manage-color-shell-end: #0b1424;
+  --manage-color-elevated: #0f1b2e;
+  --manage-color-panel: #13233b;
+  --manage-color-panel-deep: #0c1828;
+  --manage-color-panel-alt: #102033;
+
+  /* 管理页共享筛选面板独立于通用卡片面，严格使用 Figma 的亮暗面板与控件颜色。 */
+  --manage-color-filter-panel: #1d2a35;
+
+  /* Figma 暗色输入框节点 2155:17935/17948：填充 #131c26，描边为白色 14%。 */
+  --manage-color-filter-input: #131c26;
+  --manage-color-filter-line: rgb(255 255 255 / 14%);
+  --manage-color-filter-placeholder: rgb(204 204 204 / 60%);
+  --manage-color-input: #091423;
+  --manage-color-shell-overlay: rgb(8 17 31 / 88%);
+  --manage-color-panel-overlay: rgb(19 35 59 / 98%);
+  --manage-color-panel-deep-overlay: rgb(12 24 40 / 98%);
+  --manage-color-dialog-deep-overlay: rgb(11 22 37 / 98%);
+  --manage-color-text-primary: #eaf4ff;
+  --manage-color-text-secondary: rgb(234 244 255 / 68%);
+  --manage-color-text-secondary-strong: rgb(234 244 255 / 66%);
+  --manage-color-text-tertiary: rgb(234 244 255 / 34%);
+
+  /* Figma 卡片滚动条为管理页主色 #51a195，并设置 40% 透明度。 */
+  --manage-color-scrollbar-thumb: rgb(81 161 149 / 40%);
+
+  /* Figma 弹窗滚动条使用独立的浅青灰色，不复用卡片主色滑块。 */
+  --manage-color-dialog-scrollbar-thumb: #b4d5d1;
+
+  /* 侧栏菜单滚动条位于深色或绿色背景上，Figma 使用白色 20% 滑块。 */
+  --manage-color-menu-scrollbar-thumb: rgb(255 255 255 / 20%);
+
+  /* Figma 菜单类浮层统一使用白色 20% 滑块。 */
+  --manage-color-dropdown-scrollbar-thumb: rgb(255 255 255 / 20%);
+  --manage-color-line: rgb(124 169 255 / 14%);
+  --manage-color-line-component: rgb(124 169 255 / 16%);
+  --manage-color-line-hover: rgb(124 169 255 / 28%);
+  --manage-color-line-soft: rgb(124 169 255 / 8%);
+  --manage-color-accent: #51a195;
+  --manage-color-accent-2: #61e8ff;
+  --manage-color-accent-surface: rgb(97 232 255 / 4%);
+  --manage-color-accent-tint: rgb(97 232 255 / 5%);
+  --manage-color-accent-soft: rgb(97 232 255 / 8%);
+  --manage-color-accent-border: rgb(97 232 255 / 14%);
+  --manage-color-accent-border-soft: rgb(97 232 255 / 18%);
+  --manage-color-accent-border-strong: rgb(97 232 255 / 22%);
+  --manage-color-accent-hover: rgb(97 232 255 / 32%);
+  --manage-color-active: rgb(81 161 149 / 16%);
+  --manage-color-active-soft: rgb(81 161 149 / 20%);
+  --manage-color-white-soft: rgb(255 255 255 / 1.2%);
+  --manage-color-white-overlay: rgb(255 255 255 / 2%);
+  --manage-color-white-highlight: rgb(255 255 255 / 3%);
+  --manage-color-white-strong: rgb(255 255 255 / 4%);
+  --manage-color-success: #8cf0c7;
+  --manage-color-success-soft: rgb(140 240 199 / 8%);
+  --manage-color-success-border: rgb(140 240 199 / 24%);
+  --manage-color-warning: #ff9b5e;
+  --manage-color-warning-soft: rgb(255 155 94 / 12%);
+  --manage-color-danger: #ff7f7f;
+  --manage-color-danger-soft: rgb(255 127 127 / 8%);
+  --manage-color-danger-border: rgb(255 127 127 / 26%);
+  --manage-color-danger-text: #fff1f1;
+  --manage-color-danger-text-hover: #fff6f6;
+  --manage-color-danger-border-strong: rgb(255 162 162 / 18%);
+  --manage-color-danger-border-hover: rgb(255 178 178 / 24%);
+  --manage-color-upload-surface: rgb(9 20 35 / 72%);
+  --manage-color-upload-border: rgb(124 169 255 / 20%);
+  --manage-color-upload-border-hover: rgb(97 232 255 / 36%);
+  --manage-color-button-hover-surface: rgb(16 32 51 / 92%);
+  --manage-color-dropdown-surface: rgb(15 27 46 / 98%);
+  --manage-color-danger-shadow: rgb(92 25 35 / 22%);
+  --manage-shadow-black-soft: rgb(0 0 0 / 22%);
+  --manage-shadow-black-panel: rgb(0 0 0 / 28%);
+  --manage-shadow-shell: rgb(8 17 31 / 30%);
+  --manage-gradient-shell:
+    radial-gradient(circle at top, var(--manage-color-accent-tint), transparent 28%),
+    linear-gradient(180deg, var(--manage-color-shell-base) 0%, var(--manage-color-shell-end) 100%);
+  --manage-gradient-panel: linear-gradient(
+    180deg,
+    var(--manage-color-panel) 0%,
+    var(--manage-color-panel-deep) 100%
+  );
+  --manage-gradient-primary: linear-gradient(180deg, rgb(81 161 149 / 90%), rgb(35 95 88 / 92%));
+  --manage-gradient-danger: linear-gradient(
+    180deg,
+    rgb(170 66 73 / 96%) 0%,
+    rgb(118 37 49 / 98%) 100%
+  );
+  --manage-gradient-danger-hover: linear-gradient(
+    180deg,
+    rgb(184 76 83 / 98%) 0%,
+    rgb(129 42 54 / 100%) 100%
+  );
+  --manage-bg: var(--manage-color-shell-base);
+  --manage-bg-elevated: var(--manage-color-elevated);
+  --manage-bg-panel: var(--manage-color-panel);
+  --manage-bg-panel-2: var(--manage-color-panel-alt);
+  --manage-bg-input: var(--manage-color-input);
+  --manage-line: var(--manage-color-line);
+  --manage-line-strong: var(--manage-color-line-hover);
+  --manage-text: var(--manage-color-text-primary);
+  --manage-text-2: var(--manage-color-text-secondary);
+  --manage-text-3: var(--manage-color-text-tertiary);
+  --manage-accent: var(--manage-color-accent);
+  --manage-accent-2: var(--manage-color-accent-2);
+  --manage-success: var(--manage-color-success);
+  --manage-warning: var(--manage-color-warning);
+  --manage-danger: var(--manage-color-danger);
+  --manage-shadow-soft: 0 10px 30px var(--manage-shadow-black-soft);
+  --manage-shadow-panel: 0 16px 40px var(--manage-shadow-black-panel);
+
+  /*
+   * 分页使用独立语义变量：分页本身不承载整块底色，每个按钮和输入框分别着色。
+   * 默认值对应暗色主题，亮色主题在根选择器中覆盖，避免再次写死深色或蓝色。
+   */
+
+  /*
+   * Figma 暗色分页节点 2155:18221：普通按钮面为 #1d2a35、描边为白色 14%，
+   * 控件文字为白色 65%；总数文字还叠加了节点 80% 透明度，最终等效为白色 52%。
+   */
+  --manage-pagination-control-surface: #1d2a35;
+  --manage-pagination-control-border: rgb(255 255 255 / 14%);
+  --manage-pagination-control-hover: rgb(81 161 149 / 12%);
+  --manage-pagination-active-surface: #51a195;
+  --manage-pagination-active-text: #ffffff;
+  --manage-pagination-text: rgb(255 255 255 / 65%);
+  --manage-pagination-total-text: rgb(255 255 255 / 52%);
+  --manage-pagination-muted-text: rgb(255 255 255 / 60%);
+  --manage-pagination-copyright-text: rgb(255 255 255 / 40%);
+
+  /*
+   * 侧栏图片变量集中映射 Figma 导出的本地资源。暗色作为基础值，亮色根只覆盖
+   * 有主题差异的资源；共用裁字水印和分隔线始终复用同一文件，避免重复请求。
+   */
+  --manage-sidebar-surface-image: url('../../assets/images/manage/sidebar-surface-dark.svg');
+  --manage-sidebar-active-image: none;
+  --manage-sidebar-model-icon: url('../../assets/images/manage/sidebar-icon-model-dark.svg');
+  --manage-sidebar-icon-icon: url('../../assets/images/manage/sidebar-icon-icon-dark.svg');
+
+  /* 模板当前只作不可点击的 Figma 视觉占位，仍复用已本地化的主题图标资源。 */
+  --manage-sidebar-template-icon: url('../../assets/images/manage/sidebar-icon-template-dark.svg');
+  --manage-sidebar-scene-icon: url('../../assets/images/manage/sidebar-icon-scene-dark.svg');
+  --manage-sidebar-tools-image: url('../../assets/images/manage/sidebar-tools-dark.svg');
+  --manage-sidebar-divider-image: url('../../assets/images/manage/sidebar-divider.svg');
+
+  /* 侧栏水印只保留左侧图形标记，文字版源图不再进入运行时绘制。 */
+  --manage-sidebar-watermark-image: url('../../assets/images/manage/sidebar-watermark-mark.png');
+  --el-bg-color: var(--manage-color-shell-base);
+  --el-bg-color-overlay: var(--manage-color-elevated);
+  --el-fill-color-blank: var(--manage-color-input);
+  --el-fill-color-light: var(--manage-color-panel-alt);
+  --el-fill-color-lighter: var(--manage-color-panel);
+  --el-border-color: var(--manage-color-line-component);
+  --el-border-color-hover: var(--manage-color-accent-border-strong);
+  --el-text-color-primary: var(--manage-color-text-primary);
+  --el-text-color-regular: var(--manage-color-text-secondary);
+  --el-text-color-placeholder: var(--manage-color-text-tertiary);
+  --el-menu-hover-bg-color: var(--manage-color-accent-soft);
+  --el-menu-active-color: var(--manage-color-text-primary);
+}
+
+/*
+ * MUI-102 主题根值：无属性、非法属性和 light 都走亮色；只有显式 dark 才切换暗色。
+ * 变量名与公共组件选择器保持一致，后续主题状态任务只需维护 data-manage-theme。
+ */
+html:not([data-manage-theme='dark']) .manage-theme,
+html:not([data-manage-theme='dark']) .manage-app-shell,
+html:not([data-manage-theme='dark']) .manage-dialog,
+html:not([data-manage-theme='dark']) .manage-dropdown-popper,
+html:not([data-manage-theme='dark']) .manage-message-box {
+  --manage-color-shell-base: #f6f8f9;
+  --manage-color-shell-end: #f6f8f9;
+  --manage-color-elevated: #ffffff;
+  --manage-color-panel: #ffffff;
+  --manage-color-panel-deep: #f6f8f9;
+  --manage-color-panel-alt: #ffffff;
+  --manage-color-filter-panel: #ffffff;
+  --manage-color-filter-input: #ffffff;
+
+  /* Figma 亮色输入框节点 2143:10355 的实际描边为 #d9d9d9，不复用页签分割线 #e5e5e5。 */
+  --manage-color-filter-line: #d9d9d9;
+  --manage-color-filter-placeholder: #cccccc;
+  --manage-color-input: #ffffff;
+  --manage-color-shell-overlay: rgb(255 255 255 / 92%);
+  --manage-color-panel-overlay: rgb(255 255 255 / 98%);
+  --manage-color-panel-deep-overlay: rgb(246 248 249 / 98%);
+  --manage-color-dialog-deep-overlay: rgb(246 248 249 / 98%);
+  --manage-color-text-primary: #595959;
+  --manage-color-text-secondary: rgb(89 89 89 / 68%);
+  --manage-color-text-secondary-strong: rgb(89 89 89 / 66%);
+  --manage-color-text-tertiary: #b8b9bb;
+
+  /* 亮色卡片容器沿用同一 40% 主色，避免回退为浏览器默认灰色滑块。 */
+  --manage-color-scrollbar-thumb: rgb(81 161 149 / 40%);
+  --manage-color-dialog-scrollbar-thumb: #b4d5d1;
+  --manage-color-menu-scrollbar-thumb: rgb(255 255 255 / 20%);
+  --manage-color-dropdown-scrollbar-thumb: rgb(255 255 255 / 20%);
+  --manage-color-line: #e5e5e5;
+  --manage-color-line-component: rgb(229 229 229 / 88%);
+  --manage-color-line-hover: rgb(81 161 149 / 42%);
+  --manage-color-line-soft: rgb(229 229 229 / 72%);
+  --manage-color-accent: #51a195;
+  --manage-color-accent-2: #51a195;
+  --manage-color-accent-surface: rgb(81 161 149 / 4%);
+  --manage-color-accent-tint: rgb(81 161 149 / 5%);
+  --manage-color-accent-soft: rgb(81 161 149 / 8%);
+  --manage-color-accent-border: rgb(81 161 149 / 14%);
+  --manage-color-accent-border-soft: rgb(81 161 149 / 18%);
+  --manage-color-accent-border-strong: rgb(81 161 149 / 22%);
+  --manage-color-accent-hover: rgb(81 161 149 / 32%);
+  --manage-color-active: rgb(81 161 149 / 12%);
+  --manage-color-active-soft: rgb(81 161 149 / 16%);
+  --manage-color-white-soft: rgb(0 0 0 / 1.2%);
+  --manage-color-white-overlay: rgb(0 0 0 / 2%);
+  --manage-color-white-highlight: rgb(255 255 255 / 3%);
+  --manage-color-white-strong: rgb(255 255 255 / 4%);
+  --manage-color-success: #73c74f;
+  --manage-color-success-soft: rgb(115 199 79 / 8%);
+  --manage-color-success-border: rgb(115 199 79 / 24%);
+  --manage-color-warning: #ed7b2f;
+  --manage-color-warning-soft: rgb(237 123 47 / 12%);
+  --manage-color-danger: #e34d59;
+  --manage-color-danger-soft: rgb(227 77 89 / 8%);
+  --manage-color-danger-border: rgb(227 77 89 / 26%);
+  --manage-color-danger-text: #ffffff;
+  --manage-color-danger-text-hover: #ffffff;
+  --manage-color-danger-border-strong: rgb(227 77 89 / 24%);
+  --manage-color-danger-border-hover: rgb(227 77 89 / 32%);
+  --manage-color-upload-surface: #ffffff;
+  --manage-color-upload-border: #e5e5e5;
+  --manage-color-upload-border-hover: rgb(81 161 149 / 36%);
+  --manage-color-button-hover-surface: rgb(81 161 149 / 8%);
+  --manage-color-dropdown-surface: #ffffff;
+  --manage-color-danger-shadow: rgb(227 77 89 / 22%);
+  --manage-shadow-black-soft: rgb(0 0 0 / 12%);
+  --manage-shadow-black-panel: rgb(0 0 0 / 16%);
+  --manage-shadow-shell: rgb(0 0 0 / 10%);
+  --manage-pagination-control-surface: #ffffff;
+
+  /* Figma 亮色分页节点 2143:10681 的普通按钮描边为 #f0f3f5，不复用页面分隔线。 */
+  --manage-pagination-control-border: #f0f3f5;
+  --manage-pagination-control-hover: rgb(81 161 149 / 8%);
+  --manage-pagination-active-surface: #51a195;
+  --manage-pagination-active-text: #ffffff;
+  --manage-pagination-text: #595959;
+  --manage-pagination-total-text: #595959;
+  --manage-pagination-muted-text: #999999;
+  --manage-pagination-copyright-text: #c5cacc;
+  --manage-sidebar-surface-image: url('../../assets/images/manage/sidebar-surface-light.svg');
+  --manage-sidebar-active-image: url('../../assets/images/manage/sidebar-active-light.svg');
+  --manage-sidebar-model-icon: url('../../assets/images/manage/sidebar-icon-model-light.svg');
+  --manage-sidebar-icon-icon: url('../../assets/images/manage/sidebar-icon-icon-light.svg');
+  --manage-sidebar-template-icon: url('../../assets/images/manage/sidebar-icon-template-light.svg');
+  --manage-sidebar-scene-icon: url('../../assets/images/manage/sidebar-icon-scene-light.svg');
+  --manage-sidebar-tools-image: url('../../assets/images/manage/sidebar-tools-light.svg');
+  --manage-gradient-shell: linear-gradient(180deg, #f6f8f9 0%, #f6f8f9 100%);
+  --manage-gradient-panel: linear-gradient(180deg, #ffffff 0%, #f6f8f9 100%);
+  --manage-gradient-primary: linear-gradient(180deg, #51a195 0%, #3f887d 100%);
+  --manage-gradient-danger: linear-gradient(180deg, #e34d59 0%, #c83f4c 100%);
+  --manage-gradient-danger-hover: linear-gradient(180deg, #eb6670 0%, #d54a57 100%);
+}
+html[data-manage-theme='dark'] .manage-theme,
+html[data-manage-theme='dark'] .manage-app-shell,
+html[data-manage-theme='dark'] .manage-dialog,
+html[data-manage-theme='dark'] .manage-dropdown-popper,
+html[data-manage-theme='dark'] .manage-message-box {
+  --manage-color-shell-base: #121b26;
+  --manage-color-shell-end: #121b26;
+  --manage-color-elevated: #1a2736;
+  --manage-color-panel: #1f2e3f;
+  --manage-color-panel-deep: #182638;
+  --manage-color-panel-alt: #172536;
+  --manage-color-filter-panel: #1d2a35;
+
+  /* 显式重复暗色 Figma 控件值，避免主题根切换后退回基础变量的旧值。 */
+  --manage-color-filter-input: #131c26;
+  --manage-color-filter-line: rgb(255 255 255 / 14%);
+  --manage-color-filter-placeholder: rgb(204 204 204 / 60%);
+  --manage-color-input: #152333;
+  --manage-color-shell-overlay: rgb(18 27 38 / 88%);
+  --manage-color-panel-overlay: rgb(31 46 63 / 98%);
+  --manage-color-panel-deep-overlay: rgb(24 38 56 / 98%);
+  --manage-color-dialog-deep-overlay: rgb(24 38 56 / 98%);
+  --manage-color-text-primary: rgb(255 255 255 / 80%);
+  --manage-color-text-secondary: rgb(255 255 255 / 68%);
+  --manage-color-text-secondary-strong: rgb(255 255 255 / 66%);
+  --manage-color-text-tertiary: rgb(255 255 255 / 40%);
+  --manage-color-line: rgb(255 255 255 / 14%);
+  --manage-color-line-component: rgb(255 255 255 / 16%);
+  --manage-color-line-hover: rgb(255 255 255 / 28%);
+  --manage-color-line-soft: rgb(255 255 255 / 8%);
+  --manage-color-accent: #51a195;
+  --manage-color-accent-2: #7cc7ba;
+  --manage-color-accent-surface: rgb(81 161 149 / 4%);
+  --manage-color-accent-tint: rgb(81 161 149 / 5%);
+  --manage-color-accent-soft: rgb(81 161 149 / 8%);
+  --manage-color-accent-border: rgb(81 161 149 / 14%);
+  --manage-color-accent-border-soft: rgb(81 161 149 / 18%);
+  --manage-color-accent-border-strong: rgb(81 161 149 / 22%);
+  --manage-color-accent-hover: rgb(81 161 149 / 32%);
+  --manage-color-active: rgb(81 161 149 / 16%);
+  --manage-color-active-soft: rgb(81 161 149 / 20%);
+  --manage-color-white-soft: rgb(255 255 255 / 1.2%);
+  --manage-color-white-overlay: rgb(255 255 255 / 2%);
+  --manage-color-white-highlight: rgb(255 255 255 / 3%);
+  --manage-color-white-strong: rgb(255 255 255 / 4%);
+  --manage-color-success: #73c74f;
+  --manage-color-success-soft: rgb(115 199 79 / 8%);
+  --manage-color-success-border: rgb(115 199 79 / 24%);
+  --manage-color-warning: #ed7b2f;
+  --manage-color-warning-soft: rgb(237 123 47 / 12%);
+  --manage-color-danger: #e34d59;
+  --manage-color-danger-soft: rgb(227 77 89 / 8%);
+  --manage-color-danger-border: rgb(227 77 89 / 26%);
+  --manage-color-danger-text: #fff1f1;
+  --manage-color-danger-text-hover: #fff6f6;
+  --manage-color-danger-border-strong: rgb(227 77 89 / 24%);
+  --manage-color-danger-border-hover: rgb(227 77 89 / 32%);
+  --manage-color-upload-surface: rgb(18 27 38 / 72%);
+  --manage-color-upload-border: rgb(255 255 255 / 20%);
+  --manage-color-upload-border-hover: rgb(81 161 149 / 36%);
+  --manage-color-button-hover-surface: rgb(31 46 63 / 92%);
+  --manage-color-dropdown-surface: rgb(26 39 54 / 98%);
+  --manage-color-danger-shadow: rgb(227 77 89 / 22%);
+  --manage-shadow-black-soft: rgb(0 0 0 / 22%);
+  --manage-shadow-black-panel: rgb(0 0 0 / 28%);
+  --manage-shadow-shell: rgb(18 27 38 / 30%);
+  --manage-gradient-shell: linear-gradient(180deg, #121b26 0%, #121b26 100%);
+  --manage-gradient-panel: linear-gradient(180deg, #1f2e3f 0%, #182638 100%);
+  --manage-gradient-primary: linear-gradient(180deg, #51a195 0%, #235f58 100%);
+  --manage-gradient-danger: linear-gradient(180deg, #c94a57 0%, #9f3645 100%);
+  --manage-gradient-danger-hover: linear-gradient(180deg, #d85c67 0%, #ad3f4e 100%);
+}
+.manage-app-shell {
+  /*
+   * MUI-201 固定几何：侧栏贴合视口，内容区由四个边界变量唯一确定。
+   * 后续侧栏视觉和菜单任务只能消费这些值，不得用组件内边距重复补偿位置。
+   */
+  --manage-sidebar-width: 280px;
+  --manage-content-gap: 24px;
+  --manage-content-left: calc(var(--manage-sidebar-width) + var(--manage-content-gap));
+  --manage-content-top: 16px;
+  --manage-content-right: 24px;
+  --manage-content-bottom: 24px;
+
+  position: relative;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  color: var(--manage-text);
+  background: var(--manage-gradient-shell);
+}
+.manage-app-shell .mono-text,
+.manage-theme .mono-text,
+.manage-message-box .mono-text {
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+}
+.manage-app-shell .el-header {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  box-sizing: border-box;
+  width: var(--manage-sidebar-width);
+  height: 100vh;
+  height: 100dvh;
+  padding: 0 !important;
+  overflow: hidden;
+}
+.manage-app-main {
+  position: fixed;
+  inset: var(--manage-content-top) var(--manage-content-right) var(--manage-content-bottom)
+    var(--manage-content-left);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 !important;
+  overflow: hidden;
+  background: transparent;
+}
+.manage-app-main::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(115deg, var(--manage-color-accent-tint), transparent 28%),
+    repeating-linear-gradient(
+      180deg,
+      var(--manage-color-white-soft) 0,
+      var(--manage-color-white-soft) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  opacity: 0.38;
+}
+.manage-app-main > * {
+  position: relative;
+  z-index: 1;
+}
+.manage-app-main > .manage-page {
+  width: 100%;
+  height: 100%;
+}
+.manage-header {
+  position: relative;
+
+  /* 侧栏宽度含内边距计算，防止 280px 菜单轨道再叠加左右 16px 后产生横向滚动条。 */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+
+  /* Figma 内容列从 y=8 开始，底部工具区到侧栏底边固定保留约 20px。 */
+  padding: 8px 16px 20px;
+
+  /* 水印超出侧栏边界时由此处统一裁剪，不能再让裁剪规则作用到水印图形自身。 */
+  overflow: hidden;
+  background-color: var(--manage-color-shell-overlay);
+  background-image: var(--manage-sidebar-tools-image), var(--manage-sidebar-surface-image);
+  background-repeat: no-repeat;
+  background-position:
+    center bottom 20px,
+    center;
+  background-size:
+    248px 42px,
+    100% 100%;
+  border-right: 0;
+  box-shadow: none;
+  isolation: isolate;
+  backdrop-filter: none;
+}
+
+/*
+ * Figma 节点 2143:10270 / 2155:17850 的水印源图原始尺寸为 1412.707×799.527。
+ * 当前产品只保留左侧图形标记，移除右侧“本草纲目”文字，避免窄侧栏出现难以辨识的笔画。
+ * 裁剪后的标记已经过两轮等比放大：先从 484×670.154 放大到 532.4×737.169，
+ * 本轮再按用户确认放大 1.1 倍至 585.64×810.886；相对侧栏中线继续按 8px 设计步长上移至 48px。
+ * 只调整装饰图层尺寸与中心坐标，旋转、水平倾斜与透明度仍沿用设计稿，菜单布局不会因此重排。
+ * 原双遮罩仅适用于带文字的整图，继续套用会截断图形上部；现由侧栏边界自然裁切，且该层不参与命中测试。
+ */
+.manage-header__watermark {
+  position: absolute;
+
+  /* 图形中心继续锚定侧栏中区，本轮再上移 8px，抵消二次放大后视觉重心下沉。 */
+  top: calc(50% - 48px);
+  left: 50%;
+  z-index: -1;
+  width: 585.64px;
+  height: 810.886px;
+  pointer-events: none;
+  background: var(--manage-sidebar-watermark-image) center / 100% 100% no-repeat;
+  opacity: 0.1;
+  transform: translate(-50%, -50%) rotate(-23.75deg) skewX(5.65deg);
+  transform-origin: center;
+}
+.manage-header__menu {
+  position: relative;
+  left: -16px;
+
+  /*
+   * 菜单轨道按 Figma 固定为 280px，抵消 Header 的横向内边距；分类标识保持 x=16、
+   * 可点击视觉按钮保持 x=32、216×48。只有此区允许纵向滚动，底部工具不会被挤走。
+   */
+  flex: 1 1 auto;
+  width: calc(100% + 32px);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+
+  /* 中间菜单仅可纵向滚动；菜单轨道始终与 280px 侧栏齐平，横向溢出必须裁剪。 */
+  overflow: hidden auto;
+
+  /* Figma 侧栏菜单使用白色 20% 的窄滑块，轨道保持透明。 */
+  scrollbar-color: var(--manage-color-menu-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+  background: transparent;
+  border: 0 !important;
+}
+.manage-header__menu::-webkit-scrollbar {
+  /* 10px 命中轨道内绘制 4px 滑块，并保留 Figma 右侧 6px 间距。 */
+  width: 10px;
+}
+.manage-header__menu::-webkit-scrollbar-track,
+.manage-header__menu::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.manage-header__menu::-webkit-scrollbar-thumb {
+  background: var(--manage-color-menu-scrollbar-thumb);
+  background-clip: content-box;
+  border-right: 6px solid transparent;
+  border-radius: 6px;
+}
+.manage-header__menu::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.manage-header__bottom-tools {
+  /*
+   * MUI-205：主题、账号和退出入口统一占用设计资源定义的 248×42 底部槽位。
+   * 该元素是侧栏弹性列的不可收缩末项，菜单区才是唯一允许滚动的子项；
+   * 因此窗口高度、菜单内容或路由切换都不会改变工具区的底部坐标。
+   */
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+  align-self: center;
+  width: 248px;
+  max-width: 100%;
+  height: 42px;
+  margin-top: 16px;
+}
+.manage-header__theme-toggle {
+  /*
+   * 图标按钮保持 36px 方形点击面，与 42px 槽位上下保留 3px 视觉呼吸空间。
+   * 固定尺寸避免主题图标和提示文案改变时推动账号入口产生布局位移。
+   */
+  display: inline-flex;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--manage-text-2);
+  cursor: pointer;
+  background: var(--manage-color-accent-tint);
+  border: 1px solid var(--manage-color-accent-border-soft);
+  border-radius: 4px;
+  transition:
+    color 120ms ease-out,
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
+}
+.manage-header__theme-toggle .el-icon {
+  font-size: 16px;
+}
+.manage-header__theme-toggle:hover,
+.manage-header__theme-toggle[aria-pressed='true'] {
+  color: var(--manage-text);
+  background: var(--manage-color-accent-soft);
+  border-color: var(--manage-color-accent-border-strong);
+}
+.manage-header__theme-toggle:focus-visible {
+  outline: 2px solid var(--manage-accent);
+  outline-offset: 2px;
+}
+.manage-header__user-dropdown {
+  /* 下拉触发器填满主题按钮以外的固定槽位，昵称过长时只在内部截断。 */
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.manage-header__menu.el-menu--vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+}
+.manage-header__category {
+  /* Figma 分类标识：x=16、宽 248px、高 48px；它不是路由入口，故不可聚焦。 */
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 0 48px;
+  width: 248px;
+  height: 48px;
+  padding-left: 20px;
+  margin: 0 16px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 48px;
+  color: rgb(255 255 255 / 60%);
+  user-select: none;
+}
+.manage-header__category,
+.manage-header__menu.el-menu--vertical .el-menu-item,
+.manage-header__menu-static-item {
+  /*
+   * 侧栏文字对应的 Figma 节点均声明思源黑体常规字重。
+   * 字体文件由全局 @font-face 提供，此处只负责按设计调用，不向管理页面其他区域扩散继承。
+   */
+  font-family:
+    'Source Han Sans SC', 'Source Han Sans', 'Noto Sans SC', 'HarmonyOS Sans SC', 'Microsoft YaHei',
+    sans-serif;
+  font-synthesis: none;
+}
+.manage-header__category::after {
+  position: absolute;
+  right: 0;
+  bottom: -2px;
+  left: 0;
+  height: 1px;
+  pointer-events: none;
+  content: '';
+  background: var(--manage-sidebar-divider-image) center / 248px 1px no-repeat;
+}
+.manage-header__menu.el-menu--vertical .el-menu-item,
+.manage-header__menu-static-item {
+  /*
+   * 每个入口保留 280×64 点击轨道；图标坐标为 x=52、y=23，文字从 x=84 开始。
+   * 亮色的 216×48 选中底图由伪元素覆盖，暗色则只使用主色文本和图标。
+   */
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 64px;
+  align-items: center;
+  width: 280px;
+  min-width: 280px;
+  height: 64px;
+  padding: 0 20px 0 84px !important;
+  margin: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20.8px;
+  color: rgb(255 255 255 / 60%);
+  background-color: transparent !important;
+  border: 0 !important;
+  border-radius: 0;
+  transition: color 120ms ease-out;
+}
+.manage-header__menu-static-item {
+  cursor: default;
+  user-select: none;
+}
+.manage-header__menu .el-menu-item::before {
+  position: absolute;
+  top: 8px;
+  left: 32px;
+  z-index: -1;
+  width: 216px;
+  height: 48px;
+  pointer-events: none;
+  content: '';
+  background: var(--manage-sidebar-active-image) center / 216px 48px no-repeat;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+html:not([data-manage-theme='dark']) .manage-header__menu .el-menu-item {
+  /* 亮色设计的非选中入口为纯白文字，分类标识保持较弱的白色透明度。 */
+  color: #ffffff;
+}
+html:not([data-manage-theme='dark']) .manage-header__menu .el-menu-item.is-active {
+  color: #ffffff !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+html:not([data-manage-theme='dark']) .manage-header__menu .el-menu-item.is-active::before {
+  opacity: 1;
+}
+html[data-manage-theme='dark'] .manage-header__menu .el-menu-item.is-active {
+  /* 暗色设计没有选中胶囊，唯一强调为 Figma 主色 #51A195。 */
+  color: #51a195 !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+html[data-manage-theme='dark'] .manage-header__menu .el-menu-item.is-active .manage-sidebar-icon {
+  /* 深色资源中的非模型图标是白色 SVG，筛选为主色以维持任一入口的选中一致性。 */
+
+  /* 组合滤镜由浏览器按标准 CSS 语法执行；规则层已跳过 css-tree 无法解析的滤镜值。 */
+  filter: brightness(0) saturate(100%) invert(57%) sepia(13%) saturate(1807%) hue-rotate(121deg)
+    brightness(85%) contrast(84%);
+}
+.manage-sidebar-icon {
+  position: absolute;
+  top: 23px;
+  left: 52px;
+  display: block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 18px 18px;
+}
+.manage-sidebar-icon--model {
+  background-image: var(--manage-sidebar-model-icon);
+}
+.manage-sidebar-icon--icon {
+  background-image: var(--manage-sidebar-icon-icon);
+}
+.manage-sidebar-icon--template {
+  background-image: var(--manage-sidebar-template-icon);
+}
+.manage-sidebar-icon--scene {
+  background-image: var(--manage-sidebar-scene-icon);
+}
+.manage-header__menu .el-menu-item:hover:not(.is-active),
+.manage-header__menu .el-menu-item:focus-visible:not(.is-active) {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+.manage-header__menu .el-menu-item:focus-visible {
+  /* 仅键盘焦点显示描边，不叠加设计稿之外的悬浮底色或阴影。 */
+  outline: 2px solid #ffffff;
+  outline-offset: -4px;
+}
+.manage-header__user {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+  align-self: stretch;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 14px;
+
+  /* 父级工具槽统一负责与菜单的间距，账号本体只负责稳定高度与文字截断。 */
+  margin-top: 0;
+  color: var(--manage-text-2);
+  cursor: pointer;
+  background: var(--manage-color-accent-tint);
+  border: 1px solid var(--manage-color-accent-border-soft);
+  border-radius: 4px;
+  transition: 120ms ease-out;
+}
+.manage-header__user-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.manage-header__user:hover {
+  color: var(--manage-text);
+  background: var(--manage-color-accent-soft);
+  border-color: var(--manage-color-accent-border-strong);
+}
+.manage-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/*
+ * 管理页所有业务按钮统一使用 Figma 的常规字重，覆盖组件库按钮默认的中等字重。
+ * 该规则同时作用于新增、查询、重置、编辑、进入及分页按钮，避免各子页面重复覆盖。
+ */
+.manage-page .el-button {
+  --el-button-font-weight: 400;
+
+  font-weight: 400 !important;
+  font-synthesis: none;
+}
+
+/*
+ * 管理页资源卡片的文字层级全部按 Figma 普通正文处理。
+ * 该覆盖放在共享主题规则之后，专门压过旧版卡片的 500/600/700 字重，
+ * 同时使用 !important 防止 Element Plus 的按钮、下拉选项或组件状态规则重新合成粗体。
+ * 只作用于管理页，不影响编辑器和其他业务页面的视觉层级。
+ */
+.manage-page
+  :is(
+    .manage-model-page__category,
+    .manage-grid-card__title,
+    .manage-resource-card__badge,
+    .manage-resource-card__action,
+    .manage-model-card__payment,
+    .manage-model-card__edit,
+    .manage-model-card__more
+  ),
+.manage-dropdown-popper.manage-select-popper .el-select-dropdown__item {
+  font-weight: 400 !important;
+  font-synthesis: none;
+}
+.manage-list-page {
+  /* Figma 的顶部区域与后续分类或列表容器统一保持 14px 间距。 */
+  gap: 14px;
+}
+
+/*
+ * Figma 节点 2143:10396 是分类栏与卡片网格共用的中间内容容器：白底、8px 圆角、16px 内边距。
+ * 通过共享类挂载到模型、图标、场景等全部管理子页面，避免每个页面重复维护一套容器样式。
+ */
+.manage-resource-content-panel {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 8px;
+}
+.manage-resource-content-panel > .manage-grid-layout {
+  min-height: 0;
+}
+html[data-manage-theme='dark'] .manage-resource-content-panel {
+  /* 暗色主题沿用同一容器几何，仅替换底色，避免破坏主题可读性。 */
+  background: #121b26;
+}
+.manage-page-top-bar {
+  /*
+   * 三页 Figma 顶部节点 2143:10326、2143:13200、2143:11326 共用同一纵向骨架。
+   * 顶部栏位于卡片滚动容器之外，内部高度由可选页签和筛选换行自然决定。
+   */
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.manage-page-top-bar__heading {
+  /* Figma 三页标题操作行均固定为 32px 高。 */
+  display: flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+}
+.manage-page-top-bar__heading-copy {
+  display: flex;
+
+  /* 标题框宽 68px、路径从 x=84 开始，二者的设计间距固定为 16px。 */
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+}
+.manage-page-top-bar__title {
+  flex-shrink: 0;
+
+  /* 标题按各页 Figma 节点显式调用全局机器人字体。 */
+  font-family: Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+  color: #51a195;
+}
+.manage-page-top-bar__breadcrumb {
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* 路径和标题同属机器人字体，但字号、行高独立。 */
+  font-family: Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #b8b9bb;
+  white-space: nowrap;
+  font-synthesis: none;
+}
+html[data-manage-theme='dark'] .manage-page-top-bar__breadcrumb {
+  /* 暗色节点使用纯白六成透明度，不能复用带蓝色调的通用次级文字变量。 */
+  color: rgb(255 255 255 / 60%);
+}
+.manage-page-top-bar__heading-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+  align-items: center;
+}
+.manage-page-top-bar__heading-actions .el-button {
+  margin-left: 0;
+}
+.manage-page-top-bar__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.manage-page .manage-page-top-bar__heading-actions .manage-toolbar-button.el-button {
+  box-sizing: border-box;
+  min-width: 101px;
+  height: 32px;
+  padding: 5px 8px;
+  margin-left: 0;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: #ffffff;
+  background: #51a195;
+  border-color: #51a195;
+  border-radius: 4px;
+  box-shadow: none;
+  font-synthesis: none;
+}
+.manage-model-page.manage-page .manage-model-page__add-button.el-button {
+  box-sizing: border-box;
+
+  /*
+   * Figma 节点 2143:10332 / 2155:17912：按钮外框严格为 101×32，内边距 8px，
+   * 加号、文本之间保留 10px。覆盖通用 Element Plus 主按钮的 36px 高度、渐变和圆角，
+   * 但不改变它的键盘、禁用态与点击语义。
+   */
+  display: inline-flex;
+  flex: 0 0 101px;
+  align-items: center;
+  justify-content: flex-start;
+  width: 101px;
+  min-width: 101px;
+  height: 32px;
+  padding: 5px 8px;
+  color: #ffffff;
+  background: #51a195;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none;
+}
+.manage-model-page.manage-page .manage-model-page__add-button.el-button:hover,
+.manage-model-page.manage-page .manage-model-page__add-button.el-button:focus-visible {
+  color: #ffffff;
+  background: #51a195;
+  border-color: #51a195;
+  box-shadow: none;
+}
+
+/*
+ * 模板新增尚未接入写入和文件上传链路。保留设计稿的绿色按钮几何，但以透明度和禁用光标明确反馈，
+ * 既不让 Element Plus 默认灰底破坏顶部对齐，也不会把未实现功能伪装为可用操作。
+ */
+.manage-template-page.manage-page .manage-model-page__add-button.el-button.is-disabled {
+  color: #ffffff;
+  cursor: not-allowed;
+  background: #51a195;
+  border-color: #51a195;
+  opacity: 0.58;
+}
+.manage-model-page__add-button:focus-visible {
+  outline: 2px solid var(--manage-accent);
+  outline-offset: 2px;
+}
+.manage-model-page__add-icon {
+  /* Element Plus 会包裹默认插槽，故间距作用在图标自身而非按钮根的 flex gap。 */
+  display: block;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+}
+.manage-model-page__add-label {
+  /* Figma 节点 2143:10339 / 2155:17919：按钮文字显式调用全局思源黑体。 */
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  white-space: nowrap;
+}
+.manage-page-top-bar__tabs {
+  position: relative;
+
+  /*
+   * Figma 节点 2143:10341 / 2155:17921：页签轨道高 32px，横向文字间距 24px。
+   * 父容器的通用 12px 间距与此处 2px 外边距合计 14px，精确连接到下一项筛选面板；
+   * 分隔线由伪元素在 32px 轨道内部绘制，不能使用真实边框；弹性布局会把边框叠加到
+   * flex-basis 的内容高度，最终把 Figma 的 32px 错误撑成 33px。
+   * 页签作为顶部栏的可选区域；场景页不传页签时不会保留空白轨道。
+   */
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 32px;
+  gap: 24px;
+  align-items: flex-end;
+}
+.manage-page-top-bar__tabs::before {
+  /* Figma 节点 2143:10347 / 2155:17927：轨道底部的 1px 分隔线不参与盒模型尺寸计算。 */
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  height: 1px;
+  pointer-events: none;
+  content: '';
+  background: var(--manage-line);
+}
+html[data-manage-theme='dark'] .manage-page-top-bar__tabs::before {
+  /* Figma 暗色页签分隔线节点 2155:17927 为白色 10% 透明度，不复用通用管理描边的 14%。 */
+  background: rgb(255 255 255 / 10%);
+}
+.manage-page-top-bar__tabs > * {
+  /* 选中下划线必须覆盖轨道分隔线，并与页签文字同宽，避免长文案下指标显得过短。 */
+  z-index: 1;
+}
+.manage-page-top-bar__tab,
+.manage-model-page__category {
+  padding: 0;
+  font: inherit;
+  color: var(--manage-text-2);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.manage-page-top-bar__tab {
+  /* Figma 文字节点 2143:10343 / 2155:17923：页签局部调用全局思源黑体。 */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+  color: #595959;
+  font-synthesis: none;
+}
+.manage-page-top-bar__tab::after {
+  /*
+   * Figma 节点 2380:2997 的活动指标固定为 23×2px，左侧内缩 4px。
+   * 该固定轨道不随页签文案变宽，避免较长标签出现过长横线。
+   */
+  position: absolute;
+  right: auto;
+  bottom: 0;
+  left: 4px;
+  width: 23px;
+  height: 2px;
+  content: '';
+  background: transparent;
+}
+.manage-page-top-bar__tab.is-active {
+  color: #51a195;
+}
+html[data-manage-theme='dark'] .manage-page-top-bar__tab {
+  /* 暗色节点的未选中页签为纯白六成透明度，不复用带不同透明度的通用次级文案。 */
+  color: rgb(255 255 255 / 60%);
+}
+html[data-manage-theme='dark'] .manage-page-top-bar__tab.is-active {
+  color: #51a195;
+}
+.manage-page-top-bar__tab.is-active::after {
+  background: #51a195;
+}
+.manage-page-top-bar__tab:focus-visible {
+  outline: 2px solid var(--manage-accent);
+  outline-offset: -2px;
+}
+.manage-filter-bar {
+  /*
+   * 共享顶部筛选栏复用 Figma 节点 2143:10350 / 2155:17930 的已验收几何：
+   * 单行面板固定 94px，高度内含 16px 内边距；字段与操作由页面插槽注入。
+   * 不加外描边，避免把真实内容起点从 x=320/y=134 错推到 x=321/y=135；面板颜色也
+   * 单独令牌化，不能影响管理卡片或编辑器页面的通用面板颜色。
+   */
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 94px;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-end;
+  padding: 16px;
+  background: var(--manage-color-filter-panel);
+  border: 0;
+  border-radius: 8px;
+}
+.manage-filter-bar__fields {
+  display: flex;
+
+  /* 不占满剩余空间，保证模型页查询按钮仍紧跟第三个字段；空间不足时才收缩换行。 */
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  min-width: 0;
+}
+.manage-filter-bar__field {
+  /* 每个页面筛选字段均占用设计稿的 242×62px 轨道，字段数量可由页面独立变化。 */
+  display: flex;
+  flex: 0 0 242px;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.manage-filter-bar__field label,
+.manage-filter-bar__label {
+  height: 22px;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--manage-color-text-primary);
+  font-synthesis: none;
+}
+.manage-page .manage-filter-bar__field .el-input,
+.manage-page .manage-filter-bar__field .el-select {
+  /*
+   * 通用管理页控件规则位于本文件后部且同样带 .manage-page；此处显式保留该父级并增加
+   * 筛选字段层级，确保 Figma 的 242×32px 不会被通用 36px 控件覆盖。
+   */
+  width: 242px;
+  height: 32px;
+
+  --el-input-height: 32px;
+}
+.manage-page .manage-filter-bar__field .el-input__wrapper,
+.manage-page .manage-filter-bar__field .el-select__wrapper {
+  /* 保持高于后方 .manage-page 通用输入框规则的优先级，实际渲染才会使用 Figma 令牌。 */
+  box-sizing: border-box;
+  height: 32px;
+  min-height: 32px;
+  color: var(--manage-color-text-primary);
+  background: var(--manage-color-filter-input) !important;
+  box-shadow: inset 0 0 0 1px var(--manage-color-filter-line) !important;
+}
+.manage-page .manage-filter-bar__field .el-input__wrapper {
+  padding: 0 12px;
+
+  /* Figma 搜索框节点 2143:10355 / 2155:17935 的 242×32 轮廓圆角为 8px。 */
+  border-radius: 8px;
+}
+.manage-page .manage-filter-bar__field .el-select__wrapper {
+  padding: 0 16px;
+
+  /* Figma 下拉框节点 2143:10368 / 2155:17948 的轮廓圆角为 10px，不能继承默认 4px。 */
+  border-radius: 10px;
+}
+.manage-filter-bar__field .el-input__inner,
+.manage-filter-bar__field .el-select__selected-item {
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--manage-color-text-primary);
+  font-synthesis: none;
+}
+.manage-filter-bar__field .el-input__inner::placeholder {
+  color: var(--manage-color-filter-placeholder);
+  opacity: 1;
+}
+.manage-filter-bar__field .el-input__suffix-inner,
+.manage-filter-bar__field .el-select__suffix {
+  color: var(--manage-color-text-secondary);
+}
+.manage-filter-bar__field .el-input__suffix-inner > svg,
+.manage-filter-bar__field .el-select__suffix > svg {
+  width: 16px;
+  height: 16px;
+}
+.manage-filter-bar__actions {
+  /* 操作区始终与字段控件底边对齐；按钮内容及事件继续由页面独立维护。 */
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-left: 0;
+}
+
+/*
+ * 选择器包含 .manage-page，优先级高于后方通用按钮的 36px 规则；覆盖范围仍限定在模型筛选区。
+ * Element Plus 会给相邻按钮默认加 12px 外边距，因此相邻组合必须显式清零，实际间距只由父级 16px gap 决定。
+ */
+.manage-model-page.manage-page .manage-model-page__filter-actions .el-button,
+.manage-icon-page.manage-page .manage-icon-page__filter-actions .el-button,
+.manage-scene-page.manage-page .manage-scene-page__filter-actions .el-button {
+  box-sizing: border-box;
+  width: 52px;
+  min-width: 52px;
+  height: 32px;
+  padding: 0;
+  margin-left: 0;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  border-radius: 4px;
+  box-shadow: none;
+  font-synthesis: none;
+}
+.manage-model-page.manage-page .manage-model-page__filter-actions .el-button + .el-button,
+.manage-icon-page.manage-page .manage-icon-page__filter-actions .el-button + .el-button,
+.manage-scene-page.manage-page .manage-scene-page__filter-actions .el-button + .el-button {
+  margin-left: 0;
+}
+.manage-model-page.manage-page .manage-model-page__query-button.el-button,
+.manage-icon-page.manage-page .manage-icon-page__query-button.el-button,
+.manage-scene-page.manage-page .manage-scene-page__query-button.el-button {
+  color: #ffffff;
+  background: #51a195;
+  border-color: #51a195;
+}
+.manage-model-page.manage-page .manage-model-page__query-button.el-button:hover,
+.manage-model-page.manage-page .manage-model-page__query-button.el-button:focus-visible,
+.manage-icon-page.manage-page .manage-icon-page__query-button.el-button:hover,
+.manage-icon-page.manage-page .manage-icon-page__query-button.el-button:focus-visible,
+.manage-scene-page.manage-page .manage-scene-page__query-button.el-button:hover,
+.manage-scene-page.manage-page .manage-scene-page__query-button.el-button:focus-visible {
+  color: #ffffff;
+  background: #3f887d;
+  border-color: #3f887d;
+  box-shadow: none;
+}
+.manage-model-page.manage-page .manage-model-page__reset-button.el-button,
+.manage-icon-page.manage-page .manage-icon-page__reset-button.el-button,
+.manage-scene-page.manage-page .manage-scene-page__reset-button.el-button {
+  color: #51a195;
+  background: transparent;
+  border-color: #51a195;
+}
+.manage-model-page.manage-page .manage-model-page__reset-button.el-button:hover,
+.manage-model-page.manage-page .manage-model-page__reset-button.el-button:focus-visible,
+.manage-icon-page.manage-page .manage-icon-page__reset-button.el-button:hover,
+.manage-icon-page.manage-page .manage-icon-page__reset-button.el-button:focus-visible,
+.manage-scene-page.manage-page .manage-scene-page__reset-button.el-button:hover,
+.manage-scene-page.manage-page .manage-scene-page__reset-button.el-button:focus-visible {
+  color: #3f887d;
+  background: rgb(81 161 149 / 8%);
+  border-color: #3f887d;
+  box-shadow: none;
+}
+html[data-manage-theme='dark']
+  .manage-model-page.manage-page
+  .manage-model-page__filter-actions
+  .el-button,
+html[data-manage-theme='dark']
+  .manage-icon-page.manage-page
+  .manage-icon-page__filter-actions
+  .el-button,
+html[data-manage-theme='dark']
+  .manage-scene-page.manage-page
+  .manage-scene-page__filter-actions
+  .el-button {
+  /* Figma 暗色按钮节点 2155:17969/17973 为 2px 圆角，亮色仍保留其 4px 设计值。 */
+  border-radius: 2px;
+}
+.manage-model-page__categories {
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 30px;
+
+  /* Figma 分类行高 30px，分类项之间为 24px；容器内边距由白底面板统一提供。 */
+  gap: 24px;
+  align-items: center;
+  min-width: 0;
+  height: 30px;
+  max-height: 30px;
+  padding: 0;
+
+  /*
+   * 分类数量超出可用宽度时只允许横向滚动。先把两个方向设为不可溢出，
+   * 再单独开启横向滚动，避免旧版 WebKit 将纵向轴回退为 auto；同时隐藏
+   * 系统滚动条，防止其占用高度后裁切 30px 分类项。分类项始终在 30px
+   * 轨道内居中，内容超过宽度时仍可沿横向滚动。
+   */
+  overflow: hidden;
+  overflow-x: auto;
+
+  /* 固定轨道高度并关闭纵向溢出，避免浏览器为分类项生成上下箭头。 */
+  overflow-y: hidden !important;
+  scrollbar-gutter: auto;
+
+  /* Figma 分类轨道不显示系统滚动条，保留横向滚动能力供触控板或 Shift+滚轮使用。 */
+  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
+
+  /* Figma 分类内容节点没有底部分隔线，分隔职责由顶部页签轨道承担。 */
+  border-bottom: 0;
+  -ms-overflow-style: none;
+}
+.manage-model-page__categories::-webkit-scrollbar {
+  /* 隐藏系统滚动条尺寸，避免横向滚动条挤占轨道高度后裁切分类文字。 */
+  width: 0;
+  height: 0;
+}
+.manage-model-page__categories::-webkit-scrollbar:vertical {
+  /* 某些 Chromium 内核仍会为 overflow-x:auto 创建零宽纵向轴，显式覆盖其宽度。 */
+  width: 0;
+}
+.manage-model-page__categories::-webkit-scrollbar-button {
+  /* 统一隐藏滚动轴按钮；纵向轴没有业务用途，不能占用分类轨道的可视宽度。 */
+  display: none;
+  width: 0;
+  height: 0;
+}
+.manage-model-page__categories::-webkit-scrollbar-button:vertical {
+  /* 禁止浏览器为纵向轴绘制上下箭头，避免横向滚动条末端出现突兀的按钮。 */
+  display: none;
+  width: 0;
+  height: 0;
+}
+.manage-model-page__categories::-webkit-scrollbar-corner {
+  /* 两条滚动轴不应形成可见交角，分类轨道保持完整的背景色。 */
+  display: none;
+  background: transparent;
+}
+.manage-model-page__categories::-webkit-scrollbar-track {
+  background: transparent;
+}
+.manage-model-page__categories::-webkit-scrollbar-thumb {
+  background: var(--manage-color-text-tertiary);
+  border-radius: 3px;
+}
+.manage-model-page__category {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: 22px;
+  padding: 0;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+  color: #595959;
+  letter-spacing: 0;
+  font-synthesis: none;
+}
+.manage-model-page__category:hover,
+.manage-model-page__category.is-active {
+  color: var(--manage-accent);
+}
+.manage-model-page__category.is-active {
+  height: 30px;
+  padding: 4px 6px 4px 14px;
+  font-weight: 400;
+  color: #51a195;
+  background: rgb(81 161 149 / 10%);
+  border-radius: 8px;
+}
+.manage-model-page__category:focus-visible {
+  outline: 2px solid var(--manage-accent);
+  outline-offset: -2px;
+}
+html[data-manage-theme='dark'] .manage-model-page__category:not(.is-active) {
+  color: rgb(255 255 255 / 80%);
+}
+html[data-manage-theme='dark'] .manage-model-page__category.is-active {
+  color: #51a195;
+  background: rgb(90 178 165 / 10%);
+}
+.manage-grid-layout--fixed .manage-grid-layout__scroll {
+  /* 四类管理卡片共用固定列；滚动层继续独立占用顶部与分页之间的剩余空间。 */
+  padding: 4px 0 16px;
+}
+
+/*
+ * 图片管理的设计稿中，分类轨道到首排卡片只有内容面板提供的 16px 间距。
+ * 只移除该页面滚动层的额外 4px 顶部内边距，避免影响已有模型、场景卡片的验收坐标。
+ */
+.manage-icon-page .manage-grid-layout--fixed .manage-grid-layout__scroll {
+  padding-top: 0;
+}
+
+/* 模型卡片与 Figma 亮色稿一致；颜色仍由主题根变量控制，暗色不另建一套结构。 */
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource {
+  background: #ffffff;
+
+  /* 管理页全部资源卡片按 Figma 规范只保留一圈轻描边，不使用投影制造悬浮感。 */
+  border: 1px solid #d9e1e3;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* Figma 节点 2380:3042 的图片卡片外框为 #E5E5E5；模型和场景维持各自现有描边。 */
+.manage-icon-page .manage-grid-card--resource {
+  border-color: #e5e5e5;
+}
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource::before,
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource::after,
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource
+  .manage-grid-card__media::before {
+  display: none;
+}
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource:hover {
+  border-color: var(--manage-color-line-hover);
+
+  /* 悬浮态只增强描边，保持卡片原位，避免重新引入阴影或位移。 */
+  box-shadow: none;
+  transform: none;
+}
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource
+  .manage-grid-card__media {
+  height: 200px !important;
+  background: #fafafa;
+}
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource
+  .manage-grid-card__image {
+  filter: none;
+  transform: none;
+}
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource:hover
+  .manage-grid-card__image {
+  filter: none;
+  transform: none;
+}
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource
+  .manage-grid-card__body {
+  /* Figma 信息区从媒体区下方 10px 开始，左右各 14px，内容高度固定为 110px。 */
+  gap: 0;
+  padding: 9px 14px 13px;
+}
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page)
+  .manage-grid-card--resource
+  .manage-grid-card__title {
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 23px;
+  color: #333333;
+  letter-spacing: 0;
+}
+.manage-model-card__status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  box-sizing: border-box;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 24px;
+  padding: 2px 8px;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 17px;
+  color: #73c74f;
+  letter-spacing: 0;
+  white-space: nowrap;
+  background: #e6fcef;
+  border: 1px solid #e2f4d8;
+  border-radius: 8px;
+}
+.manage-model-card__status.is-online {
+  color: #73c74f;
+  background: #e6fcef;
+  border-color: #e2f4d8;
+}
+.manage-model-card__status.is-offline {
+  color: #e35a61;
+  background: #fff0f1;
+  border-color: #ffd4d7;
+}
+
+/* 场景页的“未发布”与模型页“下线”语义不同，只在场景页覆盖为 Figma 中性灰。 */
+.manage-scene-page .manage-model-card__status.is-offline {
+  color: #595959;
+  background: #f5f5f5;
+  border-color: #eaeaea;
+}
+.manage-model-card__status::before {
+  flex: 0 0 4px;
+  width: 4px;
+  height: 4px;
+  content: '';
+  background: currentColor;
+  border-radius: 50%;
+}
+html[data-manage-theme='dark'] .manage-model-card__status {
+  background: rgb(230 252 239 / 10%);
+  border-color: rgb(226 244 216 / 10%);
+}
+html[data-manage-theme='dark'] .manage-model-card__status.is-offline {
+  background: rgb(255 240 241 / 10%);
+  border-color: rgb(255 212 215 / 24%);
+}
+
+/* 暗色场景稿以深灰底和 60% 白字表达未发布，避免误读为错误状态。 */
+html[data-manage-theme='dark'] .manage-scene-page .manage-model-card__status.is-offline {
+  color: rgb(255 255 255 / 60%);
+  background: #292e32;
+  border-color: rgb(255 255 255 / 14%);
+}
+.manage-model-card__information {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+}
+.manage-model-card__description,
+.manage-model-card__meta,
+.manage-model-card__payment,
+.manage-model-card__edit,
+.manage-model-card__more {
+  font-family: 'Source Han Sans SC', sans-serif;
+  letter-spacing: 0;
+}
+.manage-model-card__description {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: #666666;
+}
+.manage-model-card__meta {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  max-width: 100%;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 17px;
+  color: #b8b9bb;
+  white-space: nowrap;
+}
+.manage-model-card__meta .mono-text {
+  flex: 0 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Source Han Sans SC', sans-serif;
+}
+.manage-model-card__meta-category {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.manage-model-card__meta-separator {
+  flex: 0 0 auto;
+}
+.manage-model-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  margin-top: 12px;
+}
+.manage-model-card__payment {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+
+  /* 免费和价格属于普通卡片信息，按 Figma 使用常规字重，不再作为粗体强调。 */
+  font-weight: 400;
+  line-height: 23px;
+  color: #51a195;
+  white-space: nowrap;
+}
+.manage-model-card__payment--paid {
+  color: #ff5b00;
+}
+.manage-model-card__payment--free {
+  color: #51a195;
+}
+html[data-manage-theme='dark'] .manage-model-card__payment--paid {
+  color: #ff8a4c;
+}
+.manage-model-card__actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+  height: 28px;
+}
+.manage-model-card__edit,
+.manage-model-card__more {
+  /*
+    亮色模型、图标和场景卡片共用 Figma 的操作按钮规格：62×28 / 28×28，
+    1px 浅灰边框与 4px 圆角。尺寸由各自选择器固定，避免操作类型变化造成布局抖动。
+  */
+  box-sizing: border-box;
+  height: 28px !important;
+  margin: 0 !important;
+  color: #333333 !important;
+  background: #fafafa !important;
+  border: 1px solid #eeeff3 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+.manage-model-card__edit {
+  width: 62px;
+  min-width: 62px;
+  padding: 3px 17px !important;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+}
+.manage-model-card__more {
+  width: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  font-size: 20px;
+}
+.manage-model-card__edit:hover,
+.manage-model-card__more:hover,
+.manage-model-card__more:focus-visible {
+  color: var(--manage-accent) !important;
+  border-color: var(--manage-accent) !important;
+}
+
+/* 暗色卡片只替换 Figma 明确给出的颜色和按钮圆角，信息结构与亮色完全共用。 */
+html[data-manage-theme='dark']
+  :is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource {
+  background: #121b26;
+  border-color: rgb(255 255 255 / 14%);
+
+  /* 暗色管理卡片同样不使用阴影，仅保留低对比度描边。 */
+  box-shadow: none;
+}
+html[data-manage-theme='dark']
+  :is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource
+  .manage-grid-card__media {
+  background: #1b2630;
+}
+html[data-manage-theme='dark']
+  :is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-card--resource
+  .manage-grid-card__title {
+  color: rgb(255 255 255 / 80%);
+}
+html[data-manage-theme='dark'] .manage-model-card__description {
+  color: rgb(255 255 255 / 60%);
+}
+html[data-manage-theme='dark'] .manage-model-card__meta {
+  color: rgb(255 255 255 / 40%);
+}
+html[data-manage-theme='dark'] .manage-model-card__edit,
+html[data-manage-theme='dark'] .manage-model-card__more {
+  color: rgb(255 255 255 / 80%) !important;
+  background: #131c26 !important;
+  border-color: rgb(255 255 255 / 14%) !important;
+  border-radius: 2px !important;
+}
+
+@media (width <= 1240px) {
+  .manage-filter-bar {
+    flex: 0 0 auto;
+    align-content: center;
+    min-height: 94px;
+  }
+}
+
+@media (width <= 768px) {
+  .manage-page-top-bar__heading-copy {
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .manage-page-top-bar__heading {
+    flex-basis: 56px;
+    align-items: flex-start;
+    height: 56px;
+  }
+  .manage-filter-bar {
+    flex: 0 0 auto;
+    align-items: stretch;
+  }
+  .manage-filter-bar__fields {
+    width: 100%;
+  }
+  .manage-filter-bar__field {
+    flex: 1 1 100%;
+  }
+  .manage-filter-bar__field .el-input,
+  .manage-filter-bar__field .el-select {
+    width: 100%;
+  }
+  .manage-filter-bar__actions {
+    width: 100%;
+  }
+  .manage-filter-bar__actions .el-button {
+    flex: 1;
+  }
+}
+.manage-page .el-input,
+.manage-page .el-select {
+  --el-input-height: 36px;
+}
+.manage-page .el-input__wrapper,
+.manage-page .el-select__wrapper,
+.manage-dialog .el-input__wrapper,
+.manage-dialog .el-select__wrapper,
+.manage-dialog .el-textarea__inner {
+  color: var(--manage-text);
+  background: var(--manage-bg-input);
+  background-color: var(--manage-bg-input) !important;
+  box-shadow: inset 0 0 0 1px var(--manage-color-line-component) !important;
+}
+.manage-page .el-input__wrapper:hover,
+.manage-page .el-input__wrapper.is-hovering,
+.manage-page .el-select__wrapper:hover,
+.manage-page .el-select__wrapper.is-hovering,
+.manage-dialog .el-input__wrapper:hover,
+.manage-dialog .el-input__wrapper.is-hovering,
+.manage-dialog .el-select__wrapper:hover,
+.manage-dialog .el-select__wrapper.is-hovering,
+.manage-dialog .el-textarea__inner:hover {
+  background-color: var(--manage-bg-input) !important;
+  box-shadow: inset 0 0 0 1px var(--manage-color-line-hover) !important;
+}
+.manage-page .el-input__wrapper.is-focus,
+.manage-page .el-select__wrapper.is-focused,
+.manage-dialog .el-input__wrapper.is-focus,
+.manage-dialog .el-select__wrapper.is-focused,
+.manage-dialog .el-textarea__inner:focus {
+  background-color: var(--manage-bg-input) !important;
+  box-shadow: inset 0 0 0 1px var(--manage-accent) !important;
+}
+.manage-page .el-input__inner,
+.manage-page .el-select__selected-item,
+.manage-page .el-input__icon,
+.manage-page .el-select__icon,
+.manage-dialog .el-input__inner,
+.manage-dialog .el-select__selected-item,
+.manage-dialog .el-input__icon,
+.manage-dialog .el-select__icon,
+.manage-dialog .el-textarea__inner {
+  color: var(--manage-text);
+}
+.manage-page .el-input__inner::placeholder,
+.manage-dialog .el-input__inner::placeholder,
+.manage-dialog .el-textarea__inner::placeholder {
+  color: var(--manage-text-3);
+}
+.manage-toolbar-button,
+.manage-card-icon-button,
+.manage-page .el-button:not(.manage-scene-card__enter, .el-button--text),
+.manage-dialog .el-button:not(.el-button--text) {
+  height: 36px;
+  padding: 0 14px;
+  color: var(--manage-text-2);
+  background: var(--manage-color-accent-surface);
+  border: 1px solid var(--manage-color-line-component);
+  border-radius: 10px;
+  transition: 120ms ease-out;
+}
+.manage-toolbar-button:hover,
+.manage-card-icon-button:hover,
+.manage-page .el-button:hover,
+.manage-dialog .el-button:hover {
+  color: var(--manage-text);
+  background: var(--manage-color-accent-soft);
+  border-color: var(--manage-color-accent-hover);
+}
+.manage-page .el-button.is-circle,
+.manage-dialog .el-button.is-circle,
+.manage-card-icon-button {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 50%;
+}
+.manage-toolbar-button--primary,
+.manage-page .el-button--primary,
+.manage-dialog .el-button--primary,
+.manage-scene-card__enter {
+  color: var(--manage-text);
+  background: var(--manage-gradient-primary);
+  border-color: var(--manage-color-accent-border-strong);
+  box-shadow:
+    inset 0 0 0 1px var(--manage-color-accent-soft),
+    0 10px 20px var(--manage-shadow-shell);
+}
+.manage-page .el-button--success,
+.manage-toolbar-button--success {
+  color: var(--manage-success);
+  background: var(--manage-color-success-soft);
+  border-color: var(--manage-color-success-border);
+}
+.manage-page .el-button--info,
+.manage-toolbar-button--info {
+  color: var(--manage-text-2);
+  background: var(--manage-color-white-highlight);
+}
+.manage-page .el-button--danger,
+.manage-dialog .el-button--danger,
+.manage-toolbar-button--danger {
+  color: var(--manage-danger);
+  background: var(--manage-color-danger-soft);
+  border-color: var(--manage-color-danger-border);
+}
+.manage-grid-layout {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+.manage-grid-layout__scroll {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 16px;
+
+  /* 卡片区只允许纵向滚动，避免网格宽度变化时出现第二条横向滚动条。 */
+  overflow: hidden auto;
+
+  /* 固定滚动轨道占位，卡片列宽不会因滚动条出现或消失而横向跳动。 */
+  scrollbar-gutter: stable;
+
+  /* Figma 滚动容器使用窄滑块，不显示浏览器默认的上下箭头。 */
+  scrollbar-color: var(--manage-color-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+.manage-grid-layout__scroll::-webkit-scrollbar {
+  /* 8px 轨道与卡片容器右侧内边距对齐，滑块视觉宽度保持轻量。 */
+  width: 8px;
+  height: 8px;
+}
+.manage-grid-layout__scroll::-webkit-scrollbar-track {
+  /* 轨道透明，保留内容面板的白底，不额外绘制一条灰色背景。 */
+  background: transparent;
+}
+.manage-grid-layout__scroll::-webkit-scrollbar-thumb {
+  /* Figma 滑块为圆角实心条；边框用于把滑块与卡片内容保持 2px 内间距。 */
+  min-height: 40px;
+  background: var(--manage-color-scrollbar-thumb);
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+.manage-grid-layout__scroll::-webkit-scrollbar-button {
+  /* 隐藏 Chromium 默认上下箭头，避免滚动条高度和 Figma 设计不一致。 */
+  display: none;
+  width: 0;
+  height: 0;
+}
+.manage-grid-layout__scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/*
+ * Element Plus 只锁定 body 的滚动；管理页卡片区使用独立滚动容器，
+ * 弹窗打开时必须同步隐藏该容器的滚动条，避免遮罩下出现突兀的右侧滚动控件。
+ * :has() 仅读取当前 DOM 状态，不新增监听器或轮询，关闭弹窗后自动恢复滚动。
+ */
+html:has(.el-overlay:not([style*='display: none'])) .manage-grid-layout__scroll {
+  overflow: hidden;
+}
+.manage-grid-layout__grid {
+  display: grid;
+  gap: 16px;
+}
+.manage-grid-layout--fixed .manage-grid-layout__grid {
+  /* Figma 模型、图标、场景和模板网格均为 294.4px 固定列，余宽留在行尾。 */
+  grid-template-columns: repeat(auto-fill, 294.4px);
+  gap: 16px;
+  justify-content: start;
+}
+
+/*
+ * 固定变体的卡片几何直接对应 Figma 卡片：外框 294.4×334px，媒体 200px，
+ * 媒体和信息区之间保留 10px，信息区主体保留 110px，剩余 14px 用作底部留白。
+ * 使用 border-box 让边框也计入固定高度，避免不同主题的边框宽度改变行高。
+ */
+.manage-grid-layout--fixed .manage-grid-card {
+  box-sizing: border-box;
+  height: 334px;
+  min-height: 334px;
+  border-radius: 8px;
+}
+.manage-grid-layout--fixed .manage-grid-card__media {
+  height: 200px !important;
+}
+.manage-grid-layout--fixed .manage-grid-card__body {
+  box-sizing: border-box;
+  height: 132px;
+  min-height: 132px;
+  padding: 9px 14px 13px;
+}
+
+/* 固定卡片的操作按钮统一为设计稿的 28px 高，保证信息区在 110px 主体内完整收纳。 */
+.manage-grid-layout--fixed .manage-resource-card__action,
+.manage-grid-layout--fixed .manage-resource-card__icon,
+.manage-grid-layout--fixed .manage-resource-card__actions > .el-dropdown {
+  height: 28px;
+}
+
+/*
+ * 模型信息主体自身已按 70px 信息 + 12px 间距 + 28px 操作行组成精确的 110px，
+ * 这里必须清除旧版容器 gap，避免固定 334px 卡片内部发生隐性溢出。
+ */
+:is(.manage-model-page, .manage-icon-page, .manage-scene-page, .manage-template-page)
+  .manage-grid-layout--fixed
+  .manage-resource-card__body {
+  gap: 0;
+  height: 110px;
+}
+
+/*
+ * 场景与模板都使用 62×28px 的“进入”槽位。模板虽暂时禁用进入，仍固定该尺寸，
+ * 防止操作区因能力开关发生横向跳动并保持 Figma 卡片的统一基线。
+ */
+:is(.manage-grid-layout--scene, .manage-grid-layout--template) .manage-scene-card__enter {
+  flex-basis: 62px;
+  min-width: 62px;
+  height: 28px;
+  padding: 0;
+}
+.manage-grid-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(165deg, rgb(18 33 54 / 98%) 0%, rgb(10 20 34 / 98%) 58%),
+    linear-gradient(180deg, rgb(255 255 255 / 2%), transparent);
+  border: 1px solid rgb(124 169 255 / 16%);
+  border-radius: 20px;
+  box-shadow:
+    0 18px 40px rgb(0 0 0 / 26%),
+    inset 0 1px 0 rgb(255 255 255 / 3%);
+  transition:
+    transform 160ms ease-out,
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out,
+    background 160ms ease-out;
+}
+.manage-grid-card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(135deg, rgb(97 232 255 / 8%), transparent 28%),
+    linear-gradient(180deg, rgb(255 255 255 / 3%), transparent 24%),
+    repeating-linear-gradient(
+      180deg,
+      rgb(255 255 255 / 1.8%) 0,
+      rgb(255 255 255 / 1.8%) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+  opacity: 0.82;
+}
+.manage-grid-card::after {
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgb(255 255 255 / 2.5%);
+  border-radius: 19px;
+}
+.manage-grid-card:hover {
+  border-color: rgb(97 232 255 / 24%);
+  box-shadow:
+    0 26px 52px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 4%);
+  transform: translateY(-4px);
+}
+.manage-grid-card.is-selectable {
+  cursor: pointer;
+}
+.manage-grid-card.is-selected {
+  border-color: var(--manage-accent);
+  box-shadow:
+    inset 0 0 0 1px rgb(97 232 255 / 18%),
+    0 24px 48px rgb(0 0 0 / 30%);
+}
+.manage-grid-card__media {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, rgb(97 232 255 / 18%), transparent 34%),
+    linear-gradient(180deg, rgb(13 32 55 / 98%), rgb(7 16 29 / 100%));
+}
+.manage-grid-card__media::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 4%), transparent 26%),
+    radial-gradient(circle at center, transparent 44%, rgb(8 17 31 / 26%) 100%);
+}
+.manage-grid-card__media-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+.manage-grid-card__media-inner.is-interactive {
+  /* 封面是模型、图标预览入口；使用缩放指针区分于卡片其他区域的批量选择行为。 */
+  cursor: zoom-in;
+}
+.manage-grid-card__media-inner.is-interactive:focus-visible {
+  /* 内描边不改变固定 200px 媒体区几何，也不会被卡片的 overflow 裁掉。 */
+  outline: 2px solid var(--manage-accent);
+  outline-offset: -2px;
+}
+.manage-grid-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 16px 28px rgb(7 13 22 / 40%));
+  transform: scale(0.9);
+  transform-origin: center;
+  transition: transform 180ms ease-out;
+}
+.manage-grid-card__media-overlay {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  height: 48%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgb(8 17 31 / 0%) 0%,
+    rgb(8 17 31 / 18%) 38%,
+    rgb(8 17 31 / 66%) 100%
+  );
+}
+.manage-grid-card__actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.manage-grid-card__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+.manage-grid-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--manage-text);
+  letter-spacing: 0.01em;
+}
+.manage-grid-card__meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--manage-text-3);
+}
+.manage-grid-card__tag {
+  color: var(--manage-text-2);
+}
+.manage-grid-card--resource {
+  background:
+    linear-gradient(180deg, rgb(18 33 54 / 98%) 0%, rgb(11 23 39 / 99%) 100%),
+    linear-gradient(180deg, rgb(255 255 255 / 2%), transparent);
+  border-color: rgb(124 169 255 / 14%);
+  border-radius: 16px;
+  box-shadow:
+    0 18px 48px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 3%);
+}
+.manage-grid-card--resource::before {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 2%), transparent 24%),
+    radial-gradient(circle at 50% 0%, rgb(97 232 255 / 8%), transparent 34%),
+    linear-gradient(135deg, rgb(77 163 255 / 6%), transparent 28%);
+  opacity: 1;
+}
+.manage-grid-card--resource:hover {
+  border-color: rgb(97 232 255 / 24%);
+  box-shadow:
+    0 24px 60px rgb(0 0 0 / 34%),
+    0 0 0 1px rgb(97 232 255 / 8%),
+    inset 0 1px 0 rgb(255 255 255 / 4%);
+  transform: translateY(-6px);
+}
+.manage-grid-card--resource .manage-grid-card__media {
+  background:
+    linear-gradient(180deg, rgb(8 17 31 / 24%), rgb(8 17 31 / 42%)),
+    linear-gradient(180deg, rgb(12 28 47 / 88%), rgb(7 15 27 / 96%));
+}
+.manage-grid-card--resource .manage-grid-card__media::before {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 3%), transparent 20%),
+    linear-gradient(180deg, rgb(8 17 31 / 0%) 40%, rgb(8 17 31 / 68%) 76%, rgb(8 17 31 / 96%) 100%);
+}
+.manage-grid-card--resource .manage-grid-card__media-overlay {
+  display: none;
+}
+.manage-grid-card--resource .manage-grid-card__image {
+  filter: saturate(0.92) brightness(0.96);
+  transform: scale(1);
+  transition:
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.45s ease;
+}
+.manage-grid-card--resource:hover .manage-grid-card__image {
+  filter: saturate(1) brightness(1);
+  transform: scale(1.045);
+}
+.manage-grid-card--resource .manage-grid-card__actions {
+  top: 14px;
+  right: 14px;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+.manage-grid-card--resource:hover .manage-grid-card__actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+.manage-grid-card--resource .manage-grid-card__body {
+  gap: 0;
+  padding: 18px 20px 20px;
+}
+.manage-grid-card--resource .manage-grid-card__title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--manage-text);
+  letter-spacing: 0.02em;
+}
+.manage-grid-card--resource .manage-grid-card__meta .mono-text {
+  font-size: 11px;
+  line-height: 16px;
+  color: rgb(255 255 255 / 40%);
+}
+.manage-resource-card__badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  max-width: calc(100% - 96px);
+  height: 30px;
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgb(234 244 255 / 82%);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  background: rgb(8 17 31 / 72%);
+  border: 1px solid rgb(97 232 255 / 14%);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+}
+.manage-resource-card__badge::before {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  content: '';
+  background: currentColor;
+  background: var(--manage-accent-2);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgb(97 232 255 / 70%);
+}
+.manage-resource-card__floating-action {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  color: rgb(234 244 255 / 74%) !important;
+  background: rgb(8 17 31 / 82%) !important;
+  border: 1px solid rgb(124 169 255 / 24%) !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 8px 18px rgb(0 0 0 / 22%),
+    inset 0 1px 0 rgb(255 255 255 / 5%) !important;
+  backdrop-filter: blur(12px);
+}
+.manage-resource-card__floating-action:hover {
+  color: var(--manage-text) !important;
+  background: rgb(18 44 74 / 92%) !important;
+  border-color: rgb(97 232 255 / 32%) !important;
+}
+.manage-resource-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.manage-resource-card__title-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.manage-resource-card__title-row .manage-grid-card__title {
+  flex: 1;
+  min-width: 0;
+}
+.manage-resource-card__date {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: rgb(234 244 255 / 42%);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.manage-resource-card__divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgb(97 232 255 / 18%) 0%, transparent 100%);
+}
+.manage-resource-card__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.manage-resource-card__action,
+.manage-resource-card__icon,
+.manage-resource-card__actions > .el-dropdown {
+  height: 40px;
+}
+.manage-resource-card__action:hover,
+.manage-resource-card__icon:hover {
+  transform: translateY(-1px);
+}
+.manage-resource-card__action {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 40px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  border-radius: 10px;
+}
+.manage-resource-card__action--primary {
+  color: var(--manage-text) !important;
+  background: linear-gradient(180deg, rgb(44 98 168 / 90%), rgb(22 54 93 / 92%)) !important;
+  border: 1px solid rgb(97 232 255 / 22%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(97 232 255 / 8%),
+    0 10px 20px rgb(8 17 31 / 22%) !important;
+}
+.manage-resource-card__action--primary:hover {
+  background: linear-gradient(180deg, rgb(55 118 196 / 94%), rgb(26 63 108 / 96%)) !important;
+  border-color: rgb(97 232 255 / 30%) !important;
+  box-shadow: 0 8px 24px rgb(17 54 94 / 28%) !important;
+}
+.manage-resource-card__action--secondary {
+  color: var(--manage-text-2) !important;
+  background: rgb(255 255 255 / 3%) !important;
+  border: 1px solid rgb(124 169 255 / 14%) !important;
+}
+.manage-resource-card__action--secondary:hover {
+  color: var(--manage-text) !important;
+  background: rgb(97 232 255 / 8%) !important;
+  border-color: rgb(97 232 255 / 22%) !important;
+}
+.manage-resource-card__actions > .el-dropdown {
+  display: none;
+}
+.manage-grid-card--resource.is-selected {
+  border-color: var(--manage-accent);
+
+  /* 选中态也只通过描边反馈，避免状态切换时出现投影跳变。 */
+  box-shadow: none;
+}
+.manage-grid-layout__empty {
+  /*
+   * 空列表属于内容面板，不应沿用旧版固定深色占位底板。
+   * 面板和虚线均消费双主题语义变量，确保亮色空状态不再出现暗色块。
+   */
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  background: var(--manage-color-panel-overlay);
+  border: 1px dashed var(--manage-color-line-component);
+  border-radius: 14px;
+}
+.manage-grid-layout__empty .el-empty__description p {
+  color: var(--manage-text-2);
+}
+
+/*
+ * Figma 场景卡片的类型标签固定为 12px 白字、20px 高、14px 圆角，使用 60% 黑色底和
+ * 10px 背景模糊；采用绝对定位，不参与 200px 封面图尺寸计算，避免图片比例变化造成偏移。
+ */
+.manage-scene-card__type {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 2;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  max-width: calc(100% - 92px);
+  height: 20px;
+  padding: 2px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: #ffffff;
+  white-space: nowrap;
+  background: rgb(51 51 51 / 60%);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+}
+.manage-scene-card__enter {
+  flex: 0 0 62px;
+  justify-content: center;
+  padding: 0 !important;
+}
+.manage-scene-card__action-icon {
+  /* Figma 两枚操作图标固定为 20×20，避免 Element Plus 默认图标尺寸参与按钮布局。 */
+  display: block;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+}
+.manage-dialog.el-dialog,
+.manage-dialog .el-overlay-dialog {
+  backdrop-filter: blur(8px);
+}
+.el-overlay.is-message-box .el-overlay-message-box {
+  backdrop-filter: blur(8px);
+}
+.manage-dialog.el-dialog,
+.manage-dialog .el-dialog {
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    var(--manage-color-panel-overlay) 0%,
+    var(--manage-color-dialog-deep-overlay) 100%
+  );
+  border: 1px solid var(--manage-line);
+  border-radius: 16px;
+  box-shadow: var(--manage-shadow-panel);
+}
+.manage-dialog.el-dialog::before,
+.manage-dialog .el-dialog::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(115deg, var(--manage-color-accent-tint), transparent 28%),
+    repeating-linear-gradient(
+      180deg,
+      var(--manage-color-white-soft) 0,
+      var(--manage-color-white-soft) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  opacity: 0.5;
+}
+.manage-dialog .el-dialog__header {
+  position: relative;
+  z-index: 1;
+  padding: 16px 20px;
+  margin: 0;
+  border-bottom: 1px solid var(--manage-line);
+}
+.manage-dialog .el-dialog__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--manage-text);
+}
+.manage-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: var(--manage-text-2);
+}
+.manage-dialog .el-dialog__body {
+  position: relative;
+  z-index: 1;
+  padding: 18px 20px;
+  color: var(--manage-text-2);
+}
+
+/*
+ * 管理弹窗可能由原生 overflow 或 Element Plus 滚动容器承载正文。
+ * 两种实现统一使用 Figma 的 #b4d5d1 滑块，避免新增、编辑和预览弹窗出现不同系统颜色。
+ */
+.manage-dialog
+  :is(
+    .el-dialog__body,
+    .el-scrollbar__wrap,
+    .model-dialog__body,
+    .icon-dialog__body,
+    .overflow-auto
+  ) {
+  scrollbar-color: var(--manage-color-dialog-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+.manage-dialog
+  :is(
+    .el-dialog__body,
+    .el-scrollbar__wrap,
+    .model-dialog__body,
+    .icon-dialog__body,
+    .overflow-auto
+  )::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.manage-dialog
+  :is(
+    .el-dialog__body,
+    .el-scrollbar__wrap,
+    .model-dialog__body,
+    .icon-dialog__body,
+    .overflow-auto
+  )::-webkit-scrollbar-track,
+.manage-dialog
+  :is(
+    .el-dialog__body,
+    .el-scrollbar__wrap,
+    .model-dialog__body,
+    .icon-dialog__body,
+    .overflow-auto
+  )::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.manage-dialog
+  :is(
+    .el-dialog__body,
+    .el-scrollbar__wrap,
+    .model-dialog__body,
+    .icon-dialog__body,
+    .overflow-auto
+  )::-webkit-scrollbar-thumb {
+  background: var(--manage-color-dialog-scrollbar-thumb);
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+.manage-dialog
+  :is(
+    .el-dialog__body,
+    .el-scrollbar__wrap,
+    .model-dialog__body,
+    .icon-dialog__body
+  )::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.manage-dialog .el-scrollbar__bar.is-vertical {
+  right: 2px;
+  width: 4px;
+}
+.manage-dialog .el-scrollbar__thumb {
+  background-color: var(--manage-color-dialog-scrollbar-thumb);
+  border-radius: 6px;
+  opacity: 1;
+}
+.manage-dialog .el-dialog__footer {
+  position: relative;
+  z-index: 1;
+  padding: 0 20px 18px;
+}
+.manage-dialog .el-form-item__label,
+.manage-dialog .el-upload-dragger,
+.manage-dialog .el-upload-list__item-name,
+.manage-dialog .el-radio__label {
+  color: var(--manage-text-2);
+}
+.manage-dialog .el-upload--picture-card,
+.manage-dialog .el-upload-dragger {
+  background: var(--manage-color-upload-surface);
+  border-color: var(--manage-color-upload-border);
+}
+.manage-dialog .el-upload-dragger:hover,
+.manage-dialog .el-upload--picture-card:hover {
+  border-color: var(--manage-color-upload-border-hover);
+}
+.manage-dialog .el-button,
+.manage-dialog.el-dialog .el-button {
+  color: var(--manage-text-2);
+}
+.manage-dialog .el-empty__description p {
+  color: var(--manage-text-2);
+}
+.manage-message-box::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(135deg, var(--manage-color-accent-tint), transparent 34%),
+    repeating-linear-gradient(
+      180deg,
+      var(--manage-color-white-soft) 0,
+      var(--manage-color-white-soft) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  opacity: 0.5;
+}
+.manage-message-box::after {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 64px;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(
+      90deg,
+      var(--manage-color-warning-soft),
+      var(--manage-color-accent-tint) 38%,
+      transparent 72%
+    ),
+    linear-gradient(180deg, var(--manage-color-white-overlay), transparent);
+  opacity: 0.8;
+}
+.manage-message-box .el-message-box__header,
+.manage-message-box .el-message-box__content,
+.manage-message-box .el-message-box__btns {
+  position: relative;
+  z-index: 1;
+}
+.manage-message-box .el-message-box__message {
+  color: inherit !important;
+}
+.manage-message-box .manage-message-box__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.manage-message-box .manage-message-box__lead {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--manage-text);
+}
+.manage-message-box .manage-message-box__target-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.manage-message-box .manage-message-box__target-label {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--manage-color-text-secondary-strong);
+  letter-spacing: 0.04em;
+  background: var(--manage-color-accent-soft);
+  border: 1px solid var(--manage-color-accent-border);
+  border-radius: 999px;
+}
+.manage-message-box .manage-message-box__target {
+  display: inline-flex;
+  align-items: center;
+  min-height: auto;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--manage-color-accent-2) !important;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+  text-shadow: 0 0 10px var(--manage-color-accent-border);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.manage-message-box .manage-message-box__description-strong {
+  color: var(--manage-text);
+}
+.manage-message-box .el-button--primary {
+  color: var(--manage-text) !important;
+}
+.manage-message-box .el-button:hover {
+  color: var(--manage-text) !important;
+  background: var(--manage-color-button-hover-surface) !important;
+  border-color: var(--manage-color-accent-hover) !important;
+}
+.manage-message-box .el-button--danger {
+  color: var(--manage-color-danger-text) !important;
+  background: var(--manage-gradient-danger) !important;
+  border-color: var(--manage-color-danger-border-strong) !important;
+  box-shadow:
+    0 8px 20px var(--manage-color-danger-shadow),
+    inset 0 1px 0 var(--manage-color-accent-soft);
+}
+.manage-message-box .el-button--danger:hover {
+  color: var(--manage-color-danger-text-hover) !important;
+  background: var(--manage-gradient-danger-hover) !important;
+  border-color: var(--manage-color-danger-border-hover) !important;
+}
+
+/*
+ * Figma 模型状态确认组为 480×191px 的紧凑三段式弹窗。此组覆盖早期的管理端装饰样式，
+ * 使删除、上线和下线仅通过语义色区分，几何、字号、间距和按钮尺寸保持完全一致。
+ */
+.manage-message-box {
+  position: relative;
+  box-sizing: border-box;
+  width: min(480px, calc(100vw - 32px)) !important;
+  max-width: 480px;
+  height: min(191px, calc(100vh - 32px));
+  max-height: min(800px, calc(100vh - 32px));
+  padding: 0 0 10px;
+  overflow: hidden;
+  font-family: 'Source Han Sans SC', 'Noto Sans SC', sans-serif;
+  color: var(--manage-text) !important;
+  background: var(--manage-color-elevated) !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%) !important;
+}
+.manage-message-box::before,
+.manage-message-box::after {
+  display: none;
+}
+.manage-message-box .el-message-box__header {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 24px !important;
+  border-bottom: 0;
+}
+.manage-message-box .el-message-box__headerbtn {
+  top: 16px;
+  right: 24px;
+  width: 16px;
+  height: 16px;
+}
+.manage-message-box .el-message-box__header::after,
+.manage-message-box .el-message-box__btns::before {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  content: '';
+  background: var(--manage-color-line-soft);
+}
+.manage-message-box .el-message-box__header::after {
+  bottom: 0;
+}
+.manage-message-box .el-message-box__title {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+.manage-message-box .el-message-box__title::before {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  color: #ffffff;
+  content: '!';
+  border-radius: 50%;
+}
+.manage-message-box--danger .el-message-box__title {
+  color: #e34d59 !important;
+}
+.manage-message-box--danger .el-message-box__title::before {
+  background: #e34d59;
+}
+.manage-message-box--online .el-message-box__title {
+  color: #51a195 !important;
+}
+.manage-message-box--online .el-message-box__title::before {
+  background: #51a195;
+}
+.manage-message-box--scene-locked .el-message-box__title {
+  color: #51a195 !important;
+}
+.manage-message-box--scene-locked .el-message-box__title::before {
+  background: #51a195;
+}
+.manage-message-box--offline .el-message-box__title {
+  color: #ed7b2f !important;
+}
+.manage-message-box--offline .el-message-box__title::before {
+  background: #ed7b2f;
+}
+.manage-message-box .el-message-box__headerbtn .el-message-box__close {
+  font-size: 12px;
+  color: var(--manage-text-2) !important;
+  border-radius: 0;
+  transition: color 0.2s ease;
+}
+.manage-message-box .el-message-box__headerbtn:hover .el-message-box__close {
+  color: var(--manage-text) !important;
+  background: transparent;
+}
+.manage-message-box .el-message-box__content {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: 42px !important;
+  max-height: 42px;
+  padding: 10px 24px !important;
+  margin-top: 24px;
+  overflow: hidden;
+}
+.manage-message-box .el-message-box__container,
+.manage-message-box .el-message-box__message {
+  /*
+   * Element Plus 默认消息容器会参与内容固有宽度计算；这里固定为正文区可用宽度，
+   * 防止单行文案把 480px 弹窗撑出横向滚动条。超长业务名称由弹窗边界裁切，
+   * 不改变 Figma 节点 2140:6682、2140:6709、2140:6736 的单行布局。
+   */
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.manage-message-box .manage-message-box__description {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: clip;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--manage-text) !important;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+/* 场景取消发布的名称可能较长，正文允许自然换行并让消息框随内容增高，禁止省略。 */
+.manage-message-box--scene-unpublish {
+  height: auto;
+  min-height: 191px;
+}
+.manage-message-box--scene-unpublish .el-message-box__content {
+  height: auto !important;
+  max-height: none;
+  overflow: visible;
+}
+.manage-message-box--scene-unpublish .el-message-box__container,
+.manage-message-box--scene-unpublish .el-message-box__message,
+.manage-message-box--scene-unpublish .manage-message-box__description {
+  overflow: visible;
+}
+.manage-message-box--scene-unpublish .manage-message-box__description {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.manage-message-box .el-message-box__btns {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  height: 43px !important;
+  min-height: 43px !important;
+  padding: 11px 24px 0 !important;
+  margin-top: 24px;
+  border-top: 0;
+}
+.manage-message-box .el-message-box__btns::before {
+  top: 0;
+}
+.manage-message-box .el-button {
+  min-width: 65px;
+  height: 32px;
+  padding: 5px 12px;
+  margin-left: 0 !important;
+  font-family: 'Source Han Sans SC', 'Noto Sans SC', sans-serif;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--manage-text-2) !important;
+  background: var(--manage-color-upload-surface) !important;
+  border-color: var(--manage-color-upload-border) !important;
+  border-radius: 4px;
+  box-shadow: none;
+}
+.manage-message-box .el-message-box__btns > .el-button:not(.manage-message-box__confirm) {
+  width: 65px;
+  min-width: 65px;
+}
+.manage-message-box .el-message-box__btns > .manage-message-box__confirm {
+  width: 82px;
+  min-width: 82px;
+}
+.manage-message-box .manage-message-box__confirm {
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+.manage-message-box .manage-message-box__confirm--danger {
+  background: #e34d59 !important;
+}
+.manage-message-box .manage-message-box__confirm--online {
+  background: #51a195 !important;
+}
+.manage-message-box--scene-locked .el-message-box__btns > .manage-message-box__confirm {
+  /* 图1“知道了”和图2“预览”均使用约 80px 的主按钮宽度。 */
+  width: 82px;
+  min-width: 82px;
+}
+.manage-message-box--scene-locked-preview .el-message-box__btns > .el-button:not(.manage-message-box__confirm) {
+  /* 已发布场景的图2弹窗中，“取消”与“预览”保持同宽，避免底部操作区视觉失衡。 */
+  width: 82px;
+  min-width: 82px;
+}
+.manage-message-box .manage-message-box__confirm--offline {
+  background: #ed7b2f !important;
+}
+.manage-message-box .manage-message-box__confirm:hover {
+  filter: brightness(0.94);
+}
+.manage-dropdown-popper.el-popper,
+.manage-dropdown-popper .el-dropdown-menu,
+.manage-dropdown-popper .el-popconfirm {
+  background: var(--manage-color-dropdown-surface) !important;
+  border: 1px solid var(--manage-line) !important;
+  box-shadow: var(--manage-shadow-panel) !important;
+  backdrop-filter: blur(16px);
+}
+.manage-dropdown-popper .el-dropdown-menu__item,
+.manage-dropdown-popper .el-popconfirm__main {
+  color: var(--manage-text-2);
+}
+.manage-dropdown-popper .el-dropdown-menu__item:hover {
+  color: var(--manage-text);
+  background: var(--manage-color-accent-soft);
+}
+
+/*
+ * 侧栏外的选择框和操作菜单由 Element Plus 自带滚动容器承载。
+ * Figma 菜单滑块固定为白色 20%，原生与组件滚动实现共用同一颜色和 4px 视觉宽度。
+ */
+.manage-dropdown-popper :is(.el-scrollbar__wrap, .el-dropdown-menu) {
+  scrollbar-color: var(--manage-color-dropdown-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+.manage-dropdown-popper :is(.el-scrollbar__wrap, .el-dropdown-menu)::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.manage-dropdown-popper :is(.el-scrollbar__wrap, .el-dropdown-menu)::-webkit-scrollbar-track,
+.manage-dropdown-popper :is(.el-scrollbar__wrap, .el-dropdown-menu)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.manage-dropdown-popper :is(.el-scrollbar__wrap, .el-dropdown-menu)::-webkit-scrollbar-thumb {
+  background: var(--manage-color-dropdown-scrollbar-thumb);
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+.manage-dropdown-popper :is(.el-scrollbar__wrap, .el-dropdown-menu)::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.manage-dropdown-popper .el-scrollbar__bar.is-vertical {
+  right: 2px;
+  width: 4px;
+}
+.manage-dropdown-popper .el-scrollbar__thumb {
+  background-color: var(--manage-color-dropdown-scrollbar-thumb);
+  border-radius: 6px;
+  opacity: 1;
+}
+
+/*
+ * 租户选择框支持分页加载，用户需要持续感知当前位置和剩余内容。
+ * 复用通用下拉框的颜色、圆角和 4px 视觉宽度，仅覆盖 Element Plus 默认的悬停隐藏行为；
+ * 该类只挂在场景筛选与场景授权的租户浮层，避免改变其他普通下拉框的交互密度。
+ */
+.manage-tenant-select-popper .el-scrollbar__bar.is-vertical {
+  display: block;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transition: none !important;
+}
+.manage-tenant-select-popper .el-scrollbar__wrap {
+  /* 预留滚动条槽位，追加分页时菜单宽度不会因滚动条出现/隐藏而抖动。 */
+  scrollbar-gutter: stable;
+  scrollbar-color: var(--manage-color-dropdown-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+.manage-tenant-select-popper .el-scrollbar__wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.manage-tenant-select-popper .el-scrollbar__wrap::-webkit-scrollbar-track,
+.manage-tenant-select-popper .el-scrollbar__wrap::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.manage-tenant-select-popper .el-scrollbar__wrap::-webkit-scrollbar-thumb {
+  background: var(--manage-color-dropdown-scrollbar-thumb) !important;
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+.manage-tenant-select-popper .el-scrollbar__thumb {
+  width: 100%;
+  min-height: 20px;
+  background-color: var(--manage-color-dropdown-scrollbar-thumb) !important;
+  border-radius: 6px;
+  opacity: 1 !important;
+}
+
+/*
+ * 模型卡片更多菜单对应 Figma 节点 2143:10619：外框宽 88px、8px 内边距，
+ * 默认两个操作项各 72×40px、纵向间距 4px，高度保持 100px。
+ * 该浮层单独覆盖通用下拉框的阴影、模糊和悬停色，避免影响其他浮层。
+ */
+.manage-card-menu-popper.el-popper {
+  box-sizing: border-box;
+  width: 88px !important;
+  min-width: 88px !important;
+  height: 100px;
+  min-height: 100px;
+  padding: 7px !important;
+  background: #fafafa !important;
+  border: 1px solid #eeeff3 !important;
+  border-radius: 2px;
+  box-shadow: none !important;
+  backdrop-filter: none;
+}
+.manage-card-menu-popper .el-popper__arrow {
+  display: none;
+}
+.manage-card-menu-popper .el-dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 72px;
+  min-width: 72px;
+  padding: 0;
+  background: #fafafa !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
+}
+
+/* 租户我的资源只保留“删除”一项：按单个 40px 菜单项收缩浮层，避免底部保留空白。 */
+.manage-card-menu-popper--compact.el-popper {
+  height: 56px;
+  min-height: 56px;
+  overflow: visible !important;
+}
+.manage-card-menu-popper--compact .el-scrollbar,
+.manage-card-menu-popper--compact .el-scrollbar__wrap,
+.manage-card-menu-popper--compact .el-scrollbar__view {
+  height: 40px !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+.manage-card-menu-popper--compact .el-scrollbar__bar {
+  display: none !important;
+}
+.manage-card-menu-popper--compact .el-dropdown-menu {
+  height: 40px;
+  min-height: 40px;
+  overflow: visible !important;
+}
+
+/* 运维端新增下载场景文件：四项菜单扩高并加宽，避免长文案换行；租户端仍使用紧凑尺寸。 */
+.manage-scene-card-menu-popper.el-popper {
+  width: 136px !important;
+  min-width: 136px !important;
+  height: 188px;
+  min-height: 188px;
+  overflow: visible !important;
+}
+.manage-scene-card-menu-popper .el-scrollbar,
+.manage-scene-card-menu-popper .el-scrollbar__wrap,
+.manage-scene-card-menu-popper .el-scrollbar__view {
+  height: 172px !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+.manage-scene-card-menu-popper .el-scrollbar__bar {
+  display: none !important;
+}
+.manage-scene-card-menu-popper .el-dropdown-menu {
+  width: 120px;
+  min-width: 120px;
+  height: 172px;
+  min-height: 172px;
+  overflow: visible !important;
+}
+
+/* 租户端隐藏授权后只剩两项，恢复与两项通用菜单一致的 100px 外框和 84px 内容区。 */
+.manage-scene-card-menu-popper--compact.el-popper {
+  width: 88px !important;
+  min-width: 88px !important;
+  height: 100px;
+  min-height: 100px;
+}
+.manage-scene-card-menu-popper--compact .el-scrollbar,
+.manage-scene-card-menu-popper--compact .el-scrollbar__wrap,
+.manage-scene-card-menu-popper--compact .el-scrollbar__view {
+  height: 84px !important;
+}
+.manage-scene-card-menu-popper--compact .el-dropdown-menu {
+  width: 72px;
+  min-width: 72px;
+  height: 84px;
+  min-height: 84px;
+}
+.manage-card-menu-popper .el-dropdown-menu__item {
+  box-sizing: border-box;
+  flex: 0 0 40px;
+  width: 72px;
+  height: 40px;
+  padding: 9px 8px;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  letter-spacing: 0;
+  border-radius: 0;
+}
+
+/* 场景菜单项跟随所属菜单宽度；不能沿用通用资源菜单固定的 72px。 */
+.manage-scene-card-menu-popper .el-dropdown-menu__item {
+  width: 100%;
+}
+html:not([data-manage-theme='dark']) .manage-card-menu-popper .el-dropdown-menu__item {
+  color: #595959;
+}
+html:not([data-manage-theme='dark']) .manage-card-menu-popper .el-dropdown-menu__item:hover,
+html:not([data-manage-theme='dark']) .manage-card-menu-popper .el-dropdown-menu__item:focus {
+  color: #595959;
+  background: #ffffff;
+}
+html[data-manage-theme='dark'] .manage-card-menu-popper .el-dropdown-menu__item {
+  color: rgb(255 255 255 / 60%);
+}
+html[data-manage-theme='dark'] .manage-card-menu-popper.el-popper,
+html[data-manage-theme='dark'] .manage-card-menu-popper .el-dropdown-menu {
+  background: #131c26 !important;
+  border-color: rgb(255 255 255 / 14%) !important;
+}
+html[data-manage-theme='dark'] .manage-card-menu-popper .el-dropdown-menu__item:hover,
+html[data-manage-theme='dark'] .manage-card-menu-popper .el-dropdown-menu__item:focus {
+  color: rgb(255 255 255 / 80%);
+  background: rgb(255 255 255 / 8%);
+}
+.manage-card-menu-popper .el-dropdown-menu__item.manage-card-menu-popper__danger {
+  /* 危险语义在亮暗主题下都固定使用 Figma 红色，优先级必须高于菜单普通文字主题规则。 */
+  color: #e3565d !important;
+}
+.manage-card-menu-popper .el-dropdown-menu__item.manage-card-menu-popper__danger:hover,
+.manage-card-menu-popper .el-dropdown-menu__item.manage-card-menu-popper__danger:focus {
+  color: #e3565d !important;
+  background: rgb(227 86 93 / 8%);
+}
+.manage-dropdown-popper.manage-select-popper.el-popper,
+.manage-dropdown-popper.manage-select-popper .el-select-dropdown,
+.manage-dropdown-popper.manage-select-popper .el-scrollbar__view {
+  background: var(--manage-gradient-panel) !important;
+  border: 1px solid var(--manage-line) !important;
+  box-shadow: var(--manage-shadow-panel) !important;
+  backdrop-filter: blur(16px);
+}
+.manage-dropdown-popper.manage-select-popper .el-popper__arrow::before {
+  background: var(--manage-color-panel-overlay) !important;
+  border: 1px solid var(--manage-line) !important;
+}
+.manage-dropdown-popper.manage-select-popper .el-select-dropdown__item {
+  color: var(--manage-text-2) !important;
+  background: transparent !important;
+}
+.manage-dropdown-popper.manage-select-popper .el-select-dropdown__item.hover,
+.manage-dropdown-popper.manage-select-popper .el-select-dropdown__item:hover {
+  color: var(--manage-text) !important;
+  background: var(--manage-color-accent-soft) !important;
+}
+.manage-dropdown-popper.manage-select-popper .el-select-dropdown__item.is-selected {
+  font-weight: 500;
+  color: var(--manage-text) !important;
+  background: var(--manage-color-active) !important;
+  box-shadow: inset 0 0 0 1px var(--manage-color-accent-border-soft);
+}
+.manage-dropdown-popper.manage-select-popper .el-select-dropdown__item.is-disabled {
+  color: var(--manage-text-3) !important;
+}
+.manage-pagination-bar {
+  /*
+   * Figma 亮暗分页节点 2143:10681 / 2155:18221 高度均为 32px；版权节点高度为 48px。
+   * 共享底栏因此固定占用 48px，分页与总数贴顶，版权使用同一底边且按视口中心定位。
+   * 底栏属于网格布局的不可收缩末项，只有上方卡片容器滚动，滚动过程不会改变底栏坐标。
+   */
+  position: relative;
+  z-index: 6;
+  display: grid;
+  flex: 0 0 48px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  margin-top: auto;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--manage-pagination-text);
+  letter-spacing: 0;
+  font-synthesis: none;
+}
+.manage-pagination-bar__total {
+  align-self: start;
+  margin-top: 5px;
+
+  /* 总数在暗色稿中比右侧控件更弱，使用独立变量保持 Figma 的两级信息层次。 */
+  color: var(--manage-pagination-total-text);
+  white-space: nowrap;
+}
+.manage-pagination-bar__copyright {
+  /*
+   * Figma 版权框为 644×48px，并以整页视口中线为基准；固定定位可避免右侧分页宽度、
+   * 侧栏和卡片列数变化时把版权推离设计坐标。该装饰文案不参与命中测试。
+   */
+  position: fixed;
+  bottom: var(--manage-content-bottom);
+  left: 50vw;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 644px;
+  height: 48px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--manage-pagination-copyright-text);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.manage-pagination-bar .common-pagination {
+  display: flex;
+  justify-self: end;
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+}
+.manage-pagination-bar .common-pagination .el-pagination {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-button-bg-color: var(--manage-pagination-control-surface);
+  --el-pagination-button-color: var(--manage-pagination-text);
+  --el-pagination-button-disabled-color: var(--manage-pagination-muted-text);
+  --el-pagination-button-disabled-bg-color: var(--manage-pagination-control-surface);
+  --el-pagination-hover-color: var(--manage-accent);
+  --el-pagination-border-radius: 8px;
+  --el-pagination-item-gap: 8px;
+
+  gap: 8px;
+  height: 32px;
+  padding: 0;
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--manage-pagination-text);
+  letter-spacing: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+}
+.manage-pagination-bar .common-pagination .el-pager {
+  gap: 8px;
+}
+.manage-pagination-bar .common-pagination .btn-next,
+.manage-pagination-bar .common-pagination .btn-prev,
+.manage-pagination-bar .common-pagination .el-pagination__jump,
+.manage-pagination-bar .common-pagination .el-pagination__sizes,
+.manage-pagination-bar .common-pagination .el-pagination__total {
+  margin-left: 0;
+  color: var(--manage-pagination-text);
+  background: transparent;
+}
+.manage-pagination-bar .common-pagination .btn-next,
+.manage-pagination-bar .common-pagination .btn-prev,
+.manage-pagination-bar .common-pagination .el-pager li {
+  box-sizing: border-box;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+  font-weight: 400;
+  line-height: 30px;
+  color: var(--manage-pagination-text);
+  background: var(--manage-pagination-control-surface) !important;
+  border: 1px solid var(--manage-pagination-control-border);
+  border-radius: 8px;
+  box-shadow: none;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+.manage-pagination-bar .common-pagination .btn-next:hover:not(:disabled),
+.manage-pagination-bar .common-pagination .btn-prev:hover:not(:disabled),
+.manage-pagination-bar .common-pagination .el-pager li:hover:not(.is-active) {
+  color: var(--manage-accent);
+  background: var(--manage-pagination-control-hover) !important;
+  border-color: var(--manage-color-accent-border-strong);
+}
+.manage-pagination-bar .common-pagination .el-pager li.is-active {
+  font-weight: 400;
+  color: var(--manage-pagination-active-text) !important;
+  background: var(--manage-pagination-active-surface) !important;
+  border-color: var(--manage-pagination-active-surface);
+  box-shadow: none;
+}
+.manage-pagination-bar .common-pagination .btn-next:disabled,
+.manage-pagination-bar .common-pagination .btn-prev:disabled,
+.manage-pagination-bar .common-pagination .el-pager li.is-disabled {
+  color: var(--manage-pagination-muted-text) !important;
+  background: var(--manage-pagination-control-surface) !important;
+  border-color: var(--manage-pagination-control-border);
+}
+.manage-pagination-bar .common-pagination .el-pagination__sizes .el-select {
+  /*
+   * 页长文案可能从“10条/页”增长为“100条/页”，固定宽度会让 Element Plus 的
+   * 绝对定位占位文本被省略。这里让单选值、左右内边距和下拉箭头共同参与固有宽度计算，
+   * 82px 仅作为设计稿最小宽度；切换更长文案时只扩展当前控件，不触发布局脚本或尺寸监听。
+   */
+  width: fit-content;
+  min-width: 82px;
+}
+.manage-pagination-bar .common-pagination .el-pagination__sizes .el-select__selection {
+  flex: 0 0 auto;
+  width: max-content;
+}
+.manage-pagination-bar
+  .common-pagination
+  .el-pagination__sizes
+  .el-select__selected-item.el-select__placeholder:not(.is-transparent) {
+  position: static;
+  width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+  transform: none;
+}
+.manage-pagination-bar .common-pagination .el-pagination__editor.el-input {
+  width: 48px;
+}
+.manage-pagination-bar .common-pagination .el-input__wrapper,
+.manage-pagination-bar .common-pagination .el-select__wrapper {
+  box-sizing: border-box;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  background: var(--manage-pagination-control-surface);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--manage-pagination-control-border) !important;
+}
+.manage-pagination-bar .common-pagination .el-input__wrapper:hover,
+.manage-pagination-bar .common-pagination .el-select__wrapper:hover,
+.manage-pagination-bar .common-pagination .el-input__wrapper.is-focus,
+.manage-pagination-bar .common-pagination .el-select__wrapper.is-focused {
+  box-shadow: inset 0 0 0 1px var(--manage-color-accent-border-strong) !important;
+}
+.manage-pagination-bar .common-pagination .el-input__inner,
+.manage-pagination-bar .common-pagination .el-select__selected-item,
+.manage-pagination-bar .common-pagination .el-select__placeholder {
+  font-family: 'Source Han Sans SC', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--manage-pagination-text);
+  letter-spacing: 0;
+}
+
+@media (width <= 1280px) {
+  .manage-resource-card__actions {
+    flex-wrap: wrap;
+  }
+  .manage-resource-card__actions::before {
+    display: none;
+  }
+}

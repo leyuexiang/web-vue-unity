@@ -1,0 +1,5 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 保留用户提供的圆头交叉线形状及默认绿色，作为资源列表缩略图。 -->
+  <path d="M7 7L17 17" stroke="#4AC36A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7 17L17 7" stroke="#4AC36A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

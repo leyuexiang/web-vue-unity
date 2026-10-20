@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="80" viewBox="0 0 180 80">
+  <title>可编辑按钮</title>
+  <!-- 静态缩略图只表达按钮类型，场景实例的图片和文字由配置独立替换。 -->
+  <rect x="18" y="18" width="144" height="44" rx="4" fill="#5ab2a5" stroke="#48998e"/>
+  <path d="M73 34h34M73 40h34M78 46h24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+</svg>

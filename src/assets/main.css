@@ -1,111 +1,140 @@
-:root {
-  color: #dbeafe;
-  background: #050912;
-  font-family: Inter, "Microsoft YaHei", system-ui, sans-serif;
-  font-synthesis: none;
-  color-scheme: dark;
+@import 'tailwindcss';
+
+/*
+ * 可分发字体统一在全局样式入口注册，供所有二维组件、图表和场景文本复用。
+ * 这里只注册字体面，不覆盖页面默认字体；具体组件通过共享字体列表选择家族。
+ * `font-display: swap` 允许浏览器先绘制回退字形，资源加载完成后再替换文本，
+ * 避免字体下载阻塞首屏，同时让离线构建和发布预览使用同一份本地资源。
+ */
+@font-face {
+  font-family: 'Source Han Sans SC';
+  font-style: normal;
+  font-weight: 250 900;
+  src: url('./fonts/SourceHanSansCN-VF.otf') format('opentype');
+  font-display: swap;
 }
 
-* { box-sizing: border-box; }
-html, body, #app { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-button, input { font: inherit; }
-button { color: inherit; }
+/*
+ * Figma 设计中保留的机器人字体使用官方可变字体资源，并保持标准 `Roboto` 家族名称。
+ * 各界面只有在设计稿明确声明该字体时才通过局部样式调用；宽度轴未设置，因此不声明 font-stretch。
+ */
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 100 900;
+  src: url('./fonts/Roboto-Variable.ttf') format('truetype');
+  font-display: swap;
+}
 
-.editor-page { height: 100%; min-width: 1120px; background: #070c16; }
-.topbar {
-  height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px;
-  padding: 0 20px; border-bottom: 1px solid #1b2a42; background: #09111f;
+/* 思源宋体（简体中文可变字体）用于衬线中文文字，覆盖 200 至 900 字重。 */
+@font-face {
+  font-family: 'Source Han Serif SC';
+  font-style: normal;
+  font-weight: 200 900;
+  src: url('./fonts/SourceHanSerifSC-VF.woff2') format('woff2');
+  font-display: swap;
 }
-.brand { display: flex; align-items: center; gap: 12px; min-width: 250px; }
-.brand__mark {
-  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px;
-  background: linear-gradient(145deg, #2563eb, #06b6d4); font-weight: 800; box-shadow: 0 0 24px #0891b255;
-}
-.brand strong, .brand small { display: block; }
-.brand small { color: #7283a0; margin-top: 3px; font-size: 11px; }
-.toolbar, .topbar__actions, .viewport-toolbar, .viewport-toolbar__group { display: flex; align-items: center; gap: 8px; }
-button {
-  border: 1px solid #263955; background: #111c2d; border-radius: 6px; padding: 7px 12px;
-  cursor: pointer; transition: 140ms ease; font-size: 13px;
-}
-button:hover:not(:disabled) { border-color: #2b80ff; background: #142944; }
-button:disabled { cursor: not-allowed; opacity: .38; }
-.toolbar__divider { width: 1px; height: 24px; background: #263955; margin: 0 3px; }
-.button-primary { border-color: #1683ff; background: #1269d3; }
-.button-secondary { background: transparent; }
 
-.editor-layout { height: calc(100% - 64px); display: grid; grid-template-columns: 260px minmax(520px, 1fr) 310px; }
-.panel { min-width: 0; background: #0b1321; }
-.hierarchy-panel { border-right: 1px solid #1b2a42; }
-.inspector-panel { border-left: 1px solid #1b2a42; }
-.panel__header {
-  min-height: 66px; padding: 14px 16px; border-bottom: 1px solid #1b2a42;
-  display: flex; align-items: center; justify-content: space-between;
+/* Google Fonts 的 Roboto Slab 可变字体，保留标准家族名供图表和文本组件使用。 */
+@font-face {
+  font-family: 'Roboto Slab';
+  font-style: normal;
+  font-weight: 100 900;
+  src: url('./fonts/RobotoSlab-VF.ttf') format('truetype');
+  font-display: swap;
 }
-.panel__header h2 { margin: 3px 0 0; font-size: 15px; font-weight: 600; }
-.panel__eyebrow { color: #388cff; font-size: 10px; letter-spacing: .16em; font-weight: 700; }
-.panel__count { min-width: 24px; padding: 3px 7px; text-align: center; border-radius: 12px; background: #15243a; color: #85a5d2; font-size: 11px; }
-.hierarchy-list { padding: 0 8px; }
-.hierarchy-item {
-  width: 100%; height: 36px; margin: 2px 0; padding: 0 10px; border-color: transparent; background: transparent;
-  display: flex; align-items: center; gap: 9px; text-align: left;
-}
-.hierarchy-item--root { border-radius: 0; margin: 0; height: 42px; border-bottom: 1px solid #142138; }
-.hierarchy-item.is-selected { color: #fff; background: linear-gradient(90deg, #0f57a8, #12345a); border-color: #217be0; }
-.hierarchy-item__icon { color: #45a3ff; }
-.hierarchy-item__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hierarchy-item__badge { margin-left: auto; color: #f59e0b; font-size: 10px; }
 
-.viewport-shell { position: relative; min-width: 0; min-height: 0; background: #03070d; }
-.viewport-toolbar {
-  position: absolute; z-index: 5; left: 16px; right: 16px; top: 14px; justify-content: space-between; pointer-events: none;
+/* Oxanium 是数字面板常用的几何无衬线字体，官方可变字体覆盖 200 至 800 字重。 */
+@font-face {
+  font-family: Oxanium;
+  font-style: normal;
+  font-weight: 200 800;
+  src: url('./fonts/Oxanium-VF.ttf') format('truetype');
+  font-display: swap;
 }
-.viewport-toolbar button { pointer-events: auto; backdrop-filter: blur(14px); background: #081322d9; }
-.unity-viewport { position: absolute; inset: 0 0 28px; overflow: hidden; background: radial-gradient(circle at 50% 45%, #15263c 0, #070d17 45%, #02050a 100%); }
-.unity-viewport__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; outline: 0; }
-.unity-viewport__grid {
-  position: absolute; inset: 0; opacity: .22; pointer-events: none;
-  background-image: linear-gradient(#22507733 1px, transparent 1px), linear-gradient(90deg, #22507733 1px, transparent 1px);
-  background-size: 44px 44px; transform: perspective(500px) rotateX(62deg) scale(1.8); transform-origin: center 75%;
-}
-.unity-viewport__status {
-  position: absolute; z-index: 4; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 7px;
-  padding: 6px 10px; border: 1px solid #263955; border-radius: 20px; background: #07101ddd; color: #8ca4c6; font-size: 11px;
-}
-.status-dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
-[data-state="ready"] .status-dot { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
-[data-state="failed"] .status-dot { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
-.unity-viewport__placeholder {
-  position: absolute; z-index: 3; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
-}
-.unity-viewport__placeholder strong { margin-top: 18px; font-size: 18px; }
-.unity-viewport__placeholder p { max-width: 520px; color: #71839e; font-size: 13px; text-align: center; line-height: 1.7; }
-.unity-viewport__placeholder small { color: #5f789a; max-width: 620px; overflow: hidden; text-overflow: ellipsis; }
-.unity-viewport__actions { display: flex; gap: 8px; margin-top: 16px; pointer-events: auto; }
-.unity-viewport__channels { position: absolute; z-index: 4; left: 16px; bottom: 16px; display: flex; gap: 6px; }
-.unity-viewport__channels span { padding: 4px 7px; border: 1px solid #2b3749; border-radius: 4px; color: #677994; background: #07101ddd; font-size: 9px; }
-.unity-viewport__channels span.is-ready { color: #85efad; border-color: #1f7541; }
-.unity-viewport__runtime-error { position: absolute; z-index: 5; left: 16px; right: 16px; top: 62px; padding: 8px 10px; border: 1px solid #7f1d1d; border-radius: 6px; color: #fecaca; background: #450a0acc; font-size: 11px; }
-.runtime-config { position: relative; pointer-events: auto; color: #9db1cc; font-size: 12px; }
-.runtime-config summary { cursor: pointer; border: 1px solid #263955; border-radius: 6px; padding: 7px 12px; background: #081322d9; list-style: none; }
-.runtime-config[open] { width: 320px; padding: 12px; border: 1px solid #263955; border-radius: 8px; background: #07101df5; }
-.runtime-config[open] summary { margin-bottom: 10px; border: 0; padding: 0; background: transparent; }
-.runtime-config label { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 8px; margin-top: 7px; }
-.runtime-config input { width: 100%; min-width: 0; border: 1px solid #263955; border-radius: 5px; padding: 6px 8px; color: #dce8f8; background: #080f1b; outline: 0; }
-.runtime-config input:focus { border-color: #2689fa; }
-.unity-mark { width: 72px; height: 72px; display: grid; place-items: center; border: 1px solid #2c73bd; border-radius: 18px; color: #6db7ff; font-size: 40px; font-weight: 800; background: #0c2037aa; box-shadow: 0 0 50px #0c78dd44; }
-.progress-track { width: 320px; height: 4px; border-radius: 4px; overflow: hidden; background: #17263c; }
-.progress-track span { display: block; height: 100%; background: #2789f5; }
-.statusbar { position: absolute; left: 0; right: 0; bottom: 0; height: 28px; display: flex; align-items: center; gap: 18px; padding: 0 12px; border-top: 1px solid #1b2a42; color: #71839e; background: #080f1b; font-size: 10px; }
 
-.inspector-content { overflow: auto; height: calc(100% - 66px); }
-.property-section { padding: 16px; border-bottom: 1px solid #17243a; }
-.property-section h3 { margin: 0 0 14px; font-size: 13px; }
-.property-section--muted p { color: #667994; font-size: 12px; line-height: 1.6; margin: 0; }
-.property-row { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 10px; margin-bottom: 10px; color: #8797af; font-size: 12px; }
-.property-row input, .vector-grid input { min-width: 0; width: 100%; height: 30px; border: 1px solid #263955; border-radius: 5px; padding: 0 8px; color: #dce8f8; background: #080f1b; outline: 0; }
-.property-row input:focus, .vector-grid input:focus { border-color: #2689fa; }
-.property-row--inline input { width: 16px; }
-.vector-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-.vector-grid label { display: flex; align-items: center; gap: 5px; color: #6884a9; font-size: 10px; }
-.empty-state { height: calc(100% - 66px); display: grid; place-items: center; color: #536680; font-size: 12px; }
+/* Orbitron 是数字面板常用的展示字体，使用 Google Fonts 可变字体保留原家族名。 */
+@font-face {
+  font-family: Orbitron;
+  font-style: normal;
+  font-weight: 400 900;
+  src: url('./fonts/Orbitron-VF.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* Datto 发布的 D-DIN 开源字体只有常规和粗体两个字重，分别映射到原始文件。 */
+@font-face {
+  font-family: D-DIN;
+  font-style: normal;
+  font-weight: 400;
+  src: url('./fonts/D-DIN-400.woff2') format('woff2');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: D-DIN;
+  font-style: normal;
+  font-weight: 700;
+  src: url('./fonts/D-DIN-700.woff2') format('woff2');
+  font-display: swap;
+}
+
+/* 优设标题黑仅提供常规字重，中文名称优先展示，内部家族名保持官方英文标识。 */
+@font-face {
+  font-family: YouSheBiaoTiHei;
+  font-style: normal;
+  font-weight: 400;
+  src: url('./fonts/YouSheBiaoTiHei.ttf') format('truetype');
+  font-display: swap;
+}
+
+/*
+ * 庞门正道标题体 3.0 仅提供常规字重，使用独立家族别名避免依赖系统安装字体。
+ * 第二个家族别名兼容早期场景保存的“免费版-4”字体值，替换资源后旧场景仍能显示。
+ */
+@font-face {
+  font-family: PangMenZhengDaoBiaoTi;
+  font-style: normal;
+  font-weight: 400;
+  src: url('./fonts/PangMenZhengDaoBiaoTi-3.0.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* 兼容旧场景中的庞门正道标题体免费版-4值，和新版字体共用同一份本地文件。 */
+@font-face {
+  font-family: "PangMenZhengDaoBiaoTiTiMianFeiBan-4";
+  font-style: normal;
+  font-weight: 400;
+  src: url('./fonts/PangMenZhengDaoBiaoTi-3.0.ttf') format('truetype');
+  font-display: swap;
+}
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    'PingFang SC',
+    'HarmonyOS Sans SC',
+    'Microsoft YaHei',
+    sans-serif;
+  background: #202327;
+}
+
+/* 定义一些常用的 tailwindcss 类 */
+.button-effect {
+  @apply cursor-pointer opacity-80 hover:opacity-100 transition-opacity;
+}
+.button-effect + .button-effect {
+  @apply ml-2;
+}
+.text-ellipsis {
+  @apply overflow-hidden whitespace-nowrap text-ellipsis;
+}

@@ -1,0 +1,10 @@
+{
+  "extends": ["@vue/tsconfig/tsconfig.dom.json", "./tsconfig.base.json"],
+  "include": ["env.d.ts", "vue.d.ts", "src/**/__tests__/**/*.ts", "src/test/**/*.ts", "src/**/*.d.ts"],
+  "exclude": [],
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["vitest/globals", "node"]
+  }
+}

@@ -1,0 +1,11 @@
+<!-- 取消内部画布的等比约束，让渐变矩形随图片容器在宽高两个方向独立拉伸，避免留白。 -->
+<svg width="456" height="260" viewBox="0 0 456 260" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+<foreignObject x="-6" y="-6" width="468" height="272"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(3px);clip-path:url(#bgblur_0_66_3071_clip_path);height:100%;width:100%"></div></foreignObject><rect data-figma-bg-blur-radius="6" width="456" height="260" transform="matrix(-1 0 0 1 456 0)" fill="url(#paint0_linear_66_3071)"/>
+<defs>
+<clipPath id="bgblur_0_66_3071_clip_path" transform="translate(6 6)"><rect width="456" height="260" transform="matrix(-1 0 0 1 456 0)"/>
+</clipPath><linearGradient id="paint0_linear_66_3071" x1="228" y1="260" x2="228" y2="0" gradientUnits="userSpaceOnUse">
+<stop stop-color="#1E1E1E" stop-opacity="0.6"/>
+<stop offset="1" stop-color="#1E1E1E" stop-opacity="0.117647"/>
+</linearGradient>
+</defs>
+</svg>

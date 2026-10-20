@@ -1,0 +1,211 @@
+.scene-edit-billboard-editor__section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--scene-edit-line);
+}
+.scene-edit-billboard-editor__section-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 21px;
+  color: var(--scene-edit-text);
+  white-space: nowrap;
+}
+.scene-edit-billboard-editor__block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+.scene-edit-billboard-editor__block-header,
+.scene-edit-billboard-editor__run-header,
+.scene-edit-billboard-editor__block-actions,
+.scene-edit-billboard-editor__text-style-buttons,
+.scene-edit-billboard-editor__slider-field,
+.scene-edit-billboard-editor__add-blocks {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.scene-edit-billboard-editor__block-header {
+  justify-content: space-between;
+  min-height: 20px;
+}
+.scene-edit-billboard-editor__block-name,
+.scene-edit-billboard-editor__run-header > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 20px;
+  color: rgb(255 255 255 / 80%);
+  white-space: nowrap;
+}
+.scene-edit-billboard-editor__block-actions {
+  flex: 0 0 auto;
+  gap: 4px;
+}
+.scene-edit-billboard-editor__block-actions :deep(.el-button),
+.scene-edit-billboard-editor__run-header :deep(.el-button) {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+}
+.scene-edit-billboard-editor__block-actions :deep(.is-danger) {
+  color: #e88b8b;
+}
+.scene-edit-billboard-editor__run {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  background: rgb(19 28 38 / 50%);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 2px;
+}
+.scene-edit-billboard-editor__run-header {
+  justify-content: space-between;
+  min-height: 20px;
+}
+.scene-edit-billboard-editor__text-style-buttons {
+  gap: 2px;
+}
+
+/**
+ * 字体样式复用 ScenePropertyButton 的深色底板、描边和交互基线；局部只固定为 32px 图标按钮，
+ * 并补充与项目主色一致的选中态，不再保留占用宽度较大的文字开关。
+ */
+.scene-edit-billboard-editor__text-style-buttons
+  :deep(.scene-edit-billboard-editor__text-style-button.scene-edit-property-button) {
+  flex: 0 0 32px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  color: rgb(255 255 255 / 70%);
+  border-radius: 2px;
+  transform: none;
+}
+.scene-edit-billboard-editor__text-style-buttons
+  :deep(.scene-edit-billboard-editor__text-style-button.scene-edit-property-button.is-active),
+.scene-edit-billboard-editor__text-style-buttons
+  :deep(.scene-edit-billboard-editor__text-style-button.scene-edit-property-button.is-active:hover),
+.scene-edit-billboard-editor__text-style-buttons
+  :deep(
+    .scene-edit-billboard-editor__text-style-button.scene-edit-property-button.is-active:focus-visible
+  ) {
+  color: #ffffff;
+  background: rgb(90 178 165 / 18%);
+  border-color: #5ab2a5;
+}
+.scene-edit-billboard-editor__text-style-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  line-height: 18px;
+}
+.scene-edit-billboard-editor__text-style-icon--bold {
+  font-weight: 700;
+}
+.scene-edit-billboard-editor__text-style-icon--italic {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+}
+.scene-edit-billboard-editor__text-style-icon--underline {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.scene-edit-billboard-editor__double-number {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-billboard-editor__double-number :deep(.el-input-number) {
+  width: 100%;
+}
+.scene-edit-billboard-editor__slider-field {
+  flex: 1 1 auto;
+  gap: 12px;
+}
+.scene-edit-billboard-editor__slider-field :deep(.scene-edit-property-slider) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.scene-edit-billboard-editor__slider-field :deep(.scene-edit-property-number-input) {
+  flex: 0 0 62px;
+  width: 62px;
+}
+.scene-edit-billboard-editor__slider-field :deep(.el-input-number) {
+  width: 100%;
+}
+
+/**
+ * 同时限定业务类与公共按钮类，使局部矩形规范的优先级高于页面级胶囊按钮主题；
+ * 仅作用于新增文本片段入口，不改变其他仍使用页面级主题的普通按钮。
+ */
+.scene-edit-billboard-editor__add-run.scene-edit-property-button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  justify-self: start;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 0 8px;
+  overflow: visible;
+  white-space: nowrap;
+  border-radius: 2px;
+  transform: none;
+}
+
+/**
+ * 新增文本按钮使用内容自适应宽度，文字保持单行并预留按钮两侧 8px 安全边距。
+ * 当前右栏最窄布局仍大于按钮完整内容宽度，因此无需省略文字，也不会把内容挤出按钮边界。
+ */
+.scene-edit-billboard-editor__add-run-label {
+  display: inline-block;
+  flex: 0 0 auto;
+  min-width: 0;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.scene-edit-billboard-editor__add-blocks {
+  gap: 4px;
+}
+.scene-edit-billboard-editor__add-blocks > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* stylelint-disable-next-line scss/at-rule-no-unknown -- 插值后的构建产物是浏览器标准容器查询。 */
+@#{'container'} scene-right-panel (width <= 340px) {
+  .scene-edit-billboard-editor__double-number {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /**
+   * 位置始终保持标签、X、Y 同一行。223px 标准控件区足够容纳两个等宽数字输入，
+   * minmax(0, 1fr) 允许更窄面板平滑收缩，不产生横向滚动条。
+   */
+  .scene-edit-billboard-editor__double-number--position {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,5 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 暗色管理卡片专用编辑图标：外部 img 不继承 currentColor，直接固化为设计要求的亮灰色。 -->
+  <path d="M3.21836 17.1259L6.32541 17.126L17.7183 5.73311L14.6111 2.62598L3.21826 14.0189L3.21836 17.1259Z" stroke="#D7E0E8" stroke-width="1.67" stroke-linejoin="round"/>
+  <path d="M11.5038 5.73242L14.6109 8.83957" stroke="#D7E0E8" stroke-width="1.67" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

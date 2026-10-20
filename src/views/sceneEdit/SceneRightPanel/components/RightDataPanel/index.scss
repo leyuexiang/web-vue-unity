@@ -1,0 +1,493 @@
+.scene-edit-right-data-panel {
+  /** 数据面板必须能收缩到右侧面板的实际内容宽度，按钮和下拉由共享控件统一视觉。 */
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  color: var(--scene-edit-text-2);
+}
+
+/** 多请求列表采用紧凑行布局，避免请求数量增加后挤压属性映射编辑区。 */
+.request-items-panel {
+  padding-bottom: 4px;
+}
+.request-items-panel__header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.request-items-panel__header .panel-title {
+  margin-bottom: 0;
+}
+.request-items-panel__list {
+  display: grid;
+  gap: 0;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 2px;
+}
+.request-item-tab {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 42px;
+  background: #1d2c39;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+.request-item-tab:last-child {
+  border-bottom: 0;
+}
+.request-item-tab.is-active {
+  background: #203443;
+}
+.request-item-tab button {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--scene-edit-text-2);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.request-item-tab__select {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  height: 100%;
+  padding: 0 12px;
+  text-align: left;
+}
+.request-item-tab__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--scene-edit-text);
+  white-space: nowrap;
+}
+.request-item-tab__type {
+  flex: 0 0 auto;
+  margin-left: 12px;
+  color: var(--scene-edit-text-2);
+  opacity: 0.75;
+}
+.request-item-tab__collapse,
+.request-item-tab__remove {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 100%;
+  padding: 0;
+  border-left: 1px solid rgb(255 255 255 / 8%) !important;
+}
+.request-item-tab__remove {
+  color: rgb(255 255 255 / 55%) !important;
+}
+.request-item-tab__arrow {
+  transition: transform 160ms ease;
+}
+.request-item-tab__arrow.is-collapsed {
+  transform: rotate(-90deg);
+}
+.request-item-tab :deep(.el-tooltip__trigger) {
+  display: inline-flex;
+  height: 100%;
+}
+.request-item-tab button:hover,
+.request-item-tab button:focus-visible {
+  color: #ffffff;
+}
+
+/** 人工映射目标字段复用共享输入框，并收敛到映射列表的 24px 紧凑行高。 */
+.scene-edit-right-data-panel__mapping-target-input {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-right-data-panel__mapping-target-input :deep(.el-input__wrapper) {
+  min-height: 24px;
+  padding: 3px 6px;
+}
+.scene-edit-right-data-panel__mapping-target-input :deep(.el-input__inner) {
+  height: 18px;
+  font-size: 12px;
+  line-height: 18px;
+}
+.panel-block + .panel-block {
+  margin-top: 18px;
+}
+
+/**
+ * Figma 数据面板采用“上一板块结束—24px—分割线—24px—下一板块”的统一节奏。
+ * 分割线挂在当前板块上，不增加额外 DOM；这样请求类型切换时不会留下空白线，
+ * 并且右侧面板从 300px 拉宽到 400px 时，分割线始终自动铺满可用宽度。
+ */
+.panel-block + .panel-block--figma-divider {
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+}
+.panel-label,
+.panel-title {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--scene-edit-text);
+}
+.panel-field-label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--scene-edit-text-2);
+}
+.panel-hint {
+  font-size: 12px;
+  color: var(--scene-edit-text-2);
+}
+.request-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  background: #131c26;
+  border: 1px solid var(--scene-edit-line);
+  border-radius: 2px;
+}
+.request-card--summary {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.request-card__header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  min-height: 26px;
+  margin-bottom: 12px;
+}
+.request-card__header .panel-title {
+  min-width: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.request-card__header .scene-edit-property-button {
+  flex: 0 0 auto;
+}
+
+/**
+ * 动态请求和数据过滤共用同一类 26px 标题操作按钮。
+ * 提高到右侧面板作用域，避免 Element Plus 全局按钮主题把 2px 直角描边覆盖成胶囊按钮。
+ */
+.scene-edit-right-data-panel
+  .scene-edit-right-data-panel__header-action.scene-edit-property-button:not(.is-link, .is-text) {
+  width: auto;
+  min-width: 80px;
+  height: 26px;
+  min-height: 26px;
+  padding: 2px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgb(255 255 255 / 80%);
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 40%);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.scene-edit-right-data-panel
+  .scene-edit-right-data-panel__header-action.scene-edit-property-button:not(
+    .is-link,
+    .is-text
+  ):hover,
+.scene-edit-right-data-panel
+  .scene-edit-right-data-panel__header-action.scene-edit-property-button:not(
+    .is-link,
+    .is-text
+  ):focus-visible {
+  color: #ffffff;
+  background: rgb(90 178 165 / 10%);
+  border-color: rgb(90 178 165 / 60%);
+}
+.request-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.request-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.request-field--wide {
+  grid-column: 1 / -1;
+}
+.request-field--block + .request-field--block {
+  margin-top: 12px;
+}
+.request-field__label {
+  font-size: 12px;
+  color: var(--scene-edit-text-2);
+}
+.request-summary {
+  display: grid;
+  row-gap: 16px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+.request-summary__row {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+  min-height: 32px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 19px;
+}
+.request-summary__row dt,
+.request-summary__row dd {
+  min-width: 0;
+  margin: 0;
+}
+.request-summary__row dt {
+  color: rgb(255 255 255 / 60%);
+}
+.request-summary__row dd {
+  color: rgb(255 255 255 / 80%);
+  overflow-wrap: anywhere;
+}
+
+/**
+ * 公共接口独立复合区块：不继承旧 request-card 的背景和内边距。
+ * 标签列固定为 Figma 的 65px，选择框、只读地址和按钮组使用剩余宽度，适配 300—400px 右栏。
+ */
+.public-request {
+  width: 100%;
+  min-width: 0;
+}
+.public-request > .panel-title {
+  margin-bottom: 12px;
+}
+.public-request__body {
+  display: grid;
+  row-gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+.public-request__row {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+  min-height: 32px;
+}
+.public-request__label {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: rgb(255 255 255 / 60%);
+}
+.public-request__address {
+  min-width: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 20px;
+  color: rgb(255 255 255 / 80%);
+  white-space: nowrap;
+}
+.public-request__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  margin-top: 16px;
+}
+
+/**
+ * 三个操作继续复用共享按钮，仅补公共接口变体的等宽描边状态。
+ * 选择器限定在数据面板内，避免 Element Plus 的全局胶囊按钮覆盖 2px 圆角。
+ */
+.scene-edit-right-data-panel
+  .public-request__action.scene-edit-property-button:not(.is-link, .is-text) {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+  padding: 5px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgb(255 255 255 / 80%);
+  white-space: nowrap;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 40%);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.scene-edit-right-data-panel
+  .public-request__action.is-accent.scene-edit-property-button:not(.is-link, .is-text) {
+  color: rgb(90 178 165 / 80%);
+  border-color: #5ab2a5;
+}
+.scene-edit-right-data-panel
+  .public-request__action.scene-edit-property-button:not(.is-link, .is-text):hover,
+.scene-edit-right-data-panel
+  .public-request__action.scene-edit-property-button:not(.is-link, .is-text):focus-visible {
+  color: #ffffff;
+  background: rgb(90 178 165 / 10%);
+  border-color: rgb(90 178 165 / 60%);
+}
+.scene-edit-right-data-panel
+  .public-request__action.scene-edit-property-button:not(.is-link, .is-text).is-disabled {
+  color: rgb(255 255 255 / 32%);
+  background: transparent;
+  border-color: rgb(255 255 255 / 16%);
+}
+
+/** 测试区严格复用共享按钮，业务样式只负责 Figma 的整行尺寸、颜色和提示节奏。 */
+.request-test .panel-label {
+  margin-bottom: 12px;
+}
+.scene-edit-right-data-panel
+  .request-test__send.scene-edit-property-button:not(.is-link, .is-text) {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgb(90 178 165 / 82%);
+  background: rgb(90 178 165 / 10%);
+  border: 1px solid rgb(90 178 165 / 44%);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.scene-edit-right-data-panel
+  .request-test__send.scene-edit-property-button:not(.is-link, .is-text):hover,
+.scene-edit-right-data-panel
+  .request-test__send.scene-edit-property-button:not(.is-link, .is-text):focus-visible {
+  color: #ffffff;
+  background: rgb(90 178 165 / 16%);
+  border-color: rgb(90 178 165 / 62%);
+}
+.request-test__hint {
+  min-height: 15px;
+  margin: 4px 0 0;
+  font-size: 10px;
+  line-height: 15px;
+  color: rgb(255 255 255 / 40%);
+  overflow-wrap: anywhere;
+}
+.request-test__hint.is-error {
+  color: #e16e6e;
+}
+
+/** 数据过滤标题与操作按钮同排；说明文字保持 10px 两行并随面板宽度自然换行。 */
+.data-filter__header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 26px;
+}
+.data-filter__header .panel-title {
+  min-width: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.data-filter__header .scene-edit-right-data-panel__header-action {
+  flex: 0 0 auto;
+  min-width: 94px;
+}
+.data-filter__hint {
+  margin-top: 12px;
+  font-size: 10px;
+  line-height: 16px;
+  color: rgb(255 255 255 / 40%);
+  overflow-wrap: anywhere;
+}
+.request-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  height: 32px;
+  padding: 0 12px;
+  color: var(--scene-edit-success);
+  background: rgb(48 209 88 / 14%);
+  border-radius: 999px;
+}
+.request-preview {
+  min-height: 32px;
+  padding: 7px 10px;
+  color: var(--scene-edit-text);
+  word-break: break-all;
+  background: rgb(255 255 255 / 6%);
+  border: 1px solid var(--scene-edit-line);
+  border-radius: 8px;
+}
+.request-actions,
+.dataset-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.request-actions--wrap,
+.dataset-row {
+  flex-wrap: wrap;
+}
+.scene-edit-dataset-property-chip {
+  color: var(--scene-edit-text);
+  background: rgb(59 130 246 / 14%);
+  border: 1px solid rgb(96 165 250 / 24%);
+}
+.mapping-status {
+  color: var(--scene-edit-text-2);
+}
+.mapping-status.is-success {
+  color: #4fd0b2;
+}
+.mapping-status.is-warning {
+  color: #f3b86b;
+}
+.error-text {
+  color: #ff8a8a;
+}
+:deep(.is-error .el-textarea__inner) {
+  border-color: #ff8a8a;
+  box-shadow: 0 0 0 1px rgb(255 138 138 / 22%) inset;
+}
+
+/** 右侧面板收窄时只压缩摘要标签列，值列继续占满剩余空间，禁止出现横向滚动。 */
+/* stylelint-disable-next-line scss/at-rule-no-unknown -- 插值后输出浏览器标准容器查询。 */
+@#{'container'} scene-right-panel (width <= 340px) {
+  .request-summary__row,
+  .public-request__row {
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  /** 窄栏仍保持三按钮同排，只压缩文字内边距，防止按钮组撑出横向滚动条。 */
+  .scene-edit-right-data-panel
+    .public-request__action.scene-edit-property-button:not(.is-link, .is-text) {
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+}

@@ -1,0 +1,5 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Figma 未发布场景卡片的 Publish 图标：仅保留纸飞机轮廓，不显示取消发布斜杠。 -->
+  <path d="M17.9167 2.08301L12.375 17.9163L9.20837 10.7913L2.08337 7.62467L17.9167 2.08301Z" stroke="currentColor" stroke-width="1.66667" stroke-linejoin="round"/>
+  <path d="M17.9167 2.08301L9.20837 10.7913" stroke="currentColor" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

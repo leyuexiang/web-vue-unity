@@ -1,0 +1,2056 @@
+/**
+ * 右侧属性面板共享控件层。
+ *
+ * 设计依据：Figma 节点 1:879、1:929、1:968、1:3421。
+ * 所有规则都以 scene-edit-right-panel 或明确的共享组件类为作用域，统一输入框、滑块、开关、
+ * 单选按钮和颜色选择器的外观，但绝不读取 SceneStore、调用 CommandBus 或改变各面板的业务事件。
+ */
+.scene-edit-right-panel .el-input__wrapper,
+.scene-edit-right-panel .el-select__wrapper,
+.scene-edit-property-select .el-select__wrapper,
+.scene-edit-property-number-input .el-input__wrapper {
+  /** 标准输入框：32px 高、#131C26 底色、14% 白色描边与左侧数值基线。 */
+  min-height: 32px;
+  padding: 3px 8px;
+  background: #131c26 !important;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 14%) !important;
+}
+.scene-edit-right-panel .el-input__wrapper:hover,
+.scene-edit-right-panel .el-select__wrapper:hover,
+.scene-edit-property-select .el-select__wrapper:hover,
+.scene-edit-property-number-input .el-input__wrapper:hover {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 24%) !important;
+}
+.scene-edit-right-panel .el-input__wrapper.is-focus,
+.scene-edit-right-panel .el-select__wrapper.is-focused,
+.scene-edit-property-select .el-select__wrapper.is-focused,
+.scene-edit-right-panel .el-input-number.is-focus .el-input__wrapper,
+.scene-edit-property-number-input.is-focus .el-input__wrapper {
+  box-shadow:
+    inset 0 0 0 1px #5ab2a5,
+    0 0 0 2px rgb(90 178 165 / 14%) !important;
+}
+.scene-edit-right-panel .el-input__inner,
+.scene-edit-right-panel .el-select__selected-item,
+.scene-edit-property-select .el-select__selected-item,
+.scene-edit-property-number-input .el-input__inner {
+  font-size: 13px;
+  color: rgb(255 255 255 / 80%);
+}
+
+/**
+ * 属性面板中的数字字段按 Figma 采用纯输入框，不显示 Element Plus 默认的增减按钮。
+ * 旧配置项曾使用 el-input-number 的默认按钮；在 300px 窄面板中按钮会占据左侧并
+ * 以白色块形式溢出，导致输入值整体右移。共享数字控件已关闭按钮，这里继续覆盖旧字段，
+ * 保证所有相同类型的数字属性获得一致外观；数值仍可直接键盘输入，不改变业务校验。
+ */
+.scene-edit-right-panel .el-input-number__decrease,
+.scene-edit-right-panel .el-input-number__increase {
+  display: none !important;
+}
+.scene-edit-right-panel .el-input-number,
+.scene-edit-right-panel .el-input-number .el-input {
+  width: 100%;
+  min-width: 0;
+}
+
+/** 日期时间选择器与普通输入框共用 32px 高度和深色底色；日期弹层仍由 Element Plus 负责传送。 */
+.scene-edit-property-date-picker {
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0;
+}
+.scene-edit-property-date-picker .el-input__wrapper {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-date-picker .el-input__inner {
+  min-width: 0;
+  text-align: left;
+}
+
+/**
+ * Figma 属性面板按钮共享基线：默认 32px 高、2px 圆角、透明深色底和青绿色主色。
+ * 仅限定右侧属性配置入口，按钮宽度仍由内容、w-full 或共享组件 width 属性决定，适配可变面板宽度。
+ */
+.scene-edit-property-button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 32px;
+  font-size: 12px;
+  line-height: 20px;
+  border-radius: 2px;
+}
+
+/**
+ * Element Plus 会给相邻按钮自动增加 12px 左外边距；共享属性控件统一使用父级 gap 排版，
+ * 若保留该外边距会让动画网格、映射行和窄面板操作区重复计距并产生横向溢出。
+ */
+.scene-edit-property-button + .scene-edit-property-button {
+  margin-left: 0;
+}
+
+/**
+ * Figma 的纯图标按钮只显示矢量图形，不具有按钮底板。
+ * Element Plus 的文本按钮在静态、悬浮、聚焦和按下状态都会注入圆形背景；通过共享变体
+ * 一次清除背景、描边、阴影和缩放，状态页的新增、编辑、删除按钮无需分别覆盖主题。
+ */
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text:hover,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text:focus,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text:focus-visible,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text:active {
+  padding: 0;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0;
+  box-shadow: none !important;
+  transform: none;
+}
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text::before,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text::after {
+  display: none;
+}
+
+/**
+ * 纯图标按钮沿用编辑器工具栏的主色反馈。Element Plus 的文本按钮悬浮色优先级较高，
+ * 因此在共享变体上统一覆盖悬浮、键盘聚焦和按下态，并让内部图标继承同一颜色。
+ */
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text:hover,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text:focus,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text:focus-visible,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text:active {
+  color: #5ab2a5 !important;
+}
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text > span,
+.scene-edit-property-button.scene-edit-property-button--bare-icon.el-button.is-text .el-icon {
+  color: inherit;
+}
+
+/**
+ * 属性弹窗共享宽度基线：业务层提供设计宽度，最终宽度始终扣除视口两侧 16px 安全边距。
+ * Element Plus 会把 width 写入弹窗行内样式，因此这里使用 !important 让共享变量成为唯一尺寸入口；
+ * 弹窗内容仍可在自身滚动区内滚动，不会把编辑器页面撑出横向滚动条。
+ */
+.scene-edit-property-dialog {
+  box-sizing: border-box;
+  width: min(var(--scene-edit-property-dialog-width, 720px), calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px);
+
+  /** 属性弹窗内部的业务网格按弹窗实际宽度切换，不依赖浏览器窗口宽度。 */
+  container-name: scene-property-dialog;
+  container-type: inline-size;
+}
+.scene-edit-property-dialog .el-dialog__header,
+.scene-edit-property-dialog .el-dialog__body,
+.scene-edit-property-dialog .el-dialog__footer {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/**
+ * 属性抽屉共享尺寸基线：横向抽屉保留现有 24px 页面边距，纵向抽屉扣除 52px 顶栏高度。
+ * 业务层只声明期望尺寸，窄视口下由共享外壳自动收缩，避免 400px 固定抽屉超出窗口。
+ */
+.scene-edit-property-drawer.rtl,
+.scene-edit-property-drawer.ltr {
+  width: min(var(--scene-edit-property-drawer-size, 400px), calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px);
+}
+.scene-edit-property-drawer.ttb,
+.scene-edit-property-drawer.btt {
+  width: 100% !important;
+  height: min(var(--scene-edit-property-drawer-size, 400px), calc(100vh - 52px)) !important;
+  max-height: calc(100vh - 52px);
+}
+.scene-edit-property-drawer .el-drawer__header,
+.scene-edit-property-drawer .el-drawer__body,
+.scene-edit-property-drawer .el-drawer__footer {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.scene-edit-property-button:not(.is-link, .is-text) {
+  color: rgb(255 255 255 / 80%);
+  background: #131c26;
+  border-color: rgb(255 255 255 / 20%);
+}
+.scene-edit-property-button:not(.is-link, .is-text):hover,
+.scene-edit-property-button:not(.is-link, .is-text):focus-visible {
+  color: #ffffff;
+  background: rgb(90 178 165 / 18%);
+  border-color: #5ab2a5;
+}
+.scene-edit-property-button.el-button--primary {
+  color: #ffffff;
+  background: #5ab2a5;
+  border-color: #5ab2a5;
+}
+.scene-edit-property-button.el-button--primary:hover,
+.scene-edit-property-button.el-button--primary:focus-visible {
+  background: #69c2b5;
+  border-color: #69c2b5;
+}
+
+/**
+ * 属性按钮在弹窗和抽屉中仍应保持共享的 2px 矩形形态。
+ * 历史编辑器主题对所有弹窗按钮设置了 999px 圆角和按下缩放；使用更具体的共享控件选择器抵消它，
+ * 只影响已经迁移到 ScenePropertyButton 的按钮，不改变尚未迁移的旧业务按钮。
+ */
+.scene-edit-dialog .scene-edit-property-button.el-button,
+.scene-edit-drawer .scene-edit-property-button.el-button {
+  border-radius: 2px;
+  transform: none;
+}
+.scene-edit-dialog .scene-edit-property-button.el-button:not(.is-link, .is-text),
+.scene-edit-drawer .scene-edit-property-button.el-button:not(.is-link, .is-text) {
+  color: rgb(255 255 255 / 80%);
+  background: #131c26;
+  border-color: rgb(255 255 255 / 20%);
+}
+.scene-edit-dialog .scene-edit-property-button.el-button--primary,
+.scene-edit-drawer .scene-edit-property-button.el-button--primary {
+  color: #ffffff;
+  background: #5ab2a5;
+  border-color: #5ab2a5;
+}
+.scene-edit-dialog .scene-edit-property-button.el-button:not(.is-link, .is-text):hover,
+.scene-edit-dialog .scene-edit-property-button.el-button:not(.is-link, .is-text):focus-visible,
+.scene-edit-drawer .scene-edit-property-button.el-button:not(.is-link, .is-text):hover,
+.scene-edit-drawer .scene-edit-property-button.el-button:not(.is-link, .is-text):focus-visible {
+  color: #ffffff;
+  background: rgb(90 178 165 / 18%);
+  border-color: #5ab2a5;
+}
+.scene-edit-dialog .scene-edit-property-button.el-button:active,
+.scene-edit-drawer .scene-edit-property-button.el-button:active {
+  transform: none;
+}
+
+/**
+ * 共享输入控件可能被弹窗传送到 body，无法继续依赖右侧面板祖先选择器。
+ * 以下规则按共享组件自身类恢复 #131C26、32px 和 14% 白色描边，既覆盖旧弹窗主题的 !important，
+ * 又不会波及普通 Element Plus 输入框或日期、颜色等具有独立语义的控件。
+ */
+body.scene-edit-route-open .scene-edit-property-input:not(.is-textarea) .el-input__wrapper,
+body.scene-edit-route-open .scene-edit-property-select .el-select__wrapper,
+body.scene-edit-route-open .scene-edit-property-number-input .el-input__wrapper {
+  min-height: 32px;
+  padding: 3px 8px;
+  color: rgb(255 255 255 / 80%) !important;
+  background: #131c26 !important;
+  border-color: rgb(255 255 255 / 14%) !important;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 14%) !important;
+}
+body.scene-edit-route-open .scene-edit-property-input.is-textarea .el-textarea__inner {
+  padding: 8px;
+  color: rgb(255 255 255 / 80%) !important;
+  background: #131c26 !important;
+  border: 1px solid rgb(255 255 255 / 14%) !important;
+  border-radius: 2px;
+  box-shadow: none !important;
+}
+
+/**
+ * ScenePropertySwitch 的正式视觉不能依赖右侧面板祖先，否则传送后的弹窗会回退成旧蓝色开关。
+ * 这里只提升共享开关自身的样式；未迁移的普通 el-switch 仍由原面板兼容规则处理。
+ */
+.scene-edit-property-switch {
+  --el-switch-on-color: #5ab2a5;
+  --el-switch-off-color: #4d4d4d;
+  --el-switch-width: 28px;
+  --el-switch-height: 16px;
+
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 16px !important;
+}
+.scene-edit-property-switch .el-switch__core {
+  box-sizing: border-box;
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 16px !important;
+  background: #4d4d4d !important;
+  border-color: #4d4d4d !important;
+  border-radius: 8px !important;
+}
+.scene-edit-property-switch.is-checked .el-switch__core {
+  background: #5ab2a5 !important;
+  border-color: #5ab2a5 !important;
+}
+.scene-edit-property-switch .el-switch__action {
+  left: 1px !important;
+  width: 12px !important;
+  height: 12px !important;
+  box-shadow: 0 2px 2px rgb(0 35 11 / 20%);
+}
+.scene-edit-property-switch.is-checked .el-switch__core .el-switch__action {
+  left: calc(100% - 13px) !important;
+}
+
+/**
+ * 配置表格共享基线：表格本身始终收缩到父容器宽度，列定义仍可由弹窗按业务设置固定宽度。
+ * 颜色和分隔线沿用 Figma 属性区令牌，避免右侧面板收窄时出现横向撑破或亮色默认表头。
+ */
+.scene-edit-property-table {
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0;
+  color: rgb(255 255 255 / 70%);
+  background: #131c26;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 2px;
+
+  --el-table-border-color: rgb(255 255 255 / 10%);
+  --el-table-header-bg-color: #1d2a35;
+  --el-table-tr-bg-color: #131c26;
+  --el-table-row-hover-bg-color: rgb(90 178 165 / 10%);
+  --el-table-text-color: rgb(255 255 255 / 70%);
+  --el-table-header-text-color: rgb(255 255 255 / 60%);
+}
+.scene-edit-property-table .el-table__inner-wrapper::before {
+  display: none;
+}
+.scene-edit-property-table .el-table__header-wrapper th.el-table__cell,
+.scene-edit-property-table .el-table__body-wrapper td.el-table__cell {
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-bottom-color: rgb(255 255 255 / 10%);
+}
+.scene-edit-property-table .el-table__header-wrapper th.el-table__cell {
+  font-size: 12px;
+  font-weight: 500;
+  background: #1d2a35;
+}
+.scene-edit-property-table .el-table__body-wrapper td.el-table__cell {
+  font-size: 12px;
+  background: #131c26;
+}
+
+/**
+ * Figma“属性映射列表”的完整共享组件基线。
+ * 基准内容宽度为 292px：标签列不再放置拖拽点阵，释放的 16px 空间并入字段输入区；
+ * 面板变宽时让映射和状态列继续吸收新增空间，避免可调宽面板破坏列对齐。
+ */
+.scene-edit-property-mapping-list {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: rgb(255 255 255 / 70%);
+  background: transparent;
+}
+.scene-edit-property-mapping-list__section-header {
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  height: 21px;
+  padding: 0;
+  margin: 0 0 12px;
+  overflow: hidden;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 21px;
+  color: rgb(255 255 255 / 92%);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.scene-edit-property-mapping-list__section-header:disabled {
+  cursor: default;
+}
+.scene-edit-property-mapping-list__section-header > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scene-edit-property-mapping-list__section-header .scene-edit-collapse-icon {
+  color: rgb(255 255 255 / 54%);
+  transform: rotate(-90deg);
+  transition: transform 120ms ease-out;
+}
+.scene-edit-property-mapping-list__section-header .scene-edit-collapse-icon.is-expanded {
+  transform: rotate(0deg);
+}
+.scene-edit-property-mapping-list__content {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-mapping-list__head,
+.scene-edit-property-mapping-list__row {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(80px, 88px) minmax(80px, 1fr) minmax(80px, 1fr);
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+.scene-edit-property-mapping-list.has-actions .scene-edit-property-mapping-list__head,
+.scene-edit-property-mapping-list.has-actions .scene-edit-property-mapping-list__row {
+  grid-template-columns:
+    minmax(80px, 88px) minmax(70px, 1.25fr) minmax(54px, 0.9fr)
+    minmax(28px, 44px);
+}
+.scene-edit-property-mapping-list__head {
+  min-height: 31px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 12px;
+  line-height: 18px;
+  color: rgb(255 255 255 / 54%);
+  background: #131c26;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+.scene-edit-property-mapping-list__head > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scene-edit-property-mapping-list__body {
+  min-width: 0;
+}
+.scene-edit-property-mapping-list__row {
+  min-height: 45px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(255 255 255 / 5%);
+}
+.scene-edit-property-mapping-list__label,
+.scene-edit-property-mapping-list__control,
+.scene-edit-property-mapping-list__status,
+.scene-edit-property-mapping-list__action {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.scene-edit-property-mapping-list__label {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 18px;
+  color: rgb(255 255 255 / 70%);
+  white-space: nowrap;
+}
+.scene-edit-property-mapping-list__control {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.scene-edit-property-mapping-list__control > .scene-edit-property-select,
+.scene-edit-property-mapping-list__control > .scene-edit-property-input,
+.scene-edit-property-mapping-list__control > .scene-edit-property-number-input {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-mapping-list__status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgb(255 255 255 / 70%);
+  white-space: nowrap;
+}
+.scene-edit-property-mapping-list__status-display {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 3px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+  background: #131c26;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 2px;
+}
+.scene-edit-property-mapping-list__status-display > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scene-edit-property-mapping-list .el-select__wrapper,
+.scene-edit-property-mapping-list .el-input__wrapper {
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+.scene-edit-property-mapping-list .el-select__selected-item,
+.scene-edit-property-mapping-list .el-input__inner {
+  height: 18px;
+  font-size: 12px;
+  line-height: 18px;
+}
+.scene-edit-property-mapping-list__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scene-edit-property-mapping-list__remove.scene-edit-property-button.is-text {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  color: rgb(255 255 255 / 54%);
+  background: transparent;
+  border: 0;
+  border-radius: 2px;
+}
+.scene-edit-property-mapping-list__remove.scene-edit-property-button.is-text .el-icon {
+  width: 12px;
+  height: 12px;
+  font-size: 12px;
+}
+.scene-edit-property-mapping-list__remove.scene-edit-property-button.is-text:hover,
+.scene-edit-property-mapping-list__remove.scene-edit-property-button.is-text:focus-visible {
+  color: #5ab2a5;
+}
+.scene-edit-property-mapping-list__add.scene-edit-property-button.is-text {
+  width: 100%;
+  min-height: 24px;
+  padding: 2px 8px;
+  margin-top: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: rgb(90 178 165 / 76%);
+  background: transparent;
+  border: 1px dashed rgb(255 255 255 / 14%);
+  border-radius: 2px;
+}
+.scene-edit-property-mapping-list__add.scene-edit-property-button.is-text:hover,
+.scene-edit-property-mapping-list__add.scene-edit-property-button.is-text:focus-visible {
+  color: #5ab2a5;
+  background: rgb(90 178 165 / 6%);
+  border-color: rgb(90 178 165 / 42%);
+}
+
+/**
+ * 状态/事件列表共享基线：状态点、名称、操作区始终保持三列，名称列使用 minmax(0, 1fr)
+ * 吸收可变宽度，避免右侧面板收窄时把编辑器整体撑出横向滚动条。
+ */
+.scene-edit-property-state-list {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+/**
+ * Figma 状态页使用无卡片的平面列表。业务面板通过该共享变体启用视觉规则，
+ * 状态数组、编辑抽屉和删除命令仍由调用方持有，不在共享组件中复制状态源。
+ */
+.scene-edit-property-state-list--flat {
+  gap: 0;
+}
+.scene-edit-property-state-list--flat .scene-edit-property-state-list__row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  min-height: 35px;
+  padding: 8px 0;
+  color: rgb(255 255 255 / 80%);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.scene-edit-property-state-list--flat .scene-edit-property-state-list__row:hover {
+  background: transparent;
+  border-color: transparent;
+}
+.scene-edit-property-state-list--flat .scene-edit-property-state-list__label {
+  font-size: 13px;
+  line-height: 19px;
+}
+.scene-edit-property-state-list--flat .scene-edit-property-state-list__actions {
+  gap: 12px;
+}
+.scene-edit-property-state-list--flat
+  .scene-edit-property-state-list__actions
+  > .scene-edit-property-button {
+  flex: 0 0 14px;
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+  min-height: 14px;
+  padding: 0;
+  color: rgb(255 255 255 / 80%);
+}
+.scene-edit-property-state-list--flat
+  .scene-edit-property-state-list__actions
+  > .scene-edit-property-button
+  .el-icon {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+}
+.scene-edit-property-state-list--flat
+  .scene-edit-property-state-list__actions
+  > .scene-edit-property-button:hover,
+.scene-edit-property-state-list--flat
+  .scene-edit-property-state-list__actions
+  > .scene-edit-property-button:focus-visible,
+.scene-edit-property-state-list--flat
+  .scene-edit-property-state-list__actions
+  > .scene-edit-property-button:active {
+  color: #5ab2a5;
+}
+.scene-edit-property-state-list__row {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 8px;
+  color: rgb(255 255 255 / 78%);
+  background: #1d2a35;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 2px;
+}
+.scene-edit-property-state-list__row:hover {
+  background: rgb(90 178 165 / 8%);
+  border-color: rgb(90 178 165 / 45%);
+}
+.scene-edit-property-state-list__status,
+.scene-edit-property-state-list__label,
+.scene-edit-property-state-list__actions {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.scene-edit-property-state-list__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scene-edit-property-state-list__status-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: #4d4d4d;
+  border: 1px solid rgb(255 255 255 / 26%);
+  border-radius: 50%;
+}
+.scene-edit-property-state-list__status-dot.is-active {
+  background: #5ab2a5;
+  border-color: #5ab2a5;
+  box-shadow: 0 0 0 2px rgb(90 178 165 / 16%);
+}
+.scene-edit-property-state-list__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.scene-edit-property-state-list__actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.scene-edit-property-state-list__actions > .scene-edit-property-button {
+  flex: 0 0 28px;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+}
+
+/* stylelint-disable-next-line scss/at-rule-no-unknown -- 插值后的构建产物是浏览器标准 @container。 */
+@#{'container'} scene-right-panel (width <= 340px) {
+  /** 窄面板仅收紧内边距和列间距，保留操作按钮的可点击尺寸。 */
+  .scene-edit-property-state-list__row {
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+    gap: 4px;
+    padding: 4px 6px;
+  }
+}
+
+/**
+ * 多图缩略图列表共享基线：44px 上传预览、可收缩地址输入和 28px 删除动作组成三列。
+ * 列定义只固定可点击控件，中间输入使用 minmax(0, 1fr)，适配 300–400px 可变属性面板。
+ */
+.scene-edit-property-thumbnail-list {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-thumbnail-list__row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 28px;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-thumbnail-list__row > .scene-edit-property-input {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-thumbnail-list__remove {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+}
+.scene-edit-property-thumbnail-list__add {
+  align-self: flex-start;
+  max-width: 100%;
+}
+.scene-edit-property-thumbnail-list__limit {
+  margin: -2px 0 0;
+  font-size: 11px;
+  line-height: 18px;
+  color: rgb(255 255 255 / 45%);
+}
+
+/* stylelint-disable-next-line scss/at-rule-no-unknown -- 插值后的构建产物是浏览器标准 @container。 */
+@#{'container'} scene-right-panel (width <= 340px) {
+  /** 窄面板缩小列间距，不压缩 Figma 规定的 44px 缩略图。 */
+  .scene-edit-property-thumbnail-list__row {
+    gap: 4px;
+  }
+}
+
+/** 单选组共享布局：子按钮继承 32px 高度与属性面板青绿色选中态，宽度由调用方布局决定。 */
+.scene-edit-property-radio-group {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-radio-group .el-radio-button {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.scene-edit-property-radio-group .el-radio-button__inner {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 10px;
+  color: rgb(255 255 255 / 70%);
+  background: #131c26;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.scene-edit-property-radio-group .el-radio-button:first-child .el-radio-button__inner {
+  border-left: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 2px;
+}
+.scene-edit-property-radio-group .el-radio-button.is-active .el-radio-button__inner {
+  color: #ffffff;
+  background: #5ab2a5;
+  border-color: #5ab2a5;
+  box-shadow: none;
+}
+
+/**
+ * 页签变体只由需要对齐天气快捷项的业务显式挂载，避免改变其他单选组原有的深色实心按钮。
+ * 植被规则类型使用三等分布局；固定高度、截断和状态过渡保证窄右栏中不会因文案变化抖动。
+ */
+.scene-edit-property-radio-group--tabs {
+  gap: 4px;
+}
+.scene-edit-property-radio-group--tabs .el-radio-button__inner {
+  height: 32px;
+  padding: 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 30px;
+  color: rgb(255 255 255 / 60%);
+  white-space: nowrap;
+  background: transparent;
+  border-color: var(--scene-edit-line);
+  transition:
+    color 120ms ease-out,
+    background-color 120ms ease-out,
+    border-color 120ms ease-out,
+    box-shadow 120ms ease-out;
+}
+.scene-edit-property-radio-group--tabs .el-radio-button:first-child .el-radio-button__inner {
+  border-left-color: var(--scene-edit-line);
+}
+.scene-edit-property-radio-group--tabs .el-radio-button:hover .el-radio-button__inner,
+.scene-edit-property-radio-group--tabs .el-radio-button:focus-within .el-radio-button__inner {
+  color: var(--scene-edit-text);
+  background: rgb(255 255 255 / 6%);
+  border-color: rgb(255 255 255 / 24%);
+}
+.scene-edit-property-radio-group--tabs .el-radio-button:focus-within .el-radio-button__inner {
+  box-shadow: 0 0 0 2px rgb(90 178 165 / 28%);
+}
+.scene-edit-property-radio-group--tabs .el-radio-button.is-active .el-radio-button__inner {
+  z-index: 1;
+  color: #5ab2a5;
+  background: rgb(90 178 165 / 14%);
+  border-color: #5ab2a5;
+  box-shadow: none;
+}
+.scene-edit-property-radio-group--tabs .el-radio-button.is-active:hover .el-radio-button__inner,
+.scene-edit-property-radio-group--tabs
+  .el-radio-button.is-active:focus-within
+  .el-radio-button__inner {
+  color: #6ac2b5;
+  background: rgb(90 178 165 / 20%);
+  border-color: #6ac2b5;
+}
+.scene-edit-property-radio-group--tabs .el-radio-button.is-disabled .el-radio-button__inner {
+  color: rgb(255 255 255 / 21%);
+  background: transparent;
+  border-color: rgb(255 255 255 / 5%);
+  opacity: 1;
+}
+
+/**
+ * 共享单选组也允许使用普通圆点单选项，正文类型等紧凑枚举不应被强制渲染为按钮组。
+ * 旧弹窗主题会把选中圆点改成蓝色；以下规则仅作用于 ScenePropertyRadioGroup 内部，
+ * 统一绿色选中态、14px 圆点和可换行间距，不影响未迁移的普通 Element Plus 单选框。
+ */
+body.scene-edit-route-open .scene-edit-property-radio-group .el-radio {
+  height: 32px;
+  margin-right: 0;
+  color: rgb(255 255 255 / 60%);
+}
+body.scene-edit-route-open .scene-edit-property-radio-group .el-radio__input {
+  display: inline-flex;
+  align-items: center;
+}
+body.scene-edit-route-open .scene-edit-property-radio-group .el-radio__inner {
+  width: 14px;
+  height: 14px;
+  background: #131c26 !important;
+  border-color: rgb(255 255 255 / 32%) !important;
+}
+body.scene-edit-route-open
+  .scene-edit-property-radio-group
+  .el-radio__input.is-checked
+  .el-radio__inner {
+  background: #5ab2a5 !important;
+  border-color: #5ab2a5 !important;
+}
+body.scene-edit-route-open
+  .scene-edit-property-radio-group
+  .el-radio__input.is-checked
+  + .el-radio__label {
+  color: #5ab2a5;
+}
+body.scene-edit-route-open .scene-edit-property-radio-group .el-radio__label {
+  padding-left: 6px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/**
+ * 共享下拉框的布局入口：所有下拉框固定 32px 高并复用上面的 Element Plus 外观；
+ * 宽度默认为填满父容器，GIS 等宽字段或图表标题等窄字段通过 ScenePropertySelect 的 width
+ * 属性覆盖，禁止在各业务面板复制一套高度和边框规则。
+ */
+.scene-edit-property-select {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  vertical-align: middle;
+}
+.scene-edit-property-select .el-select__wrapper {
+  box-sizing: border-box;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  min-height: 32px;
+
+  /**
+   * Element Plus 下拉框默认使用 6px 间距，而输入框前缀使用 8px；统一为设计稿的 8px，
+   * 使“方向 / 位置”等语义前缀与后方值保持一致的视觉节奏。
+   */
+}
+.scene-edit-right-panel .el-input-number .el-input__inner,
+.scene-edit-property-number-input .el-input__inner {
+  font-family: Roboto, Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: left !important;
+}
+
+/**
+ * Figma 属性面板的普通文本输入共享入口。
+ * 单行字段固定 32px 高，多行字段由 type="textarea" 切换为独立的文本区域规则；两种形态都以 width: 100% 为默认，
+ * 只允许调用方通过共享组件的 width 或外部布局传入语义宽度，避免右侧面板拖动后出现固定宽度溢出。
+ */
+.scene-edit-property-input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+}
+.scene-edit-property-input__control {
+  display: block;
+  width: 100%;
+}
+.scene-edit-property-input:not(.is-textarea) .el-input,
+.scene-edit-property-input:not(.is-textarea) .el-input__wrapper {
+  box-sizing: border-box;
+  height: 32px;
+}
+.scene-edit-property-input:not(.is-textarea) .el-input__inner {
+  text-align: left !important;
+}
+.scene-edit-property-input.is-textarea .el-textarea {
+  display: block;
+  width: 100%;
+}
+.scene-edit-property-input.is-textarea .el-textarea__inner {
+  box-sizing: border-box;
+  min-height: 70px;
+  padding: 8px;
+  font-size: 13px;
+  line-height: 18px;
+  color: rgb(255 255 255 / 80%);
+  resize: vertical;
+
+  /** 多行字段使用浏览器原生滚动容器，需在共享入口统一深色滚动条，避免各业务页出现系统白条。 */
+  scrollbar-color: rgb(90 178 165 / 58%) #18232d;
+  scrollbar-width: thin;
+  background: #131c26 !important;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.scene-edit-property-input.is-textarea .el-textarea__inner::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scene-edit-property-input.is-textarea .el-textarea__inner::-webkit-scrollbar-track {
+  background: #18232d;
+}
+.scene-edit-property-input.is-textarea .el-textarea__inner::-webkit-scrollbar-thumb {
+  background: rgb(90 178 165 / 58%);
+  border: 2px solid #18232d;
+  border-radius: 4px;
+}
+.scene-edit-property-input.is-textarea .el-textarea__inner::-webkit-scrollbar-thumb:hover {
+  background: rgb(90 178 165 / 78%);
+}
+.scene-edit-property-input.is-textarea .el-textarea__inner:hover {
+  border-color: rgb(255 255 255 / 24%);
+}
+.scene-edit-property-input.is-textarea .el-textarea__inner:focus {
+  border-color: #5ab2a5;
+  box-shadow: 0 0 0 2px rgb(90 178 165 / 14%);
+}
+.scene-edit-property-input.is-error .el-input__wrapper,
+.scene-edit-property-input.is-error .el-textarea__inner {
+  border-color: #e16e6e !important;
+  box-shadow: inset 0 0 0 1px #e16e6e !important;
+}
+.scene-edit-property-input__error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: #e16e6e;
+}
+
+/**
+ * Figma 右侧属性面板的纯数字输入框共享入口。
+ * 天气、场景、对象和二维组件只负责传递数值范围及业务回调；根类负责统一宽度，
+ * 其内部 Element Plus 节点复用上面的 32px 控件基线、左对齐数值和交互状态。
+ */
+.scene-edit-property-number-input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 32px;
+}
+.scene-edit-property-number-input .el-input,
+.scene-edit-property-number-input .el-input-number .el-input__wrapper {
+  box-sizing: border-box;
+  height: 32px;
+}
+.scene-edit-property-number-input .el-input-number .el-input__wrapper {
+  /**
+   * Element Plus 即使关闭增减按钮，仍会给数字输入框保留左右 42px 控件空间。
+   * 使用高于组件库默认规则的共享选择器恢复 8px 内边距，确保数字、文本、下拉三类控件
+   * 的语义前缀都从同一条左侧基线开始；只影响布局，不改变数值输入和校验行为。
+   */
+  padding: 3px 8px;
+}
+.scene-edit-property-number-input__control {
+  display: block;
+  width: 100%;
+}
+.scene-edit-property-number-input__prefix {
+  /** Element Plus 已为输入框前缀最后一项提供 8px 间距，禁止再次叠加造成数值整体右移。 */
+  margin-right: 0;
+  color: rgb(255 255 255 / 45%);
+  white-space: nowrap;
+}
+
+/**
+ * 三类共享字段的前缀容器统一从控件 8px 内边距起排，且不再引入额外左边距。
+ * 这里覆盖的是“字号 / 位置 / 方向”等常驻语义文字，不处理输入值和占位文本。
+ */
+.scene-edit-property-input .el-input__prefix,
+.scene-edit-property-number-input .el-input__prefix,
+.scene-edit-property-select .el-select__prefix {
+  flex: 0 0 auto;
+  padding: 0;
+  margin: 0;
+}
+.scene-edit-property-input .el-input__prefix-inner,
+.scene-edit-property-number-input .el-input__prefix-inner,
+.scene-edit-property-select .el-select__prefix {
+  align-items: center;
+  justify-content: flex-start;
+}
+.scene-edit-property-number-input__error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: #e16e6e;
+}
+.scene-edit-property-number-input.is-error .el-input__wrapper {
+  box-shadow: inset 0 0 0 1px #e16e6e !important;
+}
+
+/**
+ * 属性搜索框共享基线：复用普通输入的底色、描边和聚焦态，只补充 Figma 指定的 16px 搜索图标。
+ * 外壳和输入均允许收缩，确保属性面板在 300–400px 之间拖动时不会出现固定宽度溢出。
+ */
+.scene-edit-property-search {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+}
+.scene-edit-property-search__input {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-search__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  color: rgb(255 255 255 / 45%);
+}
+.scene-edit-property-search .el-input__prefix-inner {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+/**
+ * Figma“富文本框”复合块：标题、文本区、操作区和错误提示由公共层统一。
+ * 所有子项都允许收缩，按钮区使用自动换行，保证右栏在 300–400px 拖动区间内不会横向溢出。
+ */
+.scene-edit-property-rich-text-block {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-rich-text-block__header {
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  height: 21px;
+  padding: 0;
+  margin-bottom: 12px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.scene-edit-property-rich-text-block__header:disabled {
+  cursor: default;
+}
+.scene-edit-property-rich-text-block__header .scene-edit-collapse-icon {
+  color: rgb(255 255 255 / 54%);
+  transform: rotate(-90deg);
+  transition: transform 120ms ease-out;
+}
+.scene-edit-property-rich-text-block__header .scene-edit-collapse-icon.is-expanded {
+  transform: rotate(0deg);
+}
+.scene-edit-property-rich-text-block__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 21px;
+  color: rgb(255 255 255 / 92%);
+  white-space: nowrap;
+}
+.scene-edit-property-rich-text-block__editor {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-rich-text-block__editor .el-textarea__inner {
+  box-sizing: border-box;
+
+  /*
+   * 168px 是共享数据内容框的正式初始高度；静态、数据集、动态请求和公共接口均通过
+   * 同一 CSS 变量覆盖，避免不同请求类型再次出现可视行数不一致。
+   */
+  height: var(--scene-edit-rich-text-editor-height, 168px);
+  min-height: var(--scene-edit-rich-text-editor-height, 168px) !important;
+  padding: 8px 12px;
+  font-family: Roboto, 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 22px;
+  background: #131c26;
+  border-radius: 2px;
+}
+.scene-edit-property-rich-text-block__body {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-rich-text-block__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+  margin-top: 12px;
+}
+.scene-edit-right-panel
+  .scene-edit-property-rich-text-block__actions
+  .scene-edit-property-button:not(.is-link, .is-text) {
+  min-height: 28px;
+  padding: 2px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: rgb(255 255 255 / 92%);
+  background: rgb(90 178 165 / 10%);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 2px;
+}
+.scene-edit-right-panel
+  .scene-edit-property-rich-text-block__actions
+  .scene-edit-property-button:not(.is-link, .is-text):hover,
+.scene-edit-right-panel
+  .scene-edit-property-rich-text-block__actions
+  .scene-edit-property-button:not(.is-link, .is-text):focus-visible {
+  color: #ffffff;
+  background: rgb(90 178 165 / 16%);
+  border-color: rgb(90 178 165 / 50%);
+}
+.scene-edit-property-rich-text-block__error {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: #e16e6e;
+  overflow-wrap: anywhere;
+}
+
+/**
+ * Figma 动画复合板块共享基线。摘要行使用弹性布局，动画选项用自适应网格；
+ * 面板变宽时增加可用列宽，变窄时通过容器查询降为两列，禁止业务面板复制固定像素布局。
+ */
+.scene-edit-property-animation-block {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-animation-block__title {
+  height: 21px;
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 21px;
+  color: #ffffff;
+}
+.scene-edit-property-animation-block__summary {
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 8px;
+  margin-bottom: 0;
+  background: #131c26;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 2px;
+}
+.scene-edit-property-animation-block__summary-label {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: rgb(255 255 255 / 40%);
+}
+.scene-edit-property-animation-block__summary-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  color: rgb(255 255 255 / 80%);
+  text-align: right;
+  white-space: nowrap;
+}
+.scene-edit-property-animation-block__clear {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  height: 20px;
+  min-height: 20px;
+  padding: 0 2px;
+  font-size: 12px;
+  line-height: 20px;
+  color: #5ab2a5;
+}
+.scene-edit-property-animation-block__clear.scene-edit-property-button.is-text:hover,
+.scene-edit-property-animation-block__clear.scene-edit-property-button.is-text:focus-visible {
+  color: #69c2b5;
+  background: rgb(90 178 165 / 10%);
+}
+.scene-edit-property-animation-block__collapse {
+  width: 100%;
+  min-width: 0;
+  margin-top: 24px;
+}
+
+/**
+ * 动画分组采用 Figma 的“分隔线—24px—标题—12px—内容—24px”节奏。
+ * 仅覆盖动画复合块内部的共享折叠组件，不改变图表、标题等其他属性折叠栏。
+ */
+.scene-edit-property-animation-block__collapse .el-collapse-item {
+  border-top: 1px solid rgb(255 255 255 / 10%);
+}
+.scene-edit-property-animation-block__collapse .el-collapse-item__header {
+  height: 69px;
+  padding: 24px 4px 24px 0;
+  font-weight: 500;
+  line-height: 21px;
+  color: #ffffff;
+  border-bottom: 0;
+}
+.scene-edit-property-animation-block__collapse .el-collapse-item__header.is-active {
+  height: 45px;
+  padding-bottom: 0;
+}
+.scene-edit-property-animation-block__collapse .el-collapse-item__content {
+  padding: 12px 0 24px;
+}
+.scene-edit-property-animation-block__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 4px;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-animation-block__option.scene-edit-property-button:not(.is-link, .is-text) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+  padding: 3px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 19px;
+  color: rgb(255 255 255 / 80%);
+  white-space: nowrap;
+  background: #131c26;
+  border-color: rgb(255 255 255 / 14%);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.scene-edit-property-animation-block__option.scene-edit-property-button:not(
+    .is-link,
+    .is-text
+  ):hover,
+.scene-edit-property-animation-block__option.scene-edit-property-button:not(
+    .is-link,
+    .is-text
+  ):focus-visible {
+  color: #ffffff;
+  background: rgb(90 178 165 / 10%);
+  border-color: rgb(90 178 165 / 50%);
+}
+.scene-edit-property-animation-block__option.is-active.scene-edit-property-button:not(
+    .is-link,
+    .is-text
+  ),
+.scene-edit-property-animation-block__option.is-active.scene-edit-property-button:not(
+    .is-link,
+    .is-text
+  ):hover,
+.scene-edit-property-animation-block__option.is-active.scene-edit-property-button:not(
+    .is-link,
+    .is-text
+  ):focus-visible {
+  font-weight: 500;
+  color: rgb(47 151 140 / 80%);
+  background: rgb(90 178 165 / 10%);
+  border-color: rgb(90 178 165 / 50%);
+}
+
+/* stylelint-disable-next-line scss/at-rule-no-unknown -- 插值后的构建产物是浏览器标准 @container。 */
+@#{'container'} scene-right-panel (width <= 300px) {
+  .scene-edit-property-animation-block__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /** 最窄宽度仍保留 Figma 按钮自身宽度；操作区只允许自然换行，不把按钮强制拉成等宽胶囊。 */
+  .scene-edit-property-rich-text-block__actions > * {
+    min-width: 0;
+  }
+}
+
+/**
+ * 数值步进器共享基线：左右按钮固定为 32px，中间数字列使用 minmax(0, 1fr) 吸收剩余宽度。
+ * 三列都沿用属性面板的 2px 圆角和青绿色交互色，禁止业务面板单独复制加减按钮样式。
+ */
+.scene-edit-property-stepper {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+}
+.scene-edit-property-stepper__button {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+}
+.scene-edit-property-stepper__input {
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-stepper__button .el-icon {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+}
+
+/* stylelint-disable-next-line scss/at-rule-no-unknown -- 插值后的构建产物是浏览器标准 @container。 */
+@#{'container'} scene-right-panel (width <= 340px) {
+  /** 300px 面板保留 28px 可点击按钮，把更多空间让给数值文本。 */
+  .scene-edit-property-stepper {
+    grid-template-columns: 28px minmax(0, 1fr) 28px;
+  }
+  .scene-edit-property-stepper__button {
+    width: 28px;
+    min-width: 28px;
+  }
+}
+.scene-edit-right-panel {
+  /**
+   * Figma 节点 1:3421：4px 滑轨、14px 手柄和 #5AB2A5 已完成进度。
+   * ScenePropertySlider 是新代码唯一入口；保留 el-slider 选择器仅为尚未迁移的旧面板提供
+   * 同一视觉契约，迁移完成后可安全删除该兼容分支，禁止再在具体面板覆写颜色。
+   */
+  .scene-edit-property-slider,
+  .el-slider {
+    --el-slider-main-bg-color: #5ab2a5;
+    --el-slider-runway-bg-color: #131c26;
+    --el-slider-button-size: 14px;
+    --el-slider-button-wrapper-size: 24px;
+    --el-slider-button-wrapper-offset: -10px;
+
+    height: 14px;
+  }
+  .scene-edit-property-slider .el-slider__runway,
+  .scene-edit-property-slider .el-slider__bar,
+  .el-slider__runway,
+  .el-slider__bar {
+    height: 4px;
+    border-radius: 10px;
+  }
+  .scene-edit-property-slider .el-slider__runway,
+  .el-slider__runway {
+    background: #131c26 !important;
+  }
+  .scene-edit-property-slider .el-slider__bar,
+  .el-slider__bar {
+    background: #5ab2a5 !important;
+  }
+  .scene-edit-property-slider .el-slider__button,
+  .el-slider__button {
+    width: 14px;
+    height: 14px;
+    background: #ffffff !important;
+    border: 2px solid #5ab2a5 !important;
+    box-shadow: none;
+  }
+  .scene-edit-property-slider .el-slider__button:hover,
+  .scene-edit-property-slider .el-slider__button.hover,
+  .scene-edit-property-slider .el-slider__button.dragging,
+  .el-slider__button:hover,
+  .el-slider__button.hover,
+  .el-slider__button.dragging {
+    transform: none;
+  }
+
+  /**
+   * Figma 节点 1:890 与 1:949：开态绿色、关态 #4D4D4D，轨道 28×16px。
+   * ScenePropertySwitch 统一处理天气与对象布尔字段；el-switch 仅作为未迁移旧字段的过渡样式。
+   */
+  .scene-edit-property-switch,
+  .el-switch {
+    --el-switch-on-color: #5ab2a5;
+    --el-switch-off-color: #4d4d4d;
+    --el-switch-width: 28px;
+    --el-switch-height: 16px;
+
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 16px !important;
+  }
+  .scene-edit-property-switch .el-switch__core,
+  .el-switch__core {
+    box-sizing: border-box;
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 16px !important;
+    background: #4d4d4d !important;
+    border-color: #4d4d4d !important;
+    border-radius: 8px !important;
+  }
+  .scene-edit-property-switch.is-checked .el-switch__core,
+  .el-switch.is-checked .el-switch__core {
+    background: #5ab2a5 !important;
+    border-color: #5ab2a5 !important;
+  }
+  .scene-edit-property-switch .el-switch__action,
+  .el-switch__action {
+    left: 1px !important;
+    width: 12px !important;
+    height: 12px !important;
+    box-shadow: 0 2px 2px rgb(0 35 11 / 20%);
+  }
+  .scene-edit-property-switch.is-checked .el-switch__core .el-switch__action,
+  .el-switch.is-checked .el-switch__core .el-switch__action {
+    left: calc(100% - 13px) !important;
+  }
+
+  /** 单选按钮沿用属性控件的 32px 高度和 2px 圆角，可被天气模式与时间模式共同复用。 */
+  .scene-edit-property-radio-group .el-radio-button__inner {
+    width: 100%;
+    height: 32px;
+    padding: 0 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    line-height: 30px;
+    color: rgb(255 255 255 / 60%);
+    white-space: nowrap;
+    background: #131c26;
+    border-color: rgb(255 255 255 / 14%);
+    border-radius: 2px;
+    box-shadow: none;
+    transition:
+      color 120ms ease-out,
+      background-color 120ms ease-out,
+      border-color 120ms ease-out;
+  }
+  .scene-edit-property-radio-group .el-radio-button.is-active .el-radio-button__inner {
+    color: #ffffff;
+    background: #5ab2a5;
+    border-color: #5ab2a5;
+    box-shadow: none;
+  }
+}
+
+/** Figma 节点 1:929 的通用 X/Y/Z 控件，供对象、相机与光照的本地三维值共用。 */
+.scene-edit-property-vector3-input {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  min-width: 0;
+}
+.scene-edit-property-vector3-input__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 32px;
+}
+.scene-edit-property-vector3-input__axis {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  z-index: 1;
+  display: block;
+  height: auto;
+  font-size: 12px;
+  line-height: normal;
+  color: rgb(255 255 255 / 40%);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.scene-edit-property-vector3-input .el-input-number {
+  display: block;
+  width: 100%;
+}
+.scene-edit-property-vector3-input .el-input__wrapper {
+  display: flex;
+  align-items: center;
+  padding-left: 26px !important;
+}
+.scene-edit-property-vector3-input .el-input__inner {
+  height: 24px;
+  line-height: 24px;
+}
+
+/**
+ * 300px 级窄右栏中，三列坐标输入的单列有效宽度只有约 60px。
+ * 仅压缩共享控件内部的轴前缀和左右留白，不改变三列结构、字段精度或业务值，
+ * 从而让相机、光照和模型位置等所有 X/Y/Z 字段显示更多有效数字。
+ */
+/* stylelint-disable-next-line scss/at-rule-no-unknown -- 插值后的构建产物是浏览器标准 @container。 */
+@#{'container'} scene-right-panel (width <= 340px) {
+  .scene-edit-property-vector3-input__axis {
+    left: 5px;
+    font-size: 11px;
+  }
+  .scene-edit-property-vector3-input .el-input__wrapper {
+    padding-right: 4px !important;
+    padding-left: 16px !important;
+  }
+  .scene-edit-property-vector3-input .el-input__inner {
+    font-size: 11px;
+  }
+}
+
+/**
+ * Figma 共享组件 Down（下）/Vector（节点 1:761）的统一图标。
+ * 使用本地 SVG 作为遮罩（mask），避免依赖 Figma 临时资源地址；遮罩颜色继承父级文字色，
+ * 因而折叠标题、资源分类和手写展开按钮都能保持同一条路径与同一套状态旋转规则。
+ */
+.scene-edit-collapse-icon {
+  display: inline-block;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  mask: url('@/assets/images/scene-editor-collapse.svg') center / 14px 14px no-repeat;
+}
+
+/**
+ * Element Plus 折叠面板的内置箭头全部换成 Figma 路径。
+ * Element Plus 默认折叠态向右、展开态向下，因此仅覆盖图形与旋转，不触碰 v-model 和过渡逻辑。
+ */
+.scene-edit-property-content .el-collapse-item__arrow,
+.scene-edit-property-collapse .el-collapse-item__arrow,
+.scene-edit-animation-panel__collapse .el-collapse-item__arrow,
+.scene-edit-resource-panel .el-collapse-item__arrow {
+  box-sizing: border-box;
+  flex: 0 0 14px;
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 4px !important;
+  overflow: hidden;
+  font-size: 0 !important;
+  color: rgb(255 255 255 / 60%);
+  background-color: currentColor;
+  mask: url('@/assets/images/scene-editor-collapse.svg') center / 14px 14px no-repeat;
+  transform: rotate(-90deg) !important;
+  transition: transform 120ms ease-out;
+}
+.scene-edit-property-content .el-collapse-item__arrow > svg,
+.scene-edit-property-collapse .el-collapse-item__arrow > svg,
+.scene-edit-animation-panel__collapse .el-collapse-item__arrow > svg,
+.scene-edit-resource-panel .el-collapse-item__arrow > svg {
+  display: none !important;
+}
+.scene-edit-property-content .el-collapse-item__arrow.is-active,
+.scene-edit-property-collapse .el-collapse-item__arrow.is-active,
+.scene-edit-animation-panel__collapse .el-collapse-item__arrow.is-active,
+.scene-edit-resource-panel .el-collapse-item__arrow.is-active {
+  transform: rotate(0deg) !important;
+}
+
+/** 手写的请求配置展开按钮沿用同一个下箭头，展开时翻转为上箭头。 */
+.rgc-toggle .scene-edit-collapse-icon {
+  color: var(--scene-edit-text-2);
+  transform: rotate(0deg);
+  transition:
+    transform 120ms ease-out,
+    color 120ms ease-out;
+}
+.rgc-toggle:hover .scene-edit-collapse-icon {
+  color: #5ab2a5;
+}
+.rgc-toggle .scene-edit-collapse-icon.is-expanded {
+  transform: rotate(180deg);
+}
+
+/**
+ * Figma 节点 1:885 的通用属性行，作为对象、图片、标注和后续属性面板的唯一行布局入口。
+ * 局部面板只应处理分组、可见性和专属卡片布局，不能再次声明标签列、控件间距或行间距。
+ */
+.scene-edit-property-row {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  min-height: 32px;
+  margin-bottom: 16px;
+}
+.scene-edit-property-row__label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 32px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 32px;
+  color: rgb(255 255 255 / 60%);
+  white-space: nowrap;
+}
+.scene-edit-property-row__control {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 32px;
+}
+.scene-edit-property-row--fill .scene-edit-property-row__control > .el-input,
+.scene-edit-property-row--fill .scene-edit-property-row__control > .el-input-number,
+.scene-edit-property-row--fill .scene-edit-property-row__control > .el-select {
+  width: 100%;
+}
+.scene-edit-property-row__label .el-icon {
+  flex: 0 0 auto;
+  margin: 0 3px;
+  color: rgb(255 255 255 / 60%);
+}
+
+/**
+ * 模型与二维组件共用的属性内容外壳。
+ * Figma 右侧面板宽 320px、有效内容宽 292px：左 12px、右 16px（预留覆盖式滚动轨道）。
+ * 外壳只处理视觉布局；字段值、组件选中状态和命令调用仍完全由各业务面板维护。
+ */
+.scene-edit-property-inspector__content {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 12px 16px 24px 12px;
+}
+.scene-edit-property-content {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--scene-edit-text);
+}
+
+/**
+ * “通用 / 标题 / 图例”等内容分组的基础骨架。
+ * 首轮只统一标题、分隔线与内边距，折叠状态和每一种二维组件的专属字段留到下一轮逐项还原。
+ */
+.scene-edit-property-section {
+  min-width: 0;
+  margin: 0 0 24px;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+.scene-edit-property-section__header {
+  height: 21px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 21px;
+  color: rgb(255 255 255 / 92%);
+}
+.scene-edit-property-section__body {
+  min-width: 0;
+}
+
+/**
+ * 折叠分组共享基线：容器和每个折叠项都允许收缩到父面板宽度，
+ * 标题超长时截断，内容区使用 min-width: 0 让输入、表格和动画按钮继续参与弹性布局。
+ * 业务面板只通过 class 或属性调整局部间距，不再复制 Element Plus 折叠面板的主题变量。
+ */
+.scene-edit-property-collapse {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-top: 0;
+  border-bottom: 0;
+
+  --el-collapse-border-color: rgb(255 255 255 / 10%);
+  --el-collapse-header-bg-color: transparent;
+  --el-collapse-content-bg-color: transparent;
+  --el-collapse-header-height: 36px;
+}
+.scene-edit-property-collapse-item {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-property-collapse .el-collapse-item__header {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 4px 0 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 36px;
+  color: rgb(255 255 255 / 92%);
+  background: transparent;
+  border-bottom-color: rgb(255 255 255 / 10%);
+}
+.scene-edit-property-collapse .el-collapse-item__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scene-edit-property-collapse .el-collapse-item__wrap {
+  min-width: 0;
+  overflow: hidden;
+  background: transparent;
+  border-bottom: 0;
+}
+.scene-edit-property-collapse .el-collapse-item__content {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 12px 0 0;
+  overflow-wrap: anywhere;
+}
+
+/**
+ * 二维组件历史配置大量使用 SettingItemBox，不能直接修改全局组件以免波及其他页面。
+ * 仅在统一右侧属性根节点内将其适配为 Figma 的“65px 标签列 + 4px 间隙 + 32px 控件”布局；
+ * 输入框下方的旧子标题被占位符替代，使宽度、高度、X、Y 等文本保持在输入框内部。
+ */
+.scene-edit-property-content .config-item-box {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  margin: 0 0 12px;
+}
+.scene-edit-property-content .config-item-box .item-left {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 32px;
+  color: rgb(255 255 255 / 60%);
+  text-align: left;
+  white-space: nowrap;
+}
+.scene-edit-property-content .config-item-box .item-right {
+  gap: 4px;
+  width: auto;
+  min-width: 0;
+}
+.scene-edit-property-content .config-item-box .setting-item {
+  display: block;
+  min-width: 0;
+  margin: 0;
+}
+.scene-edit-property-content .config-item-box .setting-item .name {
+  display: none;
+}
+.scene-edit-property-content .config-item-box .setting-item > .el-input,
+.scene-edit-property-content .config-item-box .setting-item > .el-input-number,
+.scene-edit-property-content .config-item-box .setting-item > .el-select,
+.scene-edit-property-content .config-item-box .setting-item > .scene-edit-property-select {
+  width: 100%;
+}
+
+/**
+ * 旧图表配置使用 Element Plus 折叠面板；在属性根节点内收敛为 Figma 的细分隔线标题。
+ * 不改变 activeSections 或懒渲染逻辑，因此展开状态、配置数据和序列化行为保持原样。
+ */
+.scene-edit-property-content .el-collapse {
+  border-top: 0;
+  border-bottom: 0;
+}
+.scene-edit-property-content .el-collapse-item__header {
+  height: 36px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 36px;
+  color: rgb(255 255 255 / 92%);
+  background: transparent;
+  border-bottom-color: rgb(255 255 255 / 10%);
+}
+.scene-edit-property-content .el-collapse-item__arrow {
+  margin-right: 4px;
+  color: rgb(255 255 255 / 50%);
+}
+.scene-edit-property-content .el-collapse-item__wrap {
+  background: transparent;
+  border-bottom: 0;
+}
+.scene-edit-property-content .el-collapse-item__content {
+  padding: 12px 0 0;
+}
+.scene-edit-property-content .el-collapse-item:last-child .el-collapse-item__header {
+  border-bottom-color: rgb(255 255 255 / 10%);
+}
+
+/**
+ * Figma 节点 1:2277 / 2160:20126：对齐方式是二维组件和分组共同的六动作控件。
+ * 默认 223px 内容宽度拆成两个等宽组三按钮：按钮高 24px、组内间距 2px、组间距 8px、图标 18px。
+ * 图标仅表达对齐方向；所有真实位置计算仍在 WidgetBase / WidgetGroupBase 的动作函数中执行。
+ */
+.scene-edit-widget-align-row {
+  align-items: center;
+}
+.scene-edit-widget-align-row .scene-edit-property-row__label {
+  align-items: center;
+}
+.scene-edit-widget-align-control {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.scene-edit-widget-align-control__group {
+  display: flex;
+  flex: 1 1 0;
+  gap: 2px;
+  min-width: 0;
+}
+.scene-edit-widget-align-control__button {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+  background: #131c26;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 2px;
+  transition:
+    background-color 120ms ease-out,
+    border-color 120ms ease-out,
+    color 120ms ease-out;
+}
+.scene-edit-widget-align-control__button:hover,
+.scene-edit-widget-align-control__button:focus-visible {
+  outline: 0;
+  background: #131c26;
+  border-color: rgb(255 255 255 / 14%);
+}
+.scene-edit-widget-align-control__button:active {
+  background: rgb(90 178 165 / 10%);
+  border-color: rgb(90 178 165 / 60%);
+}
+.scene-edit-widget-align-control__button:disabled {
+  cursor: not-allowed;
+  background: #131c26;
+  border-color: rgb(255 255 255 / 10%);
+  opacity: 0.4;
+}
+.scene-edit-widget-align-control__button:disabled .scene-edit-widget-align-control__icon {
+  color: rgb(255 255 255 / 32%);
+}
+.scene-edit-widget-align-control__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #ffffff;
+  opacity: 0.6;
+}
+.scene-edit-widget-align-control__icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: none;
+}
+.scene-edit-widget-align-control__icon path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.125;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.scene-edit-widget-align-control__button:hover .scene-edit-widget-align-control__icon,
+.scene-edit-widget-align-control__button:focus-visible .scene-edit-widget-align-control__icon,
+.scene-edit-widget-align-control__button:active .scene-edit-widget-align-control__icon {
+  color: #5ab2a5;
+  opacity: 0.8;
+}
+
+/** 标注边框边距仍保留四项业务字段，但由共享属性行提供统一的标签列和行距。 */
+.scene-edit-annotation-padding-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+}
+.scene-edit-annotation-padding-fields .el-input-number {
+  width: 100%;
+}
+
+/** Figma 节点 1:968 的颜色框与场景级独立色块共享同一色块和聚焦反馈。 */
+.scene-edit-property-color-picker {
+  position: relative;
+  box-sizing: border-box;
+}
+.scene-edit-property-color-picker--field {
+  display: flex;
+  align-items: center;
+  width: 114px;
+  max-width: 100%;
+  height: 32px;
+  padding: 3px 8px;
+  background: #131c26;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 2px;
+}
+.scene-edit-property-color-picker--field::after {
+  position: absolute;
+  top: 12px;
+  right: 29px;
+  width: 7px;
+  height: 7px;
+  margin: 0;
+  pointer-events: none;
+  content: '';
+  border-right: 1px solid rgb(255 255 255 / 40%);
+  border-bottom: 1px solid rgb(255 255 255 / 40%);
+  transform: rotate(45deg) translateY(-2px);
+}
+.scene-edit-property-color-picker__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 24px;
+  color: rgb(255 255 255 / 40%);
+}
+.scene-edit-property-color-picker--field .el-color-picker {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin-right: 24px;
+}
+.scene-edit-property-color-picker--swatch .el-color-picker {
+  width: 44px;
+  height: 32px;
+}
+.scene-edit-property-color-picker .el-color-picker__trigger {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 3px;
+  overflow: hidden;
+  background: #131c26;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.scene-edit-property-color-picker--swatch .el-color-picker__trigger {
+  padding: 4px;
+  border-color: rgb(255 255 255 / 14%);
+}
+.scene-edit-property-color-picker:focus-within .el-color-picker__trigger,
+.scene-edit-property-color-picker .el-color-picker__trigger:hover {
+  border-color: #5ab2a5;
+  box-shadow: 0 0 0 2px rgb(90 178 165 / 14%);
+}
+.scene-edit-property-color-picker .el-color-picker__color {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+}
+.scene-edit-property-color-picker .el-color-picker__color-inner {
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 18%);
+}
+.scene-edit-property-color-picker .el-color-picker__icon {
+  display: none;
+}
+.scene-edit-property-color-picker__panel-button {
+  z-index: 2;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  order: 1;
+  min-width: 52px;
+  height: 24px;
+  padding: 0 8px;
+  color: rgb(255 255 255 / 72%);
+  white-space: nowrap;
+  cursor: crosshair;
+  background: rgb(19 28 38 / 92%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 2px;
+  transition:
+    color 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
+}
+.scene-edit-popper .el-color-picker-panel__footer > div {
+  order: 2;
+}
+.scene-edit-property-color-picker__panel-button svg {
+  width: 12px;
+  height: 12px;
+}
+.scene-edit-property-color-picker__panel-button:hover:not(:disabled),
+.scene-edit-property-color-picker__panel-button:focus-visible,
+.scene-edit-property-color-picker__panel-button.is-picking {
+  color: #ffffff;
+  outline: none;
+  background: #2d4152;
+  border-color: #5ab2a5;
+}
+.scene-edit-property-color-picker__panel-button:disabled {
+  color: rgb(255 255 255 / 30%);
+  cursor: not-allowed;
+  opacity: 0.8;
+}

@@ -1,0 +1,8 @@
+<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Figma 节点 1:5399 的删除图标：各路径保持 1.16667px 线宽，与相邻写作图标视觉重量一致。 -->
+  <path d="M2.625 3.5V12.25H11.375V3.5H2.625Z" stroke="currentColor" stroke-width="1.16667" stroke-linejoin="round"/>
+  <path d="M5.25 6.125V9.917" stroke="currentColor" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8.75 6.125V9.917" stroke="currentColor" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M1.167 3.5H12.833" stroke="currentColor" stroke-width="1.16667" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M4.083 3.5L5.042 1.75H8.31L9.25 3.5H4.083Z" stroke="currentColor" stroke-width="1.16667" stroke-linejoin="round"/>
+</svg>

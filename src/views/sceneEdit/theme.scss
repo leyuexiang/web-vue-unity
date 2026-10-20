@@ -1,0 +1,2401 @@
+.scene-edit-theme,
+.scene-edit-dialog,
+.scene-edit-drawer,
+.scene-edit-popover,
+.scene-edit-popper,
+.scene-edit-template-message-box {
+  --scene-edit-bg: #0b1220;
+
+  /**
+   * 正式设计规范中的编辑器背景令牌。
+   * app 用于页面及舞台缩放留白，canvas 用于真实发布舞台的未加载底色；
+   * 两者必须分层使用，不能再由旧的 #1C1F24 统一覆盖而放大上下留白。
+   */
+  --scene-edit-bg-app: #0c121a;
+  --scene-edit-bg-canvas: #0b1218;
+  --scene-edit-bg-elevated: #111827;
+  --scene-edit-bg-panel: rgb(18 27 42 / 92%);
+  --scene-edit-bg-panel-2: #182336;
+  --scene-edit-bg-input: rgb(21 30 45 / 88%);
+  --scene-edit-line: rgb(255 255 255 / 6%);
+  --scene-edit-line-strong: rgb(59 130 246 / 42%);
+  --scene-edit-text: #f8fafc;
+  --scene-edit-text-2: #94a3b8;
+  --scene-edit-text-3: rgb(148 163 184 / 48%);
+  --scene-edit-accent: #3b82f6;
+  --scene-edit-accent-2: #60a5fa;
+
+  /*
+   * Figma 顶栏只包含 48px 高的品牌与场景名称行；左右页签位于其下方的工作区，
+   * 中间工具栏则由画布容器自己占用 36px。这样工作区三列可以从同一条 y=48 基线开始。
+   */
+  --scene-edit-header-height: 48px;
+  --scene-edit-titlebar-height: 48px;
+  --scene-edit-nav-height: 36px;
+  --scene-edit-left-resource-rail-width: 48px;
+
+  /** 左侧资源与结构分类栏共用同一底色，防止页签切换时导航轨道出现明暗跳变。 */
+  --scene-edit-left-resource-rail-bg: #121b26;
+  --scene-edit-left-card-nav-width: max(248px, 13vw);
+
+  /** 右栏默认宽度由 sceneEdit 分栏按 320px 初始化，避免首帧先按视口比例显示成 365px。 */
+  --scene-edit-right-card-nav-width: 320px;
+  --scene-edit-success: #30d158;
+  --scene-edit-warning: #ffd60a;
+  --scene-edit-danger: #ff453a;
+  --scene-edit-shadow-soft: 0 12px 26px rgb(0 0 0 / 24%);
+  --scene-edit-shadow-panel: 0 18px 46px rgb(0 0 0 / 26%);
+  --scene-edit-frosted: rgb(20 30 50 / 65%);
+  --scene-edit-frosted-strong: rgb(18 27 42 / 88%);
+}
+.scene-edit-theme {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    'PingFang SC',
+    'HarmonyOS Sans SC',
+    sans-serif;
+  color: var(--scene-edit-text);
+  letter-spacing: 0;
+  background: linear-gradient(180deg, #0f172a 0%, var(--scene-edit-bg) 100%);
+}
+.scene-edit-theme::before {
+  display: none;
+}
+.scene-edit-theme .mono-text {
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+}
+.scene-edit-shell,
+.scene-edit-main-pane,
+.scene-edit-left-panel,
+.scene-edit-right-panel,
+.scene-edit-operation,
+.scene-edit-header {
+  /* 顶栏、导航和场景工具栏共用正式规范的操作色，避免遗留蓝色状态在区域间不一致。 */
+  --scene-edit-header-primary: #5ab2a5;
+  --scene-edit-header-primary-hover: #6ac2b5;
+  --scene-edit-header-primary-active: #48998e;
+  --scene-edit-header-control: #14222d;
+
+  position: relative;
+  z-index: 1;
+}
+.scene-edit-panel-surface {
+  background: var(--scene-edit-bg-panel);
+  border: 1px solid var(--scene-edit-line);
+  box-shadow: var(--scene-edit-shadow-panel);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.scene-edit-theme .splitpanes__pane {
+  background: transparent;
+}
+.scene-edit-theme .splitpanes__splitter {
+  background: transparent;
+}
+.scene-edit-theme .splitpanes__splitter::before {
+  position: absolute;
+  inset: 0;
+  width: 1px;
+  margin: 0 auto;
+  content: '';
+  background: var(--scene-edit-line);
+  box-shadow: none;
+}
+.scene-edit-shell {
+  border-top: 1px solid var(--scene-edit-line);
+}
+.scene-edit-header {
+  /**
+   * 第二行页签通过绝对定位延伸到 48px 标题栏之外，与从同一纵坐标开始的工作区重叠。
+   * 顶栏必须建立高于工作区的父级堆叠上下文，否则页签虽然可见，实际点击会命中后渲染的分栏面板；
+   * 中间占位仍由 pointer-events: none 保持事件穿透，因此提高层级不会遮挡场景工具栏。
+   */
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: var(--scene-edit-header-height);
+  overflow: visible;
+  background: rgb(11 18 32 / 94%);
+  border-bottom: 1px solid var(--scene-edit-line);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.scene-edit-titlebar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  height: var(--scene-edit-titlebar-height);
+  padding: 0 12px;
+  background: #1d2a35;
+  border-bottom: 1px solid var(--scene-edit-line);
+}
+.scene-edit-brand {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-self: start;
+  min-width: 0;
+  max-width: min(520px, 46vw);
+  color: var(--scene-edit-text);
+  background: transparent;
+  border: 0;
+}
+.scene-edit-brand__logo {
+  display: block;
+  flex: 0 0 auto;
+  width: 22px;
+
+  /* 设计稿品牌图标本体为 22×31，保持原始比例，避免压缩后图形变形。 */
+  height: 31px;
+  object-fit: contain;
+}
+.scene-edit-brand__mark {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 3px;
+  width: 28px;
+  margin-bottom: 1px;
+}
+.scene-edit-brand__mark span {
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, #e0f2fe 0%, var(--scene-edit-accent-2) 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgb(96 165 250 / 32%);
+  transform: skewX(-24deg);
+}
+.scene-edit-brand__mark span:nth-child(2) {
+  width: 21px;
+  margin-left: 5px;
+}
+.scene-edit-brand__mark span:nth-child(3) {
+  width: 14px;
+  margin-left: 10px;
+}
+.scene-edit-brand__text {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  min-width: 0;
+}
+.scene-edit-brand__text strong {
+  flex: 0 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  white-space: nowrap;
+}
+.scene-edit-header__title {
+  max-width: min(38vw, 560px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+  color: var(--scene-edit-text);
+  white-space: nowrap;
+}
+.scene-edit-header__actions {
+  display: inline-flex;
+  flex: 0 0 176px;
+  gap: 12px;
+  align-items: center;
+  justify-self: end;
+  width: 176px;
+  height: 24px;
+  margin-right: 4px;
+}
+.scene-edit-header__primary-actions {
+  display: inline-flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* 运维端新增一枚上传按钮：槽位增加 20px 图标与 16px 间距，退出按钮保持在视口内。 */
+.scene-edit-header__actions--with-import {
+  flex-basis: 212px;
+  width: 212px;
+}
+
+/* 上传使用现有组件库矢量图标，颜色沿用顶栏默认色与主色，不新增图片请求。 */
+.scene-edit-header__action--upload {
+  color: #c6cfd6;
+}
+.scene-edit-header__action--upload:hover,
+.scene-edit-header__action--upload:focus-visible {
+  color: var(--scene-edit-header-primary);
+}
+.scene-edit-header__action {
+  position: relative;
+  display: block;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  transform-origin: center;
+  transition: transform 80ms ease-out;
+}
+.scene-edit-header__action-icon {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+.scene-edit-header__action-icon--default {
+  opacity: 1;
+}
+.scene-edit-header__action-icon--active {
+  opacity: 0;
+}
+.scene-edit-header__action:hover .scene-edit-header__action-icon--default,
+.scene-edit-header__action:active .scene-edit-header__action-icon--default,
+.scene-edit-header__action:focus-visible .scene-edit-header__action-icon--default {
+  opacity: 0;
+}
+.scene-edit-header__action:hover .scene-edit-header__action-icon--active,
+.scene-edit-header__action:active .scene-edit-header__action-icon--active,
+.scene-edit-header__action:focus-visible .scene-edit-header__action-icon--active {
+  opacity: 1;
+}
+.scene-edit-header__action:focus-visible {
+  outline: 1px solid var(--scene-edit-header-primary);
+  outline-offset: 3px;
+}
+
+/*
+ * 悬浮和按下共用 Figma 的主色图标，因此仅切换资源无法体现鼠标按压过程。
+ * 所有顶栏图标统一在按下期间轻微收缩，松开后由短过渡立即回弹；只修改合成层，
+ * 不触发布局重排，也不会延迟保存、预览、发布或退出等业务事件。
+ */
+.scene-edit-header__action:active {
+  transform: scale(0.88);
+}
+
+/*
+ * 保存请求期间使用原生 disabled 阻断重复点击；等待光标和透明度只表达暂不可操作，
+ * 不增加动画帧、定时器或额外组件状态。禁用态固定显示默认图标，避免悬浮样式误导用户。
+ */
+.scene-edit-header__action:disabled {
+  cursor: wait;
+  opacity: 0.55;
+  transform: none;
+}
+.scene-edit-header__action:disabled .scene-edit-header__action-icon--default {
+  opacity: 1;
+}
+.scene-edit-header__action:disabled .scene-edit-header__action-icon--active {
+  opacity: 0;
+}
+.scene-edit-header__divider {
+  position: relative;
+  display: block;
+  flex: 0 0 0;
+  width: 0;
+  height: 10px;
+  pointer-events: none;
+}
+.scene-edit-header__divider::before {
+  position: absolute;
+  top: 0;
+  left: -0.5px;
+  display: block;
+  width: 1px;
+  height: 10px;
+  content: '';
+  background: rgb(255 255 255 / 20%);
+}
+.scene-edit-header__action--exit {
+  flex-basis: 24px;
+  width: 24px;
+  height: 24px;
+}
+.scene-edit-header__exit-icon {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+.scene-edit-brand__text small {
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 14px;
+  color: var(--scene-edit-text-2);
+  white-space: nowrap;
+}
+.scene-edit-window-tools {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+.scene-edit-window-tool,
+.scene-edit-nav__section,
+.scene-edit-mode-tabs__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--scene-edit-text-2);
+  background: transparent;
+  border: 1px solid transparent;
+  transition:
+    transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.scene-edit-window-tool {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+.scene-edit-window-tool:hover,
+.scene-edit-nav__section:hover,
+.scene-edit-mode-tabs__item:hover {
+  color: var(--scene-edit-text);
+  background: rgb(255 255 255 / 6%);
+  border-color: var(--scene-edit-line);
+}
+.scene-edit-window-tool:active,
+.scene-edit-nav__section:active,
+.scene-edit-mode-tabs__item:active {
+  transform: scale(0.96);
+}
+.scene-edit-nav {
+  position: absolute;
+  top: var(--scene-edit-titlebar-height);
+  right: 0;
+  left: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--scene-edit-nav-height);
+  padding: 0;
+  pointer-events: none;
+  background: transparent;
+}
+.scene-edit-nav__sections {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  align-items: center;
+  width: var(--scene-edit-left-card-nav-width);
+  height: 100%;
+  padding: 0;
+  pointer-events: auto;
+  background: #1d2b36;
+  border: 0;
+  border-right: 1px solid var(--scene-edit-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+.scene-edit-nav__section {
+  position: relative;
+  height: 100%;
+  padding: 0 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+  border: 0;
+  border-radius: 0;
+}
+.scene-edit-nav__section::after,
+.scene-edit-mode-tabs__item::after {
+  position: absolute;
+  right: 16px;
+  bottom: 0;
+  left: 16px;
+  height: 2px;
+  content: '';
+  background: transparent;
+  transition: background-color 150ms ease-out;
+}
+.scene-edit-nav__section:hover,
+.scene-edit-mode-tabs__item:hover {
+  color: var(--scene-edit-text);
+  background: transparent;
+  border-color: transparent;
+}
+.scene-edit-nav__section:active,
+.scene-edit-mode-tabs__item:active {
+  transform: none;
+}
+.scene-edit-nav__section.is-active {
+  color: var(--scene-edit-text);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.scene-edit-nav__section.is-active::after,
+.scene-edit-mode-tabs__item.is-active::after {
+  background: var(--scene-edit-header-primary);
+}
+.scene-edit-nav__spacer {
+  flex: 1 1 auto;
+  min-width: 18px;
+}
+.scene-edit-nav__center {
+  /* 中间工具栏已挂载到画布容器；这里仅保留可穿透的占位，避免遮挡画布工具栏交互。 */
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  pointer-events: none;
+}
+.scene-edit-mode-tabs {
+  display: inline-flex;
+  gap: 0;
+  align-items: center;
+  width: var(--scene-edit-right-card-nav-width);
+  height: 100%;
+  padding: 0;
+  pointer-events: auto;
+  background: #1d2b36;
+  border: 0;
+  border-left: 1px solid var(--scene-edit-line);
+  border-radius: 0;
+}
+.scene-edit-mode-tabs__item {
+  position: relative;
+  flex: 1 1 0;
+  justify-content: center;
+  min-width: 0;
+  height: 100%;
+  padding: 0 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+  border: 0;
+  border-radius: 0;
+}
+.scene-edit-mode-tabs__item .el-icon {
+  /* 设计稿顶部页签仅展示文字，面板内部仍保留对应功能图标。 */
+  display: none;
+}
+.scene-edit-mode-tabs__item.is-active {
+  color: var(--scene-edit-text);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.scene-edit-operation {
+  position: relative;
+  z-index: 5;
+  display: flex;
+
+  /*
+   * 场景工具栏属于中间画布槽位，严格占用标题栏下方的 36px 高度；
+   * 保存与预览仍由全局标题栏承载，避免重复入口和重复事件绑定。
+   */
+  flex: 0 0 var(--scene-edit-nav-height);
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0;
+  background: #121b26;
+  border-bottom: 1px solid var(--scene-edit-line);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.scene-edit-operation__group {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.scene-edit-operation__rail {
+  display: inline-flex;
+  gap: 20px;
+  align-items: center;
+  min-height: 20px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.scene-edit-operation .el-divider--vertical {
+  height: 12px;
+  margin: 0;
+  border-left-color: var(--scene-edit-line);
+}
+.scene-edit-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--scene-edit-text-2);
+  border-radius: 0;
+  transition:
+    color 120ms ease-out,
+    background-color 120ms ease-out;
+}
+.scene-edit-icon-button__image {
+  display: block;
+  width: 20px;
+  height: 20px;
+
+  /* 外部 SVG 作为遮罩后继承父级 currentColor，避免 img 无法响应激活态颜色。 */
+  background-color: currentColor;
+  mask-image: var(--scene-icon-src);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  transition:
+    background-color 120ms ease-out,
+    opacity 120ms ease-out;
+}
+.scene-edit-icon-button:hover {
+  color: var(--scene-edit-text);
+  background: transparent;
+}
+.scene-edit-icon-button:active {
+  color: var(--scene-edit-header-primary-active);
+}
+.scene-edit-icon-button.is-active {
+  color: var(--scene-edit-header-primary);
+  background: transparent;
+  box-shadow: none;
+}
+.scene-edit-icon-button--measure.is-active {
+  background: transparent;
+  box-shadow: none;
+}
+.scene-edit-icon-button.is-disabled {
+  color: var(--scene-edit-text-3);
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* 保存按钮的脏状态和失败状态只做轻量视觉提示；实际保存状态由 integrations/scene 的跟踪器维护。 */
+.scene-edit-icon-button.is-dirty {
+  color: var(--scene-edit-warning);
+  background: rgb(255 214 10 / 13%);
+  box-shadow: none;
+}
+.scene-edit-icon-button.is-save-failed {
+  color: var(--scene-edit-danger);
+  background: rgb(255 69 58 / 13%);
+  box-shadow: none;
+}
+.scene-edit-icon-button.is-accent:hover {
+  color: var(--scene-edit-accent);
+}
+.scene-edit-main-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--scene-edit-header-height));
+}
+.scene-edit-canvas-shell {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: #0f172a;
+}
+.scene-edit-canvas-shell::before {
+  display: none;
+}
+.scene-edit-canvas-shell::after {
+  position: absolute;
+  inset: 14px;
+  z-index: 1;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgb(255 255 255 / 7%);
+
+  /* 保留画布弱边框，不再使用带 calc() 的 clip-path，避免 stylelint 的 css-tree 解析异常阻断提交。 */
+}
+.scene-edit-scene-hud {
+  position: absolute;
+  top: 10px;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+.scene-edit-scene-hud__pill {
+  min-height: 28px;
+  padding: 6px 12px;
+  color: var(--scene-edit-text);
+  pointer-events: auto;
+  background: var(--scene-edit-frosted-strong);
+  border: 1px solid var(--scene-edit-line);
+  border-radius: 999px;
+  box-shadow: none;
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.scene-edit-scene-hud__subtle {
+  color: var(--scene-edit-text-2);
+}
+.scene-edit-preview-actions {
+  position: absolute;
+  top: 20px;
+  right: 12px;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+}
+.scene-edit-preview-actions .el-button {
+  background: var(--scene-edit-accent);
+  border-color: var(--scene-edit-accent);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.scene-edit-left-panel,
+.scene-edit-right-panel {
+  height: 100%;
+}
+.scene-edit-left-panel {
+  /* 左侧资源区采用规范中的面板底色，取消旧版整块阴影，层级由边框区分。 */
+  background: #1d2a35;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.scene-edit-left-panel > .el-tabs,
+.scene-edit-right-panel > .el-tabs {
+  height: 100%;
+}
+.scene-edit-theme .el-tabs__nav-wrap::after {
+  background-color: transparent;
+}
+.scene-edit-theme .el-tabs__header {
+  margin-bottom: 0;
+}
+.scene-edit-theme .el-tabs__item {
+  color: var(--scene-edit-text-2);
+}
+.scene-edit-theme .el-tabs__item:hover,
+.scene-edit-theme .el-tabs__item.is-active {
+  color: var(--scene-edit-text);
+}
+.scene-edit-drawer .el-tabs__new-tab {
+  color: var(--scene-edit-text-2) !important;
+  background: rgb(255 255 255 / 8%) !important;
+  border-color: var(--scene-edit-line) !important;
+  transition:
+    border-color 120ms ease-out,
+    background-color 120ms ease-out,
+    color 120ms ease-out;
+}
+.scene-edit-drawer .el-tabs__new-tab:hover {
+  color: var(--scene-edit-text) !important;
+  background: rgb(255 255 255 / 12%) !important;
+  border-color: var(--scene-edit-accent) !important;
+}
+.scene-edit-drawer .el-tabs__new-tab .el-icon,
+.scene-edit-drawer .el-tabs__new-tab i,
+.scene-edit-drawer .el-tabs__header .el-icon,
+.scene-edit-drawer .el-tabs__header i {
+  color: inherit !important;
+}
+.scene-edit-theme .el-tabs--card > .el-tabs__header {
+  border-bottom: 1px solid var(--scene-edit-line);
+}
+.scene-edit-theme .el-tabs--card > .el-tabs__header .el-tabs__item,
+.scene-edit-theme .el-tabs--border-card,
+.scene-edit-theme .el-tabs--card > .el-tabs__header .el-tabs__nav {
+  background: transparent;
+  border: none;
+}
+.scene-edit-theme .el-tabs--left .el-tabs__header.is-left {
+  margin-right: 0;
+}
+.scene-edit-theme .el-tabs--left .el-tabs__nav-wrap.is-left::after {
+  width: 1px;
+  background: var(--scene-edit-line);
+}
+.scene-edit-theme .el-tabs--left .el-tabs__item.is-left {
+  justify-content: center;
+}
+.scene-edit-theme .el-tabs__active-bar {
+  background: var(--scene-edit-accent);
+}
+.scene-edit-theme .el-collapse {
+  border-top: none;
+  border-bottom: none;
+}
+.scene-edit-theme .el-collapse-item__header,
+.scene-edit-theme .el-collapse-item__wrap {
+  color: var(--scene-edit-text-2);
+  background: transparent;
+  border-bottom-color: var(--scene-edit-line);
+}
+.scene-edit-theme .el-collapse-item__content {
+  padding-bottom: 10px;
+  color: var(--scene-edit-text-2);
+}
+.scene-edit-theme .el-empty__description p,
+.scene-edit-dialog .el-empty__description p,
+.scene-edit-drawer .el-empty__description p {
+  color: var(--scene-edit-text-3);
+}
+.scene-edit-theme .el-input__wrapper,
+.scene-edit-theme .el-select__wrapper,
+.scene-edit-theme .el-textarea__inner,
+.scene-edit-theme .el-input-number__decrease,
+.scene-edit-theme .el-input-number__increase,
+.scene-edit-dialog .el-input__wrapper,
+.scene-edit-dialog .el-select__wrapper,
+.scene-edit-dialog .el-textarea__inner,
+.scene-edit-dialog .el-input-number__decrease,
+.scene-edit-dialog .el-input-number__increase,
+.scene-edit-drawer .el-input__wrapper,
+.scene-edit-drawer .el-select__wrapper,
+.scene-edit-drawer .el-textarea__inner,
+.scene-edit-drawer .el-input-number__decrease,
+.scene-edit-drawer .el-input-number__increase {
+  color: var(--scene-edit-text);
+  background: var(--scene-edit-bg-input);
+  border-color: var(--scene-edit-line);
+  box-shadow: inset 0 0 0 1px var(--scene-edit-line);
+}
+.scene-edit-theme .el-input__wrapper:hover,
+.scene-edit-theme .el-select__wrapper:hover,
+.scene-edit-theme .el-input-number:hover .el-input__wrapper,
+.scene-edit-dialog .el-input__wrapper:hover,
+.scene-edit-dialog .el-select__wrapper:hover,
+.scene-edit-dialog .el-input-number:hover .el-input__wrapper,
+.scene-edit-drawer .el-input__wrapper:hover,
+.scene-edit-drawer .el-select__wrapper:hover,
+.scene-edit-drawer .el-input-number:hover .el-input__wrapper {
+  box-shadow: inset 0 0 0 1px var(--scene-edit-line-strong);
+}
+.scene-edit-theme .el-input__wrapper.is-focus,
+.scene-edit-theme .el-select__wrapper.is-focused,
+.scene-edit-theme .el-textarea__inner:focus,
+.scene-edit-theme .el-input-number.is-focus .el-input__wrapper,
+.scene-edit-dialog .el-input__wrapper.is-focus,
+.scene-edit-dialog .el-select__wrapper.is-focused,
+.scene-edit-dialog .el-textarea__inner:focus,
+.scene-edit-dialog .el-input-number.is-focus .el-input__wrapper,
+.scene-edit-drawer .el-input__wrapper.is-focus,
+.scene-edit-drawer .el-select__wrapper.is-focused,
+.scene-edit-drawer .el-textarea__inner:focus,
+.scene-edit-drawer .el-input-number.is-focus .el-input__wrapper {
+  box-shadow:
+    inset 0 0 0 1px var(--scene-edit-accent),
+    0 0 0 3px rgb(59 130 246 / 13%);
+}
+.scene-edit-theme .el-input__inner,
+.scene-edit-theme .el-textarea__inner,
+.scene-edit-theme .el-select__placeholder,
+.scene-edit-theme .el-input__inner::placeholder,
+.scene-edit-theme .el-textarea__inner::placeholder,
+.scene-edit-dialog .el-input__inner,
+.scene-edit-dialog .el-textarea__inner,
+.scene-edit-dialog .el-select__placeholder,
+.scene-edit-dialog .el-input__inner::placeholder,
+.scene-edit-dialog .el-textarea__inner::placeholder,
+.scene-edit-drawer .el-input__inner,
+.scene-edit-drawer .el-textarea__inner,
+.scene-edit-drawer .el-select__placeholder,
+.scene-edit-drawer .el-input__inner::placeholder,
+.scene-edit-drawer .el-textarea__inner::placeholder {
+  color: var(--scene-edit-text-2);
+}
+.scene-edit-theme .el-input-number .el-input__inner,
+.scene-edit-theme .el-input-number__decrease,
+.scene-edit-theme .el-input-number__increase,
+.scene-edit-dialog .el-input-number .el-input__inner,
+.scene-edit-drawer .el-input-number .el-input__inner {
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+}
+.scene-edit-theme .el-slider__runway,
+.scene-edit-dialog .el-slider__runway,
+.scene-edit-drawer .el-slider__runway {
+  background: rgb(0 0 0 / 8%);
+}
+.scene-edit-theme .el-slider__bar,
+.scene-edit-dialog .el-slider__bar,
+.scene-edit-drawer .el-slider__bar {
+  background: var(--scene-edit-accent);
+}
+.scene-edit-theme .el-slider__button,
+.scene-edit-dialog .el-slider__button,
+.scene-edit-drawer .el-slider__button {
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border: 2px solid var(--scene-edit-accent);
+  box-shadow: none;
+}
+.scene-edit-theme .el-checkbox__inner,
+.scene-edit-dialog .el-checkbox__inner,
+.scene-edit-drawer .el-checkbox__inner,
+.scene-edit-theme .el-switch__core,
+.scene-edit-dialog .el-switch__core,
+.scene-edit-drawer .el-switch__core {
+  background: var(--scene-edit-bg-input);
+  border-color: var(--scene-edit-line-strong);
+}
+.scene-edit-theme .el-checkbox__input.is-checked .el-checkbox__inner,
+.scene-edit-dialog .el-checkbox__input.is-checked .el-checkbox__inner,
+.scene-edit-drawer .el-checkbox__input.is-checked .el-checkbox__inner,
+.scene-edit-theme .el-switch.is-checked .el-switch__core,
+.scene-edit-dialog .el-switch.is-checked .el-switch__core,
+.scene-edit-drawer .el-switch.is-checked .el-switch__core {
+  background: var(--scene-edit-accent);
+  border-color: var(--scene-edit-accent);
+}
+.scene-edit-theme .el-button,
+.scene-edit-dialog .el-button,
+.scene-edit-drawer .el-button {
+  color: var(--scene-edit-text-2);
+  background: rgb(255 255 255 / 8%);
+  border-color: var(--scene-edit-line);
+  border-radius: 999px;
+  transition:
+    transform 120ms ease-out,
+    background-color 120ms ease-out,
+    border-color 120ms ease-out,
+    color 120ms ease-out;
+}
+.scene-edit-theme .el-button:hover,
+.scene-edit-dialog .el-button:hover,
+.scene-edit-drawer .el-button:hover {
+  color: var(--scene-edit-text);
+  border-color: var(--scene-edit-line-strong);
+}
+.scene-edit-theme .el-button--primary,
+.scene-edit-dialog .el-button--primary,
+.scene-edit-drawer .el-button--primary {
+  color: #ffffff;
+  background: var(--scene-edit-accent);
+  border-color: var(--scene-edit-accent);
+}
+.scene-edit-theme .el-button--primary:hover,
+.scene-edit-dialog .el-button--primary:hover,
+.scene-edit-drawer .el-button--primary:hover {
+  color: #ffffff;
+  background: var(--scene-edit-accent-2);
+  border-color: var(--scene-edit-accent-2);
+}
+.scene-edit-theme .el-button:active,
+.scene-edit-dialog .el-button:active,
+.scene-edit-drawer .el-button:active {
+  transform: scale(0.95);
+}
+.scene-edit-drawer .el-icon {
+  color: currentcolor;
+}
+.scene-edit-theme .el-tag,
+.scene-edit-dialog .el-tag,
+.scene-edit-drawer .el-tag {
+  color: var(--scene-edit-text);
+  background: rgb(59 130 246 / 14%);
+  border-color: rgb(96 165 250 / 24%);
+}
+.scene-edit-theme .el-card,
+.scene-edit-dialog .el-card,
+.scene-edit-drawer .el-card {
+  color: var(--scene-edit-text);
+  background: rgb(255 255 255 / 6%);
+  border-color: var(--scene-edit-line);
+  border-radius: 8px;
+}
+.scene-edit-theme .el-card__header,
+.scene-edit-dialog .el-card__header,
+.scene-edit-drawer .el-card__header {
+  border-bottom-color: var(--scene-edit-line);
+}
+body.scene-edit-route-open .scene-edit-theme .el-table,
+body.scene-edit-route-open .scene-edit-dialog .el-table,
+body.scene-edit-route-open .scene-edit-drawer .el-table {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: rgb(255 255 255 / 1%);
+  --el-table-header-bg-color: rgb(255 255 255 / 5%);
+  --el-table-row-hover-bg-color: rgb(59 130 246 / 10%);
+  --el-table-border-color: var(--scene-edit-line);
+  --el-table-header-text-color: var(--scene-edit-text-2);
+  --el-table-text-color: var(--scene-edit-text);
+
+  color: var(--scene-edit-text);
+}
+.scene-edit-theme .el-table th.el-table__cell,
+.scene-edit-theme .el-table tr,
+.scene-edit-dialog .el-table th.el-table__cell,
+.scene-edit-dialog .el-table tr,
+.scene-edit-drawer .el-table th.el-table__cell,
+.scene-edit-drawer .el-table tr {
+  background: transparent;
+}
+.scene-edit-theme .el-pagination,
+.scene-edit-dialog .el-pagination {
+  --el-pagination-button-bg-color: rgb(11 18 32 / 92%);
+  --el-pagination-button-color: var(--scene-edit-text-2);
+  --el-pagination-hover-color: var(--scene-edit-text);
+  --el-pagination-bg-color: rgb(11 18 32 / 92%);
+
+  color: var(--scene-edit-text-2);
+}
+.scene-edit-theme .el-pagination button,
+.scene-edit-dialog .el-pagination button {
+  color: inherit;
+  background: transparent;
+}
+.scene-edit-theme .el-pagination .el-pager li,
+.scene-edit-dialog .el-pagination .el-pager li,
+body.scene-edit-route-open .el-pagination .el-pager li {
+  color: var(--scene-edit-text-2) !important;
+  background: rgb(11 18 32 / 92%) !important;
+}
+.scene-edit-theme .el-pagination .el-pager li.is-active,
+.scene-edit-theme .el-pagination .el-pager li.is-active.number,
+.scene-edit-dialog .el-pagination .el-pager li.is-active,
+.scene-edit-dialog .el-pagination .el-pager li.is-active.number,
+body.scene-edit-route-open .el-pagination .el-pager li.is-active,
+body.scene-edit-route-open .el-pagination .el-pager li.is-active.number {
+  color: var(--scene-edit-text) !important;
+  background: rgb(59 130 246 / 88%) !important;
+  box-shadow: inset 0 0 0 1px rgb(96 165 250 / 26%);
+}
+.scene-edit-theme .el-radio__inner,
+.scene-edit-dialog .el-radio__inner {
+  background: var(--scene-edit-bg-input);
+  border-color: var(--scene-edit-line-strong);
+}
+.scene-edit-theme .el-radio__input.is-checked .el-radio__inner,
+.scene-edit-dialog .el-radio__input.is-checked .el-radio__inner {
+  background: var(--scene-edit-accent-2);
+  border-color: var(--scene-edit-accent-2);
+}
+.scene-edit-dialog .el-radio-button__inner,
+.scene-edit-drawer .el-radio-button__inner {
+  color: var(--scene-edit-text-2) !important;
+  background: rgb(11 18 32 / 92%) !important;
+  border-color: rgb(96 165 250 / 22%) !important;
+  box-shadow: none !important;
+}
+.scene-edit-dialog .el-radio-button:first-child .el-radio-button__inner,
+.scene-edit-drawer .el-radio-button:first-child .el-radio-button__inner {
+  border-left-color: rgb(96 165 250 / 22%) !important;
+}
+.scene-edit-dialog .el-radio-button__original-radio:checked + .el-radio-button__inner,
+.scene-edit-drawer .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  color: #eff6ff !important;
+  background: linear-gradient(
+    180deg,
+    rgb(37 99 235 / 96%) 0%,
+    rgb(30 64 175 / 98%) 100%
+  ) !important;
+  border-color: rgb(96 165 250 / 46%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 14%),
+    0 0 0 1px rgb(59 130 246 / 12%) !important;
+}
+.scene-edit-dialog .el-radio-button:hover .el-radio-button__inner,
+.scene-edit-drawer .el-radio-button:hover .el-radio-button__inner {
+  color: var(--scene-edit-text) !important;
+  border-color: rgb(96 165 250 / 30%) !important;
+}
+.scene-edit-dialog,
+.scene-edit-drawer,
+.scene-edit-popover,
+.scene-edit-popper {
+  color: var(--scene-edit-text);
+}
+body.scene-edit-route-open .scene-edit-dialog,
+body.scene-edit-route-open .scene-edit-drawer {
+  overflow: visible;
+  color: var(--scene-edit-text);
+  background: linear-gradient(180deg, rgb(40 43 48 / 98%) 0%, rgb(26 29 33 / 99%) 100%);
+  border: 1px solid var(--scene-edit-line);
+  box-shadow: var(--scene-edit-shadow-panel);
+}
+.scene-edit-dialog {
+  display: flex;
+  flex-direction: column;
+  height: auto !important;
+  max-height: calc(100vh - 96px);
+  margin: 0 auto !important;
+}
+.scene-edit-dialog .el-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(100vh - 240px);
+  overflow: auto;
+}
+.scene-edit-drawer {
+  top: 52px !important;
+  bottom: auto !important;
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column;
+  height: calc(100vh - 52px) !important;
+  max-height: calc(100vh - 52px) !important;
+  margin: 0 !important;
+}
+.scene-edit-drawer.rtl {
+  right: 24px !important;
+}
+.scene-edit-drawer.ltr {
+  left: 24px !important;
+}
+.scene-edit-drawer .el-drawer__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+.scene-edit-drawer .el-drawer__body > .el-scrollbar {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.scene-edit-drawer .el-drawer__footer {
+  margin-top: auto;
+}
+.scene-edit-dialog__wide {
+  max-width: calc(100vw - 48px);
+}
+body.scene-edit-route-open .scene-edit-dialog .el-dialog__header,
+body.scene-edit-route-open .scene-edit-drawer .el-drawer__header,
+body.scene-edit-route-open .scene-edit-dialog__header,
+body.scene-edit-route-open .scene-edit-drawer__header {
+  padding: 18px 20px 14px;
+  margin-right: 0;
+  color: var(--scene-edit-text);
+  background: linear-gradient(90deg, rgb(59 130 246 / 6%), transparent 40%), rgb(59 130 246 / 4%);
+  border-bottom: 1px solid var(--scene-edit-line);
+}
+.scene-edit-dialog .el-dialog__title,
+.scene-edit-drawer .el-drawer__title {
+  font-weight: 600;
+  color: var(--scene-edit-text);
+}
+.scene-edit-dialog .el-dialog__body,
+.scene-edit-drawer .el-drawer__body {
+  color: var(--scene-edit-text-2);
+}
+.scene-edit-dialog .el-dialog__footer,
+.scene-edit-drawer .el-drawer__footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--scene-edit-line);
+}
+
+/**
+ * 应用模板确认框使用编辑器专属深色外观。
+ * Element Plus 消息框会传送到 body，因此不能依赖 .scene-edit-theme 后代选择器；同时使用独立类，
+ * 确保本组规则只影响“应用模板”这一处确认框，不改变管理页或编辑器其他消息框。
+ */
+body.scene-edit-route-open .scene-edit-template-message-box {
+  box-sizing: border-box;
+  width: min(420px, calc(100vw - 32px));
+  padding: 0;
+  overflow: hidden;
+  color: var(--scene-edit-text);
+  background: linear-gradient(180deg, #1d2a35 0%, #17232d 100%);
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 4px;
+  box-shadow: var(--scene-edit-shadow-panel);
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-message-box__header {
+  padding: 15px 20px 12px;
+  border-bottom: 1px solid var(--scene-edit-line);
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-message-box__title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--scene-edit-text);
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-message-box__headerbtn {
+  top: 11px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-message-box__close {
+  color: var(--scene-edit-text-2);
+  transition: color 120ms ease-out;
+}
+body.scene-edit-route-open
+  .scene-edit-template-message-box
+  .el-message-box__headerbtn:hover
+  .el-message-box__close,
+body.scene-edit-route-open
+  .scene-edit-template-message-box
+  .el-message-box__headerbtn:focus-visible
+  .el-message-box__close {
+  color: #5ab2a5;
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-message-box__content {
+  padding: 16px 20px;
+  color: var(--scene-edit-text-2);
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-message-box__message {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--scene-edit-text-2);
+}
+body.scene-edit-route-open
+  .scene-edit-template-message-box
+  .el-message-box__status.el-message-box-icon--warning {
+  color: #e6b65c;
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-message-box__btns {
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--scene-edit-line);
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-button {
+  min-width: 60px;
+  height: 32px;
+  padding: 0 16px;
+  color: var(--scene-edit-text-2);
+  background: #14222d;
+  border-color: rgb(255 255 255 / 14%);
+  border-radius: 2px;
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-button:hover,
+body.scene-edit-route-open .scene-edit-template-message-box .el-button:focus-visible {
+  color: var(--scene-edit-text);
+  background: #1b303d;
+  border-color: rgb(90 178 165 / 55%);
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-button--primary {
+  color: #ffffff;
+  background: #5ab2a5;
+  border-color: #5ab2a5;
+}
+body.scene-edit-route-open .scene-edit-template-message-box .el-button--primary:hover,
+body.scene-edit-route-open .scene-edit-template-message-box .el-button--primary:focus-visible {
+  color: #ffffff;
+  background: #6ac2b5;
+  border-color: #6ac2b5;
+}
+.scene-edit-theme .el-overlay.el-modal-dialog,
+.scene-edit-theme .el-overlay.is-drawer,
+body.scene-edit-route-open .el-overlay.el-modal-dialog,
+body.scene-edit-route-open .el-overlay.is-drawer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 4000 !important;
+}
+.scene-edit-theme .el-overlay.el-modal-dialog,
+body.scene-edit-route-open .el-overlay.el-modal-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.scene-edit-theme .el-overlay.el-modal-dialog > .el-overlay-dialog,
+body.scene-edit-route-open .el-overlay.el-modal-dialog > .el-overlay-dialog {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 100% !important;
+  padding: 0 !important;
+}
+.scene-edit-theme .el-overlay.is-drawer,
+body.scene-edit-route-open .el-overlay.is-drawer {
+  display: block;
+}
+.scene-edit-theme .el-overlay.el-modal-dialog .el-dialog,
+body.scene-edit-route-open .el-overlay.el-modal-dialog .el-dialog {
+  top: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100vh - 96px) !important;
+  margin: 0 !important;
+  color: var(--scene-edit-text) !important;
+  background: linear-gradient(180deg, rgb(40 43 48 / 98%) 0%, rgb(26 29 33 / 99%) 100%) !important;
+  border: 1px solid var(--scene-edit-line) !important;
+  box-shadow: var(--scene-edit-shadow-panel) !important;
+}
+.scene-edit-theme .el-overlay.is-drawer .el-drawer,
+body.scene-edit-route-open .el-overlay.is-drawer .el-drawer {
+  top: 52px !important;
+  bottom: auto !important;
+  height: calc(100vh - 52px) !important;
+  min-height: 0 !important;
+  max-height: calc(100vh - 52px) !important;
+  margin: 0 !important;
+  color: var(--scene-edit-text) !important;
+  background: linear-gradient(180deg, rgb(40 43 48 / 98%) 0%, rgb(26 29 33 / 99%) 100%) !important;
+  border: 1px solid var(--scene-edit-line) !important;
+  box-shadow: var(--scene-edit-shadow-panel) !important;
+}
+.scene-edit-dialog--compact {
+  height: auto !important;
+  max-height: none !important;
+}
+.scene-edit-dialog--compact .el-dialog__body {
+  flex: 0 0 auto;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding-bottom: 16px;
+  overflow: visible !important;
+}
+.scene-edit-dialog--dataset,
+.scene-edit-dialog--rules {
+  height: auto !important;
+  overflow: visible !important;
+}
+.scene-edit-dialog--task .el-dialog__body {
+  overflow: visible !important;
+}
+.scene-edit-dialog--task {
+  overflow: visible !important;
+}
+.scene-edit-dialog--dataset .el-dialog__body,
+.scene-edit-dialog--rules .el-dialog__body {
+  flex: 1 1 auto;
+  overflow: visible !important;
+}
+.scene-edit-dialog--dataset .el-dialog__body {
+  min-height: 240px;
+  max-height: min(52vh, 520px) !important;
+}
+.scene-edit-dialog--rules .el-dialog__body {
+  min-height: 180px;
+  max-height: min(56vh, 560px) !important;
+}
+.scene-edit-theme .el-overlay.is-drawer .el-drawer__header,
+.scene-edit-theme .el-overlay.el-modal-dialog .el-dialog__header,
+.scene-edit-theme .el-overlay.is-drawer .el-drawer__body,
+.scene-edit-theme .el-overlay.el-modal-dialog .el-dialog__body,
+.scene-edit-theme .el-overlay.is-drawer .el-drawer__footer,
+.scene-edit-theme .el-overlay.el-modal-dialog .el-dialog__footer,
+body.scene-edit-route-open .el-overlay.is-drawer .el-drawer__header,
+body.scene-edit-route-open .el-overlay.el-modal-dialog .el-dialog__header,
+body.scene-edit-route-open .el-overlay.is-drawer .el-drawer__body,
+body.scene-edit-route-open .el-overlay.el-modal-dialog .el-dialog__body,
+body.scene-edit-route-open .el-overlay.is-drawer .el-drawer__footer,
+body.scene-edit-route-open .el-overlay.el-modal-dialog .el-dialog__footer {
+  color: inherit !important;
+  background: transparent !important;
+}
+.scene-edit-popover.el-popper,
+.scene-edit-popper.el-popper {
+  color: var(--scene-edit-text-2);
+  background: rgb(18 27 42 / 98%);
+  border: 1px solid var(--scene-edit-line);
+  box-shadow: var(--scene-edit-shadow-panel);
+}
+.scene-edit-popover.el-popper *,
+.scene-edit-popper.el-popper * {
+  color: inherit;
+}
+.scene-edit-popover.el-popper .el-popover__title,
+.scene-edit-popper.el-popper .el-popover__title {
+  color: var(--scene-edit-text);
+}
+.scene-edit-popover.el-popper .el-popper__arrow::before,
+.scene-edit-popper.el-popper .el-popper__arrow::before {
+  background: rgb(18 27 42 / 98%);
+  border: 1px solid var(--scene-edit-line);
+}
+.scene-edit-theme .scene-edit-resource-panel .scene-edit-resource-card {
+  transition: 120ms ease-out;
+}
+.scene-edit-theme .scene-edit-resource-panel .scene-edit-resource-card:hover {
+  /* 资源卡片悬停只保留设计稿中的浅色填充与细边框，不叠加旧版发光阴影。 */
+  background: rgb(90 178 165 / 14%);
+  border-color: #6ac2b5 !important;
+  box-shadow: none;
+}
+body.scene-edit-route-open .el-select__popper,
+body.scene-edit-route-open .el-tree-select__popper,
+body.scene-edit-route-open .el-popover.el-popper,
+body.scene-edit-route-open .el-popconfirm.el-popper,
+body.scene-edit-route-open .el-picker__popper,
+body.scene-edit-route-open .el-cascader__dropdown {
+  z-index: 4100 !important;
+  color: var(--scene-edit-text) !important;
+  background: rgb(18 27 42 / 98%) !important;
+  border: 1px solid var(--scene-edit-line) !important;
+  box-shadow: var(--scene-edit-shadow-panel) !important;
+}
+body.scene-edit-route-open .el-select__popper .el-select-dropdown,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown,
+body.scene-edit-route-open .el-tree-select__popper .el-tree,
+body.scene-edit-route-open .el-tree-select__popper .el-scrollbar,
+body.scene-edit-route-open .el-tree-select__popper .el-scrollbar__view,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__wrap,
+body.scene-edit-route-open .el-select__popper .el-scrollbar,
+body.scene-edit-route-open .el-select__popper .el-scrollbar__view,
+body.scene-edit-route-open .el-select__popper .el-select-dropdown__wrap,
+body.scene-edit-route-open .el-cascader__dropdown .el-scrollbar,
+body.scene-edit-route-open .el-cascader__dropdown .el-scrollbar__view {
+  color: var(--scene-edit-text) !important;
+  background: rgb(18 27 42 / 98%) !important;
+}
+body.scene-edit-route-open .el-select__popper .el-select-dropdown,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown,
+body.scene-edit-route-open .el-cascader__dropdown {
+  padding: 8px 0 !important;
+  overflow: hidden !important;
+  border-radius: 10px !important;
+}
+body.scene-edit-route-open .el-tree-select__popper .el-tree-node,
+body.scene-edit-route-open .el-tree-select__popper .el-tree-node:focus > .el-tree-node__content,
+body.scene-edit-route-open
+  .el-tree-select__popper
+  .el-tree-node.is-current
+  > .el-tree-node__content {
+  background: transparent !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item,
+body.scene-edit-route-open .el-cascader-node,
+body.scene-edit-route-open .el-tree-node__content {
+  min-height: 34px;
+  color: var(--scene-edit-text-2) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  transition:
+    background-color 120ms ease-out,
+    color 120ms ease-out;
+}
+html body.scene-edit-route-open .el-select-dropdown__item *,
+html body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item *,
+html body.scene-edit-route-open .el-tree-node__content *,
+html body.scene-edit-route-open .el-tree-node__label,
+html body.scene-edit-route-open .el-cascader-node *,
+html body.scene-edit-route-open .el-cascader-node__label {
+  color: rgb(245 245 245 / 90%) !important;
+}
+body.scene-edit-route-open .el-select__wrapper {
+  background: rgb(11 18 32 / 92%) !important;
+  border: 1px solid rgb(96 165 250 / 16%) !important;
+  box-shadow: inset 0 0 0 1px transparent !important;
+}
+body.scene-edit-route-open .el-select__wrapper:hover,
+body.scene-edit-route-open .el-select__wrapper.is-hovering {
+  background: rgb(34 37 42 / 96%) !important;
+  border-color: rgb(96 165 250 / 32%) !important;
+}
+body.scene-edit-route-open .el-select__wrapper.is-focused,
+body.scene-edit-route-open .el-select__wrapper.is-active {
+  background: rgb(18 27 42 / 98%) !important;
+  border-color: rgb(59 130 246 / 52%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(59 130 246 / 14%),
+    0 0 0 1px rgb(59 130 246 / 16%) !important;
+}
+body.scene-edit-route-open .el-select__selected-item,
+body.scene-edit-route-open .el-select__placeholder,
+body.scene-edit-route-open .el-select__input,
+body.scene-edit-route-open .el-select__caret,
+body.scene-edit-route-open .el-tree-select__placeholder {
+  color: var(--scene-edit-text) !important;
+}
+body.scene-edit-route-open .el-select__selected-item.is-hovering {
+  color: var(--scene-edit-text) !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item.hover,
+body.scene-edit-route-open .el-select-dropdown__item.is-hovering,
+body.scene-edit-route-open .el-select-dropdown__item:hover,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item.is-hovering,
+body.scene-edit-route-open .el-cascader-node:hover,
+body.scene-edit-route-open .el-cascader-node.in-active-path,
+body.scene-edit-route-open .el-tree-node:focus > .el-tree-node__content,
+body.scene-edit-route-open .el-tree-node__content:hover {
+  color: var(--scene-edit-text) !important;
+  background: rgb(30 64 175 / 46%) !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item.hover *,
+body.scene-edit-route-open .el-select-dropdown__item.is-hovering *,
+body.scene-edit-route-open .el-select-dropdown__item:hover *,
+body.scene-edit-route-open .el-tree-node__content:hover *,
+body.scene-edit-route-open .el-tree-node:focus > .el-tree-node__content *,
+body.scene-edit-route-open .el-cascader-node:hover *,
+body.scene-edit-route-open .el-cascader-node.in-active-path * {
+  color: #eff6ff !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item.selected,
+body.scene-edit-route-open .el-select-dropdown__item.is-selected,
+body.scene-edit-route-open .el-select-dropdown__item[aria-selected='true'],
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item.is-selected,
+body.scene-edit-route-open .el-cascader-node.is-active,
+body.scene-edit-route-open .el-tree-node.is-current > .el-tree-node__content,
+body.scene-edit-route-open
+  .el-tree-select__popper
+  .el-tree-node.is-current
+  > .el-tree-node__content,
+body.scene-edit-route-open .el-tree-select__popper .el-tree-node__content[aria-selected='true'] {
+  font-weight: 500 !important;
+  color: #eff6ff !important;
+  background: linear-gradient(
+    180deg,
+    rgb(92 101 114 / 88%) 0%,
+    rgb(109 116 128 / 88%) 100%
+  ) !important;
+  box-shadow:
+    inset 2px 0 0 rgb(96 165 250 / 72%),
+    inset 0 0 0 1px rgb(96 165 250 / 8%) !important;
+}
+html body.scene-edit-route-open .el-select-dropdown__item.selected *,
+html body.scene-edit-route-open .el-select-dropdown__item.is-selected *,
+html body.scene-edit-route-open .el-select-dropdown__item[aria-selected='true'] *,
+html body.scene-edit-route-open .el-tree-node.is-current > .el-tree-node__content *,
+html
+  body.scene-edit-route-open
+  .el-tree-select__popper
+  .el-tree-node.is-current
+  > .el-tree-node__content
+  *,
+html
+  body.scene-edit-route-open
+  .el-tree-select__popper
+  .el-tree-node__content[aria-selected='true']
+  *,
+html body.scene-edit-route-open .el-cascader-node.is-active * {
+  color: #eff6ff !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item.is-selected::after,
+body.scene-edit-route-open .el-select-dropdown__item[aria-selected='true']::after,
+body.scene-edit-route-open .el-tree-node.is-current > .el-tree-node__content::after {
+  color: var(--scene-edit-text) !important;
+}
+body.scene-edit-route-open .el-popover.el-popper,
+body.scene-edit-route-open .el-popconfirm.el-popper {
+  color: var(--scene-edit-text-2) !important;
+}
+body.scene-edit-route-open .el-popover.el-popper .el-popover__title,
+body.scene-edit-route-open .el-popconfirm.el-popper .el-popconfirm__main,
+body.scene-edit-route-open .el-popover.el-popper strong,
+body.scene-edit-route-open .el-popover.el-popper b {
+  color: var(--scene-edit-text) !important;
+}
+body.scene-edit-route-open .el-popover.el-popper div,
+body.scene-edit-route-open .el-popover.el-popper span,
+body.scene-edit-route-open .el-popover.el-popper p,
+body.scene-edit-route-open .el-popconfirm.el-popper div,
+body.scene-edit-route-open .el-popconfirm.el-popper span,
+body.scene-edit-route-open .el-popconfirm.el-popper p {
+  color: var(--scene-edit-text-2) !important;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper {
+  min-width: 168px !important;
+  padding: 12px !important;
+  border-color: rgb(96 165 250 / 28%) !important;
+  border-radius: 8px !important;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper .el-popconfirm__main {
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 18px;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper .el-popconfirm__main,
+body.scene-edit-route-open .el-popconfirm.el-popper .el-popconfirm__main span {
+  color: var(--scene-edit-text) !important;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper .el-popconfirm__main .el-icon {
+  margin-top: 1px;
+  color: var(--scene-edit-warning) !important;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper .el-popconfirm__action {
+  margin-top: 10px;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper .el-button {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--scene-edit-text-2) !important;
+  background: rgb(255 255 255 / 7%) !important;
+  border-color: rgb(255 255 255 / 10%) !important;
+  border-radius: 8px;
+  box-shadow: none !important;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper .el-button span {
+  color: inherit !important;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper .el-button:hover {
+  color: var(--scene-edit-text) !important;
+  background: rgb(255 255 255 / 11%) !important;
+  border-color: rgb(96 165 250 / 28%) !important;
+}
+body.scene-edit-route-open .el-popconfirm.el-popper .el-button--primary {
+  color: #ffffff !important;
+  background: var(--scene-edit-accent) !important;
+  border-color: var(--scene-edit-accent) !important;
+}
+
+/**
+ * 颜色选择器真正参与堆叠的是外层 tooltip popper，而不是内部的 el-color-dropdown 面板。
+ * 之前只抬高了内层面板，外层定位容器仍然落在任务弹窗层级之下，所以视觉上依旧被盖住。
+ * 这里直接抬高业务专用颜色弹层的外层容器，并保留高于 scene-edit 对话框的安全余量。
+ */
+body.scene-edit-route-open .scene-edit-task-color-popper.el-popper,
+body.scene-edit-route-open .scene-edit-task-color-popper.el-tooltip__popper {
+  z-index: 4600 !important;
+}
+
+/**
+ * Element Plus 颜色选择器有两层壳：
+ * 1. 外层是 el-color-picker__panel，默认白底、浅边框；
+ * 2. 内层是 el-color-picker-panel，内部输入区的文字默认也是黑色。
+ * 前面只覆盖了 el-color-dropdown，所以弹层虽然浮上来了，但视觉仍然是白色默认主题。
+ * 这里把外层壳、内层面板、底部输入和按钮区一起统一到场景编辑器深色主题。
+ */
+body.scene-edit-route-open .el-color-picker__panel,
+body.scene-edit-route-open .scene-edit-popper.el-color-picker__panel,
+body.scene-edit-route-open .scene-edit-scene-color-popper.el-color-picker__panel {
+  /**
+   * 颜色面板已通过 Teleport 挂到 body，不能继续依赖右侧属性栏局部定义的控件变量。
+   * 在弹层根节点重新声明设计规范令牌，确保颜色输入、清空按钮、确定按钮及交互态使用
+   * bg/control=#14222D、primary/default=#5AB2A5 和正式文字透明度，而不是旧蓝色主题或默认黑灰色。
+   */
+  --scene-edit-bg-input: #14222d;
+  --scene-edit-line: rgb(255 255 255 / 14%);
+  --scene-edit-text: #ffffff;
+  --scene-edit-text-2: rgb(255 255 255 / 60%);
+  --scene-edit-accent: #5ab2a5;
+  --scene-edit-accent-hover: #6ac2b5;
+  --scene-edit-accent-active: #48998e;
+
+  color: var(--scene-edit-text) !important;
+  background: #1d2b36 !important;
+  border: 1px solid var(--scene-edit-line) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--scene-edit-shadow-panel) !important;
+}
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker-panel,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel,
+body.scene-edit-route-open .scene-edit-scene-color-popper .el-color-picker-panel {
+  color: var(--scene-edit-text) !important;
+  background: transparent !important;
+}
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker-panel.is-border,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel.is-border,
+body.scene-edit-route-open .scene-edit-scene-color-popper .el-color-picker-panel.is-border {
+  border-color: var(--scene-edit-line) !important;
+}
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker-panel__footer,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel__footer,
+body.scene-edit-route-open .scene-edit-scene-color-popper .el-color-picker-panel__footer {
+  background: transparent !important;
+  border-top: 1px solid var(--scene-edit-line) !important;
+}
+body.scene-edit-route-open
+  .el-color-picker__panel
+  .el-color-picker-panel__footer
+  .el-input__wrapper,
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker-panel__footer .el-input__inner,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel__footer .el-input__wrapper,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel__footer .el-input__inner,
+body.scene-edit-route-open
+  .scene-edit-scene-color-popper
+  .el-color-picker-panel__footer
+  .el-input__wrapper,
+body.scene-edit-route-open
+  .scene-edit-scene-color-popper
+  .el-color-picker-panel__footer
+  .el-input__inner {
+  color: var(--scene-edit-text) !important;
+  background: var(--scene-edit-bg-input) !important;
+}
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker-panel__footer .el-button,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel__footer .el-button,
+body.scene-edit-route-open
+  .scene-edit-scene-color-popper
+  .el-color-picker-panel__footer
+  .el-button {
+  color: var(--scene-edit-text-2) !important;
+  background: transparent !important;
+  border-color: var(--scene-edit-line) !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+}
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker-panel__footer .el-button span,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel__footer .el-button span,
+body.scene-edit-route-open
+  .scene-edit-scene-color-popper
+  .el-color-picker-panel__footer
+  .el-button
+  span {
+  color: inherit !important;
+}
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker-panel__footer .el-button:hover,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel__footer .el-button:hover,
+body.scene-edit-route-open
+  .scene-edit-scene-color-popper
+  .el-color-picker-panel__footer
+  .el-button:hover {
+  color: var(--scene-edit-text) !important;
+  background: rgb(255 255 255 / 8%) !important;
+  border-color: rgb(255 255 255 / 24%) !important;
+}
+body.scene-edit-route-open
+  .el-color-picker__panel
+  .el-color-picker-panel__footer
+  .el-button--primary,
+body.scene-edit-route-open .scene-edit-popper .el-color-picker-panel__footer .el-button--primary,
+body.scene-edit-route-open
+  .scene-edit-scene-color-popper
+  .el-color-picker-panel__footer
+  .el-button--primary,
+body.scene-edit-route-open
+  .el-color-picker__panel
+  .el-color-picker-panel__footer
+  .el-button--small.is-plain,
+body.scene-edit-route-open
+  .scene-edit-popper
+  .el-color-picker-panel__footer
+  .el-button--small.is-plain,
+body.scene-edit-route-open
+  .scene-edit-scene-color-popper
+  .el-color-picker-panel__footer
+  .el-button--small.is-plain {
+  color: #ffffff !important;
+  background: var(--scene-edit-accent) !important;
+  border-color: var(--scene-edit-accent) !important;
+}
+
+/** 颜色弹层主按钮使用设计规范的悬停、按下色，避免被上方次级按钮交互规则覆盖。 */
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker__footer-btn:hover {
+  color: #ffffff !important;
+  background: var(--scene-edit-accent-hover) !important;
+  border-color: var(--scene-edit-accent-hover) !important;
+}
+body.scene-edit-route-open .el-color-picker__panel .el-color-picker__footer-btn:active {
+  color: #ffffff !important;
+  background: var(--scene-edit-accent-active) !important;
+  border-color: var(--scene-edit-accent-active) !important;
+}
+
+/** 色值输入聚焦时沿用属性输入框的青绿色描边，文本始终保持主要文字色。 */
+body.scene-edit-route-open
+  .el-color-picker__panel
+  .el-color-picker-panel__footer
+  .el-input__wrapper.is-focus {
+  box-shadow: inset 0 0 0 1px var(--scene-edit-accent) !important;
+}
+body.scene-edit-route-open .scene-edit-task-color-popper.el-color-picker__panel {
+  background: rgb(18 27 42 / 98%) !important;
+  border: 1px solid var(--scene-edit-line) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--scene-edit-shadow-panel) !important;
+}
+body.scene-edit-route-open .scene-edit-task-color-popper .el-color-picker-panel {
+  color: var(--scene-edit-text) !important;
+  background: transparent !important;
+}
+body.scene-edit-route-open .scene-edit-task-color-popper .el-color-picker-panel.is-border {
+  border: 1px solid rgb(96 165 250 / 16%) !important;
+  border-radius: 10px !important;
+}
+body.scene-edit-route-open .scene-edit-task-color-popper .el-color-picker-panel__footer {
+  border-top: 1px solid var(--scene-edit-line) !important;
+}
+body.scene-edit-route-open .scene-edit-task-color-popper .el-color-picker-panel__footer .el-input,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-input__wrapper,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-input__inner {
+  color: var(--scene-edit-text) !important;
+  background: rgb(11 18 32 / 92%) !important;
+}
+body.scene-edit-route-open .scene-edit-task-color-popper .el-color-picker-panel__footer .el-button,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button
+  span,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-color-dropdown__link-btn,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-color-dropdown__btn {
+  color: var(--scene-edit-text) !important;
+}
+
+/**
+ * 颜色面板底部有两类按钮：
+ * 1. “清空”是文本按钮，需要保持轻量但不能发灰到看不清；
+ * 2. “确定”是 plain 按钮，默认会回退成浅底灰边，所以这里单独收口默认、悬停和禁用态。
+ */
+body.scene-edit-route-open .scene-edit-task-color-popper .el-color-picker-panel__footer .el-button {
+  background: rgb(11 18 32 / 92%) !important;
+  border-color: rgb(96 165 250 / 18%) !important;
+}
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button:hover,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button:focus-visible {
+  color: #eff6ff !important;
+  background: rgb(17 35 58 / 96%) !important;
+  border-color: rgb(96 165 250 / 36%) !important;
+}
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button--text,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button.is-text,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button.is-link {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button--text:hover,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button.is-text:hover,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button.is-link:hover {
+  background: rgb(59 130 246 / 10%) !important;
+}
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button--small.is-plain,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button--default.is-plain {
+  color: #eff6ff !important;
+  background: linear-gradient(
+    180deg,
+    rgb(37 99 235 / 92%) 0%,
+    rgb(30 64 175 / 96%) 100%
+  ) !important;
+  border-color: rgb(96 165 250 / 42%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 10%),
+    0 0 0 1px rgb(59 130 246 / 14%) !important;
+}
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button--small.is-plain:hover,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button--default.is-plain:hover {
+  color: #eff6ff !important;
+  background: linear-gradient(
+    180deg,
+    rgb(59 130 246 / 96%) 0%,
+    rgb(37 99 235 / 98%) 100%
+  ) !important;
+  border-color: rgb(96 165 250 / 54%) !important;
+}
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button.is-disabled,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button.is-disabled:hover,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button.is-disabled
+  span {
+  color: rgb(245 245 245 / 34%) !important;
+  background: rgb(74 74 74 / 44%) !important;
+  border-color: rgb(96 165 250 / 14%) !important;
+  box-shadow: none !important;
+}
+body.scene-edit-route-open .el-color-dropdown {
+  z-index: 4300 !important;
+  background: rgb(18 27 42 / 98%) !important;
+  border: 1px solid var(--scene-edit-line) !important;
+  box-shadow: var(--scene-edit-shadow-panel) !important;
+}
+body.scene-edit-route-open .el-color-dropdown__main-wrapper,
+body.scene-edit-route-open .el-color-dropdown__btns,
+body.scene-edit-route-open .el-color-dropdown__value,
+body.scene-edit-route-open .el-color-dropdown__link-btn,
+body.scene-edit-route-open .el-color-dropdown__color-selector,
+body.scene-edit-route-open .el-color-dropdown__alpha-slider,
+body.scene-edit-route-open .el-color-dropdown__alpha-slider-bar,
+body.scene-edit-route-open .el-color-dropdown__empty {
+  color: var(--scene-edit-text) !important;
+  background-color: transparent !important;
+}
+body.scene-edit-route-open .el-color-dropdown__btns {
+  border-top: 1px solid var(--scene-edit-line) !important;
+}
+body.scene-edit-route-open .el-color-dropdown__value .el-input__wrapper,
+body.scene-edit-route-open .el-color-dropdown__value .el-input__inner {
+  color: var(--scene-edit-text) !important;
+  background: rgb(11 18 32 / 92%) !important;
+}
+body.scene-edit-route-open .el-color-dropdown__link-btn,
+body.scene-edit-route-open .el-color-dropdown__btn {
+  color: var(--scene-edit-text-2) !important;
+}
+
+/**
+ * 状态颜色等业务表单里的预设色块需要在深色主题里保持清晰边界。
+ * 给色块外层补半透明描边和轻微发光，避免弹层抬高后仍然因为底色接近而视觉发闷。
+ */
+body.scene-edit-route-open .el-color-dropdown .el-color-predefine__color-selector {
+  border: 1px solid rgb(96 165 250 / 24%) !important;
+  border-radius: 6px !important;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%) !important;
+}
+body.scene-edit-route-open .el-color-dropdown .el-color-predefine__color-selector.selected {
+  border-color: rgb(96 165 250 / 62%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 12%),
+    0 0 0 1px rgb(96 165 250 / 18%) !important;
+}
+body.scene-edit-route-open .el-color-dropdown .el-color-predefine__color-selector:hover {
+  border-color: rgb(96 165 250 / 40%) !important;
+}
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item.selected,
+body.scene-edit-route-open
+  .el-tree-select__popper
+  .el-tree-node.is-current
+  > .el-tree-node__content,
+body.scene-edit-route-open .el-tree-select__popper .el-tree-node__content:hover {
+  color: var(--scene-edit-text) !important;
+}
+body.scene-edit-route-open .el-popper__arrow::before {
+  background: rgb(18 27 42 / 98%) !important;
+  border-color: var(--scene-edit-line) !important;
+}
+
+/**
+ * 时间选择器的弹层除了外壳，还包含内部面板、时间滚轮、单元格等子结构。
+ * 之前这里只覆盖了 el-picker__popper 外层，内部仍然沿用 Element Plus 默认白色主题，
+ * 所以画布里的时间选择器一打开就会出现白色面板，与场景编辑器深色主题冲突。
+ *
+ * 下面这一组样式专门把日期/时间面板内部也统一到当前项目主色调。
+ */
+body.scene-edit-route-open .el-picker__popper .el-picker-panel,
+body.scene-edit-route-open .el-picker__popper .el-date-picker,
+body.scene-edit-route-open .el-picker__popper .el-date-range-picker,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__body,
+body.scene-edit-route-open .el-picker__popper .el-time-panel,
+body.scene-edit-route-open .el-picker__popper .el-time-spinner,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__content,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__footer {
+  color: var(--scene-edit-text) !important;
+  background: rgb(18 27 42 / 98%) !important;
+  border-color: var(--scene-edit-line) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__icon-btn,
+body.scene-edit-route-open .el-picker__popper .el-date-picker__header-label,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__header-label,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__btn,
+body.scene-edit-route-open .el-picker__popper .el-time-spinner__item,
+body.scene-edit-route-open .el-picker__popper .el-date-table th,
+body.scene-edit-route-open .el-picker__popper .el-date-table td,
+body.scene-edit-route-open .el-picker__popper .el-date-table td span,
+body.scene-edit-route-open .el-picker__popper .el-date-table td div,
+body.scene-edit-route-open .el-picker__popper .el-date-table td em,
+body.scene-edit-route-open .el-picker__popper .el-month-table td .cell,
+body.scene-edit-route-open .el-picker__popper .el-year-table td .cell,
+body.scene-edit-route-open .el-picker__popper .el-date-table td .el-date-table-cell__text {
+  color: var(--scene-edit-text-2) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-date-picker__header,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__header,
+body.scene-edit-route-open .el-picker__popper .el-date-picker__time-header,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__content,
+body.scene-edit-route-open .el-picker__popper .el-date-table,
+body.scene-edit-route-open .el-picker__popper .el-date-table tr,
+body.scene-edit-route-open .el-picker__popper .el-date-table td,
+body.scene-edit-route-open .el-picker__popper .el-month-table,
+body.scene-edit-route-open .el-picker__popper .el-year-table {
+  background: transparent !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-date-table th,
+body.scene-edit-route-open .el-picker__popper .el-date-table td.next-month,
+body.scene-edit-route-open .el-picker__popper .el-date-table td.prev-month,
+body.scene-edit-route-open .el-picker__popper .el-date-table td.available,
+body.scene-edit-route-open .el-picker__popper .el-date-table td.available .el-date-table-cell__text,
+body.scene-edit-route-open .el-picker__popper .el-date-table td.today .el-date-table-cell__text,
+body.scene-edit-route-open .el-picker__popper .el-month-table td .cell,
+body.scene-edit-route-open .el-picker__popper .el-year-table td .cell {
+  color: rgb(234 244 255 / 78%) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-date-table td.disabled,
+body.scene-edit-route-open .el-picker__popper .el-date-table td.disabled .el-date-table-cell__text,
+body.scene-edit-route-open .el-picker__popper .el-month-table td.disabled .cell,
+body.scene-edit-route-open .el-picker__popper .el-year-table td.disabled .cell,
+body.scene-edit-route-open
+  .el-picker__popper
+  .el-date-table
+  td.next-month
+  .el-date-table-cell__text,
+body.scene-edit-route-open
+  .el-picker__popper
+  .el-date-table
+  td.prev-month
+  .el-date-table-cell__text {
+  color: rgb(245 245 245 / 34%) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__icon-btn:hover,
+body.scene-edit-route-open .el-picker__popper .el-date-picker__header-label:hover,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__btn:hover,
+body.scene-edit-route-open .el-picker__popper .el-time-spinner__item:hover,
+body.scene-edit-route-open .el-picker__popper .el-date-table td.available:hover,
+body.scene-edit-route-open .el-picker__popper .el-month-table td .cell:hover,
+body.scene-edit-route-open .el-picker__popper .el-year-table td .cell:hover {
+  color: #eff6ff !important;
+  background: rgb(30 64 175 / 46%) !important;
+}
+
+/**
+ * 这里要区分“今天”和“当前选中值”：
+ * 1. current 表示用户当前真正选中的值，应保持强高亮；
+ * 2. today 只是今天这个日期的提示，不应该和 current 共用同一套选中底色；
+ * 3. 否则当用户选中别的日期时，会视觉上误以为“今天”也仍然被选中了。
+ */
+body.scene-edit-route-open .el-picker__popper .el-time-spinner__item.active,
+body.scene-edit-route-open
+  .el-picker__popper
+  .el-date-table
+  td.current:not(.disabled)
+  .el-date-table-cell__text,
+body.scene-edit-route-open .el-picker__popper .el-month-table td.current:not(.disabled) .cell,
+body.scene-edit-route-open .el-picker__popper .el-year-table td.current:not(.disabled) .cell {
+  color: #eff6ff !important;
+  background: linear-gradient(
+    180deg,
+    rgb(92 101 114 / 88%) 0%,
+    rgb(109 116 128 / 88%) 100%
+  ) !important;
+  box-shadow:
+    inset 2px 0 0 rgb(96 165 250 / 72%),
+    inset 0 0 0 1px rgb(96 165 250 / 8%) !important;
+}
+
+/**
+ * today 只保留“今天标记”语义：
+ * - 不再填充选中背景；
+ * - 用亮橙描边和更亮文字做弱提示；
+ * - 一旦某天被真正选中，仍由 current 的高亮规则接管。
+ */
+html
+  body.scene-edit-route-open
+  .el-picker__popper
+  .el-date-table
+  td.today:not(.current)
+  .el-date-table-cell__text,
+html body.scene-edit-route-open .el-picker__popper .el-month-table td.today:not(.current) .cell,
+html body.scene-edit-route-open .el-picker__popper .el-year-table td.today:not(.current) .cell {
+  color: #eff6ff !important;
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1px rgb(96 165 250 / 38%) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-time-spinner__wrapper::before,
+body.scene-edit-route-open .el-picker__popper .el-time-spinner__wrapper::after,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__content::before,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__content::after {
+  border-color: rgb(96 165 250 / 16%) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-date-picker__time-header,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__footer {
+  border-color: var(--scene-edit-line) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__footer,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__sidebar,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__shortcut {
+  color: var(--scene-edit-text-2) !important;
+  background: rgb(18 27 42 / 98%) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__shortcut:hover,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__link-btn:hover,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__btn:hover {
+  color: #eff6ff !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-button,
+body.scene-edit-route-open .el-picker__popper .el-button span,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__link-btn,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__btn,
+body.scene-edit-route-open .el-picker__popper .el-button--default {
+  color: var(--scene-edit-text) !important;
+}
+
+/**
+ * 日期弹层底部的“此刻 / 确定”本质上也是按钮体系。
+ * 这里把按钮本身、内部文字、纯文本按钮和主按钮统一到项目主题色，
+ * 避免仍然出现 Element Plus 默认的深色文字或白底按钮。
+ */
+body.scene-edit-route-open .el-picker__popper .el-button,
+body.scene-edit-route-open .el-picker__popper .el-button--default,
+body.scene-edit-route-open .el-picker__popper .el-button--small,
+body.scene-edit-route-open .el-picker__popper .el-button--text,
+body.scene-edit-route-open .el-picker__popper .el-button.is-text,
+body.scene-edit-route-open .el-picker__popper .el-button.is-link,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__link-btn,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__btn {
+  color: var(--scene-edit-text) !important;
+  background: rgb(11 18 32 / 92%) !important;
+  border-color: rgb(96 165 250 / 18%) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-button span,
+body.scene-edit-route-open .el-picker__popper .el-button--default span,
+body.scene-edit-route-open .el-picker__popper .el-button--small span,
+body.scene-edit-route-open .el-picker__popper .el-button--text span,
+body.scene-edit-route-open .el-picker__popper .el-button.is-text span,
+body.scene-edit-route-open .el-picker__popper .el-button.is-link span,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__link-btn,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__btn {
+  color: inherit !important;
+}
+
+/**
+ * “此刻”属于日期面板底部的文本按钮。
+ * Element Plus 会单独给文本按钮的默认态挂深色变量，
+ * 所以前面的通用按钮颜色还不够，需要在 footer 这里再压一层静态态颜色。
+ */
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button--text,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button.is-text,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button.is-link,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button > span,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button--text > span,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button.is-text > span,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button.is-link > span {
+  color: rgb(245 245 245 / 82%) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-button--primary,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button:last-child {
+  color: #eff6ff !important;
+  background: linear-gradient(
+    180deg,
+    rgb(59 130 246 / 92%) 0%,
+    rgb(37 99 235 / 92%) 100%
+  ) !important;
+  border-color: rgb(96 165 250 / 42%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 12%),
+    0 0 0 1px rgb(59 130 246 / 16%) !important;
+}
+html body.scene-edit-route-open .el-picker__popper .el-button--primary span,
+html
+  body.scene-edit-route-open
+  .el-picker__popper
+  .el-picker-panel__footer
+  .el-button:last-child
+  span {
+  color: #eff6ff !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__icon-btn,
+body.scene-edit-route-open .el-picker__popper .el-date-picker__header-label,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__header-label,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__header button,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__header span {
+  color: rgb(245 245 245 / 82%) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__icon-btn:hover,
+body.scene-edit-route-open .el-picker__popper .el-date-picker__header-label:hover,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__header-label:hover,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__header button:hover,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__header span:hover {
+  color: #eff6ff !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-input__wrapper,
+body.scene-edit-route-open .el-picker__popper .el-input__inner,
+body.scene-edit-route-open .el-picker__popper .el-date-editor .el-range-input {
+  color: var(--scene-edit-text) !important;
+  background: rgb(11 18 32 / 92%) !important;
+}
+.scene-edit-theme .config-item-box .item-left,
+.scene-edit-theme .setting-item .name {
+  color: var(--scene-edit-text-2);
+}
+.scene-edit-theme .config-item-box {
+  margin: 16px 0;
+}
+.scene-edit-theme .monaco-editor,
+.scene-edit-theme .monaco-editor-background,
+.scene-edit-theme .monaco-editor .margin,
+.scene-edit-theme .overflow-guard {
+  background: rgb(11 18 32 / 96%) !important;
+}
+
+/* Industrial dark editor refresh: graphite surfaces, thin separators, blue precision actions. */
+.scene-edit-theme .el-divider--vertical {
+  border-left-color: var(--scene-edit-line);
+}
+.scene-edit-theme .el-table,
+.scene-edit-dialog .el-table,
+.scene-edit-drawer .el-table {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: rgb(255 255 255 / 3%);
+  --el-table-header-bg-color: rgb(255 255 255 / 6%);
+  --el-table-row-hover-bg-color: rgb(59 130 246 / 12%);
+  --el-table-border-color: var(--scene-edit-line);
+  --el-table-header-text-color: var(--scene-edit-text-2);
+  --el-table-text-color: var(--scene-edit-text);
+}
+.scene-edit-dialog,
+.scene-edit-drawer {
+  background: rgb(18 27 42 / 96%);
+  border: 1px solid var(--scene-edit-line);
+  box-shadow: none;
+}
+.scene-edit-dialog .el-dialog__header,
+.scene-edit-drawer .el-drawer__header,
+.scene-edit-dialog__header,
+.scene-edit-drawer__header {
+  color: var(--scene-edit-text);
+  background: rgb(255 255 255 / 5%);
+  border-bottom: 1px solid var(--scene-edit-line);
+}
+.scene-edit-theme .el-overlay.el-modal-dialog .el-dialog,
+body.scene-edit-route-open .el-overlay.el-modal-dialog .el-dialog,
+.scene-edit-theme .el-overlay.is-drawer .el-drawer,
+body.scene-edit-route-open .el-overlay.is-drawer .el-drawer {
+  color: var(--scene-edit-text) !important;
+  background: rgb(18 27 42 / 96%) !important;
+  border: 1px solid var(--scene-edit-line) !important;
+  box-shadow: none !important;
+}
+.scene-edit-popover.el-popper,
+.scene-edit-popper.el-popper,
+body.scene-edit-route-open .el-select__popper,
+body.scene-edit-route-open .el-tree-select__popper,
+body.scene-edit-route-open .el-popover.el-popper,
+body.scene-edit-route-open .el-popconfirm.el-popper,
+body.scene-edit-route-open .el-picker__popper,
+body.scene-edit-route-open .el-cascader__dropdown,
+body.scene-edit-route-open .el-color-dropdown,
+body.scene-edit-route-open .scene-edit-task-color-popper.el-popper,
+body.scene-edit-route-open .scene-edit-task-color-popper.el-tooltip__popper,
+body.scene-edit-route-open .scene-edit-task-color-popper.el-color-picker__panel {
+  color: var(--scene-edit-text) !important;
+  background: rgb(18 27 42 / 96%) !important;
+  border: 1px solid var(--scene-edit-line) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+.scene-edit-popover.el-popper .el-popper__arrow::before,
+.scene-edit-popper.el-popper .el-popper__arrow::before,
+body.scene-edit-route-open .el-popper__arrow::before {
+  background: rgb(18 27 42 / 96%) !important;
+  border-color: var(--scene-edit-line) !important;
+}
+body.scene-edit-route-open .el-select__popper .el-select-dropdown,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown,
+body.scene-edit-route-open .el-tree-select__popper .el-tree,
+body.scene-edit-route-open .el-tree-select__popper .el-scrollbar,
+body.scene-edit-route-open .el-tree-select__popper .el-scrollbar__view,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__wrap,
+body.scene-edit-route-open .el-select__popper .el-scrollbar,
+body.scene-edit-route-open .el-select__popper .el-scrollbar__view,
+body.scene-edit-route-open .el-select__popper .el-select-dropdown__wrap,
+body.scene-edit-route-open .el-cascader__dropdown .el-scrollbar,
+body.scene-edit-route-open .el-cascader__dropdown .el-scrollbar__view,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel,
+body.scene-edit-route-open .el-picker__popper .el-date-picker,
+body.scene-edit-route-open .el-picker__popper .el-date-range-picker,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__body,
+body.scene-edit-route-open .el-picker__popper .el-time-panel,
+body.scene-edit-route-open .el-picker__popper .el-time-spinner,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__content,
+body.scene-edit-route-open .el-picker__popper .el-time-panel__footer,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__sidebar,
+body.scene-edit-route-open .scene-edit-task-color-popper .el-color-picker-panel,
+body.scene-edit-route-open .el-color-dropdown__main-wrapper,
+body.scene-edit-route-open .el-color-dropdown__btns,
+body.scene-edit-route-open .el-color-dropdown__value,
+body.scene-edit-route-open .el-color-dropdown__color-selector,
+body.scene-edit-route-open .el-color-dropdown__alpha-slider,
+body.scene-edit-route-open .el-color-dropdown__alpha-slider-bar {
+  color: var(--scene-edit-text) !important;
+  background: rgb(18 27 42 / 96%) !important;
+}
+body.scene-edit-route-open .el-select__wrapper,
+body.scene-edit-route-open .el-input__wrapper,
+body.scene-edit-route-open .el-textarea__inner,
+body.scene-edit-route-open .el-picker__popper .el-input__wrapper,
+body.scene-edit-route-open .el-picker__popper .el-input__inner,
+body.scene-edit-route-open .el-picker__popper .el-date-editor .el-range-input,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-input__wrapper,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-input__inner {
+  color: var(--scene-edit-text) !important;
+  background: var(--scene-edit-bg-input) !important;
+  border-color: var(--scene-edit-line) !important;
+  box-shadow: inset 0 0 0 1px var(--scene-edit-line) !important;
+}
+body.scene-edit-route-open .el-select__wrapper:hover,
+body.scene-edit-route-open .el-select__wrapper.is-hovering,
+body.scene-edit-route-open .el-select__wrapper.is-focused,
+body.scene-edit-route-open .el-select__wrapper.is-active {
+  background: rgb(255 255 255 / 9%) !important;
+  border-color: var(--scene-edit-accent) !important;
+  box-shadow: inset 0 0 0 1px var(--scene-edit-accent) !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item,
+body.scene-edit-route-open .el-cascader-node,
+body.scene-edit-route-open .el-tree-node__content,
+body.scene-edit-route-open .el-picker__popper .el-date-table td,
+body.scene-edit-route-open .el-picker__popper .el-date-table td span,
+body.scene-edit-route-open .el-picker__popper .el-month-table td .cell,
+body.scene-edit-route-open .el-picker__popper .el-year-table td .cell {
+  color: var(--scene-edit-text-2) !important;
+  background: transparent !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item *,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item *,
+body.scene-edit-route-open .el-tree-node__content *,
+body.scene-edit-route-open .el-tree-node__label,
+body.scene-edit-route-open .el-cascader-node *,
+body.scene-edit-route-open .el-cascader-node__label {
+  color: inherit !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item.hover,
+body.scene-edit-route-open .el-select-dropdown__item.is-hovering,
+body.scene-edit-route-open .el-select-dropdown__item:hover,
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item.is-hovering,
+body.scene-edit-route-open .el-cascader-node:hover,
+body.scene-edit-route-open .el-cascader-node.in-active-path,
+body.scene-edit-route-open .el-tree-node:focus > .el-tree-node__content,
+body.scene-edit-route-open .el-tree-node__content:hover,
+body.scene-edit-route-open .el-picker__popper .el-date-table td.available:hover,
+body.scene-edit-route-open .el-picker__popper .el-month-table td .cell:hover,
+body.scene-edit-route-open .el-picker__popper .el-year-table td .cell:hover {
+  color: var(--scene-edit-text) !important;
+  background: rgb(59 130 246 / 14%) !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item.selected,
+body.scene-edit-route-open .el-select-dropdown__item.is-selected,
+body.scene-edit-route-open .el-select-dropdown__item[aria-selected='true'],
+body.scene-edit-route-open .el-tree-select__popper .el-select-dropdown__item.is-selected,
+body.scene-edit-route-open .el-cascader-node.is-active,
+body.scene-edit-route-open .el-tree-node.is-current > .el-tree-node__content,
+body.scene-edit-route-open
+  .el-tree-select__popper
+  .el-tree-node.is-current
+  > .el-tree-node__content,
+body.scene-edit-route-open .el-tree-select__popper .el-tree-node__content[aria-selected='true'],
+body.scene-edit-route-open .el-picker__popper .el-time-spinner__item.active,
+body.scene-edit-route-open
+  .el-picker__popper
+  .el-date-table
+  td.current:not(.disabled)
+  .el-date-table-cell__text,
+body.scene-edit-route-open .el-picker__popper .el-month-table td.current:not(.disabled) .cell,
+body.scene-edit-route-open .el-picker__popper .el-year-table td.current:not(.disabled) .cell {
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background: var(--scene-edit-accent) !important;
+  box-shadow: none !important;
+}
+body.scene-edit-route-open .el-select-dropdown__item.selected *,
+body.scene-edit-route-open .el-select-dropdown__item.is-selected *,
+body.scene-edit-route-open .el-select-dropdown__item[aria-selected='true'] *,
+body.scene-edit-route-open .el-tree-node.is-current > .el-tree-node__content *,
+body.scene-edit-route-open
+  .el-tree-select__popper
+  .el-tree-node.is-current
+  > .el-tree-node__content
+  *,
+body.scene-edit-route-open .el-tree-select__popper .el-tree-node__content[aria-selected='true'] *,
+body.scene-edit-route-open .el-cascader-node.is-active * {
+  color: #ffffff !important;
+}
+body.scene-edit-route-open
+  .el-picker__popper
+  .el-date-table
+  td.today:not(.current)
+  .el-date-table-cell__text,
+body.scene-edit-route-open .el-picker__popper .el-month-table td.today:not(.current) .cell,
+body.scene-edit-route-open .el-picker__popper .el-year-table td.today:not(.current) .cell {
+  color: var(--scene-edit-accent) !important;
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1px var(--scene-edit-accent) !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-button,
+body.scene-edit-route-open .el-picker__popper .el-button--default,
+body.scene-edit-route-open .el-picker__popper .el-button--small,
+body.scene-edit-route-open .scene-edit-task-color-popper .el-color-picker-panel__footer .el-button,
+body.scene-edit-route-open .el-color-dropdown__btn {
+  color: var(--scene-edit-text) !important;
+  background: rgb(255 255 255 / 8%) !important;
+  border-color: var(--scene-edit-line) !important;
+  box-shadow: none !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-button--primary,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button:last-child,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button--small.is-plain,
+body.scene-edit-route-open
+  .scene-edit-task-color-popper
+  .el-color-picker-panel__footer
+  .el-button--default.is-plain {
+  color: #ffffff !important;
+  background: var(--scene-edit-accent) !important;
+  border-color: var(--scene-edit-accent) !important;
+  box-shadow: none !important;
+}
+body.scene-edit-route-open .el-picker__popper .el-button--primary span,
+body.scene-edit-route-open .el-picker__popper .el-picker-panel__footer .el-button:last-child span {
+  color: #ffffff !important;
+}
+body.scene-edit-route-open
+  .scene-edit-theme
+  .scene-edit-resource-panel
+  .scene-edit-resource-card:hover {
+  background: rgb(90 178 165 / 14%);
+  border-color: rgb(90 178 165 / 32%) !important;
+  box-shadow: none;
+}
+body.scene-edit-route-open .scene-edit-theme .monaco-editor,
+body.scene-edit-route-open .scene-edit-theme .monaco-editor-background,
+body.scene-edit-route-open .scene-edit-theme .monaco-editor .margin,
+body.scene-edit-route-open .scene-edit-theme .overflow-guard {
+  background: #0b1220 !important;
+}

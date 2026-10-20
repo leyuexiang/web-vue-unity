@@ -1,0 +1,7 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 暗色管理卡片专用下线图标：擦除线固定使用卡片底色，不能对整图反色。 -->
+  <path d="M17.9167 2.08301L12.375 17.9163L9.20837 10.7913L2.08337 7.62467L17.9167 2.08301Z" stroke="#D7E0E8" stroke-width="1.66667" stroke-linejoin="round"/>
+  <path d="M17.9167 2.08301L9.20837 10.7913" stroke="#D7E0E8" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M6.08971 2.00019L18.8718 14.0003" stroke="#131C26" stroke-width="3.34" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M4.49309 2.0575L17.7821 14.7225" stroke="#D7E0E8" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

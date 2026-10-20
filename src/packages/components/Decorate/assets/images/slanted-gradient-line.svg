@@ -1,0 +1,12 @@
+<svg width="289" height="10" viewBox="0 0 289 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 缩略图保留用户原始路径、颜色和透明度，移除粘贴内容中的转义符。 -->
+  <line opacity="0.4" y1="9.5" x2="205" y2="9.5" stroke="#4AC36A"/>
+  <path d="M208.933 0H216.667L210.733 10H203L208.933 0Z" fill="#4AC36A"/>
+  <path opacity="0.6" d="M220.6 0L288.334 0L282.4 10H214.667L220.6 0Z" fill="url(#slanted-gradient)"/>
+  <defs>
+    <linearGradient id="slanted-gradient" x1="296" y1="5" x2="214.667" y2="5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#235D33" stop-opacity="0"/>
+      <stop offset="1" stop-color="#4AC36A" stop-opacity="0.8"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,28 +1,54 @@
 # Web Unity
 
-基于 `jtyf-web-three` 交互设计迁移的独立 Unity 云渲染场景编辑器。
+从 `jtyf-web-three` 迁入管理页面、编辑器及完整二维体系，后续接入 Unity 云渲染。
 
 ## 当前边界
 
-- Vue 负责编辑器 UI、SceneStore、命令历史和四包保存。
-- Unity 负责唯一三维视口、拾取、Gizmo、模型和运行表现。
-- 本项目不依赖 CesiumJS 或 Three.js。
+- 当前为第一阶段二维验收版本：来源页面、二维组件、事件、数据、命令历史、保存与预览已迁入。
+- 二维宿主独立运行，不连接信令或 Unity；三维配置保全，需要实际三维能力的操作显示待接入。
+- 原云渲染传输与协议代码保持不变。用户确认二维后，再实施三维适配。
+- 本项目不安装来源的浏览器三维引擎依赖。
 
 ## 开发
 
-```bash
+要求：Node.js 22.12 或以上，pnpm 10.34.6。首次配置可参考 `.env.example`，复制为 `.env.development.local` 后填写业务地址、登录应用编号和嵌入模式；不要覆盖已有有效配置。
+
+```powershell
 pnpm install
-pnpm type-check
-pnpm test
-pnpm build
 pnpm dev
 ```
 
+使用示例配置时访问 `http://localhost:5180/threeWeb/`，首页进入场景管理。独立模式登录表单支持运营端与租户端直接切换，认证成功后展示所选平台的内容，刷新保持该平台；登录、用户资料与退出共用 `VITE_DIM3D_SERVER_URL`；当前默认复用参考项目服务器。真实登录、场景与资源列表依赖业务后端；二维阶段无需启动 Unity。生产配置使用 `.env.production.local`，产物在 `dist/web-unity`，服务器须为配置的访问子路径提供路由回退。
+
+```powershell
+pnpm type-check
+pnpm test
+pnpm media:test
+pnpm audit:frontend
+pnpm build
+```
+
+隔离浏览器验收使用已安装的 Edge，启动开发服务器后执行以下命令。脚本模拟业务接口，测试凭据仅存在于隔离会话，不写真实后端。
+
+```powershell
+$env:TWOD_SMOKE_FULL='1'
+$env:TWOD_SMOKE_REPORT='docs/migration/09-二维浏览器验收结果.json'
+pnpm test:browser:2d
+```
+
+默认测试地址为 `http://127.0.0.1:5180/threeWeb`，其他访问路径通过 `TWOD_SMOKE_BASE_URL` 配置。第一阶段交付范围、验证边界和人工验收步骤见 [二维迁移交付与验收说明](docs/migration/10-第一阶段二维迁移交付与验收说明.md)。
+
+二维视频的服务端配置见 `server/media.env.example`。开发中间件只用于本地接入；生产媒体服务需要单独设置服务端环境变量、业务鉴权和代理，不能与 Unity 云渲染通道混用。
+
 实施资料：
 
+- 后端从零开发交接：[接口文档入口](docs/api/README.md)，包含当前二维接口、完整场景数据结构及后续三维和 Unity 云渲染接口。
+- 当前迁移执行计划：[二维完整迁移与 Unity 渲染替换分阶段合并计划](docs/migration/07-二维完整迁移与Unity渲染替换分阶段合并计划.md)。先完成前端与完整二维迁移，经用户验收后再替换三维底层；迁移顺序以此文档为准。
 - 全链路总体计划：`docs/migration/01-Unity云渲染全链路改造总体里程碑计划.md`
 - 前端专项实施规划：`docs/migration/02-Unity云渲染独立前端迁移实施规划.md`
 - 当前迁移状态：`docs/migration/03-Unity云渲染迁移状态.md`
 - 测试服务器 SSH/发布授权：`docs/migration/04-测试服务器SSH登录与发布授权.md`
 - 测试信令部署与 Launcher 联调：`docs/migration/05-测试信令部署与Launcher联调记录.md`
 - Unity 编辑器直连端到端联调：`docs/migration/06-Unity编辑器直连端到端联调记录.md`
+
+独立鉴权协议、现有接口证据与后续环境切换步骤见 [独立登录鉴权设计与环境切换](docs/api/05-独立登录鉴权设计与环境切换.md)。旧独立管理鉴权接口已停用，不作为新后端开发依据。

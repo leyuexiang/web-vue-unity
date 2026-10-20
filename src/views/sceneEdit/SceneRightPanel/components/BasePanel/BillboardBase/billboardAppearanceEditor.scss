@@ -1,0 +1,129 @@
+.scene-edit-billboard-appearance__section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.scene-edit-billboard-appearance__section-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 21px;
+  color: var(--scene-edit-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scene-edit-billboard-appearance__double-number,
+.scene-edit-billboard-appearance__padding-fields,
+.scene-edit-billboard-appearance__distance-fields,
+.scene-edit-billboard-appearance__border-fields,
+.scene-edit-billboard-appearance__slider-field,
+.scene-edit-billboard-appearance__background-color {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.scene-edit-billboard-appearance__double-number,
+.scene-edit-billboard-appearance__padding-fields,
+.scene-edit-billboard-appearance__distance-fields {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+}
+
+.scene-edit-billboard-appearance__double-number {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.scene-edit-billboard-appearance__padding-fields {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* 距离字段沿用天气面板的紧凑标签加数值控件规格，四项在窄侧栏中仍保持稳定网格。 */
+.scene-edit-billboard-appearance__distance-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.scene-edit-billboard-appearance__distance-fields label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  min-width: 0;
+  color: var(--scene-edit-text-2);
+}
+
+.scene-edit-billboard-appearance__distance-fields label > span {
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scene-edit-billboard-appearance__double-number :deep(.el-input-number),
+.scene-edit-billboard-appearance__padding-fields :deep(.el-input-number),
+.scene-edit-billboard-appearance__distance-fields :deep(.el-input-number) {
+  width: 100%;
+}
+
+.scene-edit-billboard-appearance__background-color {
+  flex: 1 1 auto;
+  gap: 12px;
+}
+
+.scene-edit-billboard-appearance__background-color label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 20px;
+  font-size: 12px;
+  color: var(--scene-edit-text-2);
+}
+
+.scene-edit-billboard-appearance__border-fields {
+  flex: 1 1 auto;
+  gap: 12px;
+}
+
+.scene-edit-billboard-appearance__border-fields :deep(.scene-edit-property-number-input) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.scene-edit-billboard-appearance__border-fields :deep(.el-input-number) {
+  width: 100%;
+}
+
+.scene-edit-billboard-appearance__slider-field {
+  flex: 1 1 auto;
+  gap: 12px;
+}
+
+.scene-edit-billboard-appearance__slider-field :deep(.scene-edit-property-slider) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.scene-edit-billboard-appearance__slider-field :deep(.scene-edit-property-number-input) {
+  flex: 0 0 62px;
+  width: 62px;
+}
+
+.scene-edit-billboard-appearance__slider-field :deep(.el-input-number) {
+  width: 100%;
+}
+
+@container scene-right-panel (width <= 340px) {
+  .scene-edit-billboard-appearance__padding-fields,
+  .scene-edit-billboard-appearance__distance-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scene-edit-billboard-appearance__border-fields {
+    gap: 8px;
+  }
+}
