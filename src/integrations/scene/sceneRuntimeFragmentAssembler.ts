@@ -396,7 +396,9 @@ const toAssetRef = (
     /** 资源版本是稳定恢复信息；重新补地址时必须保留，不能退化为仅有编号和URL。 */
     ...(getString(record.version) ? { version: getString(record.version) } : {}),
     ...(getString(record.contentHash) ? { hash: getString(record.contentHash) } : {}),
-    ...(isRecord(record.metadata) ? { metadata: record.metadata } : {}),
+    ...(isRecord(record.metadata) || assetId !== resourceKey
+      ? { metadata: { ...(isRecord(record.metadata) ? record.metadata : {}), assetId } }
+      : {}),
     ...(lodVariants.length > 0 ? { modelLodVariants: lodVariants } : {}),
   }
 }

@@ -4,14 +4,14 @@ import type { VegetationQualityPreset } from './types'
  * 植被自身的阴影参与方式。
  *
  * 该类型只描述植被的局部渲染意图，不控制天气系统的全局阴影开关、阴影贴图尺寸或级联参数。
- * 运行时再把它映射为 Cesium（铯引擎）的公开 ShadowMode 枚举，保证领域数据不依赖具体引擎。
+ * 运行时通过 Unity 协议应用该语义，领域数据不依赖具体引擎枚举。
  */
-export type CesiumVegetationShadowMode = 'enabled' | 'receive-only' | 'disabled'
+export type VegetationShadowMode = 'enabled' | 'receive-only' | 'disabled'
 
 /** 三档植被渲染的跨正式瓦片和编辑预览共享语义。 */
 export interface VegetationQualityRenderingProfile {
   /** 植被是否投射阴影、只接收阴影或完全退出阴影计算。 */
-  shadowMode: CesiumVegetationShadowMode
+  shadowMode: VegetationShadowMode
   /** 该档位的推荐正式植被最大显示距离，单位为米；用户仍可手动改成自定义值。 */
   recommendedDisplayDistanceM: number
 }

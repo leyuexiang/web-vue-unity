@@ -61,7 +61,10 @@ export class JsonRpcUnityCloudRuntime implements UnityCloudRuntime {
   }
 
   async loadScene(scene: SceneDefinition): Promise<void> {
-    if (this.capabilities?.features['scene.loadDraft'] === false) throw new Error('Unity 尚未支持草稿场景加载')
+    if (this.capabilities?.features['scene.loadDraft'] === false) throw new Error('当前 Unity 播放器尚未支持网页场景对象加载，请更新播放器')
+    if (this.capabilities && !this.capabilities.sceneTypes.includes(scene.type)) {
+      throw new Error(`当前 Unity 播放器不支持 ${scene.type} 场景，请更新对应端的播放器`)
+    }
     this.sceneId = scene.id
     this.sceneGeneration += 1
     // Unity 只接收三维投影；二维组件和业务设置继续由 Web 保存，减少通道负载。
@@ -71,6 +74,7 @@ export class JsonRpcUnityCloudRuntime implements UnityCloudRuntime {
       sceneType: scene.type,
       objects: scene.objects,
       resources: scene.resources,
+      ...(scene.geospatial ? { geospatial: scene.geospatial } : {}),
     }
     const response = await this.send<UnitySceneSnapshotDto, unknown>('editor.v1.scene.loadDraft', snapshot)
     this.assertSuccess(response)
@@ -154,6 +158,9 @@ export class JsonRpcUnityCloudRuntime implements UnityCloudRuntime {
       }),
       this.transport.subscribe<UnityRuntimeEventMap['sceneFailed']>('editor.v1.scene.failed', (event) => {
         if (this.acceptEvent(event)) this.emit('sceneFailed', event.payload)
+      }),
+      this.transport.subscribe<UnityRuntimeEventMap['runtimeError']>('editor.v1.runtime.error', (event) => {
+        if (this.acceptEvent(event)) this.emit('runtimeError', event.payload)
       }),
     )
   }

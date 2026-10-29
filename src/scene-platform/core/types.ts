@@ -1,7 +1,7 @@
 /**
  * 场景类型。
- * - gis: 地理坐标体系，渲染/拾取由 Cesium Runtime 主导
- * - local3d: 局部坐标体系，渲染/拾取由 Three Runtime 主导
+ * - gis: 地理坐标体系，由 Unity GIS 场景渲染与拾取
+ * - local3d: 局部坐标体系，由 Unity 普通三维场景渲染与拾取
  */
 export type SceneType = 'gis' | 'local3d'
 

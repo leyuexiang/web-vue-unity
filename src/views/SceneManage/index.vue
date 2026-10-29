@@ -246,6 +246,23 @@
       @updateList="getList"
     />
 
+    <el-dialog v-model="enterDialog.visible" title="选择渲染方式" width="420px" align-center>
+      <p class="manage-scene-render-choice__scene">{{ enterDialog.record?.name }}</p>
+      <div class="manage-scene-render-choice__options">
+        <button
+          v-for="option in renderModeOptions"
+          :key="option.label"
+          type="button"
+          class="manage-scene-render-choice__option"
+          :disabled="!option.configured || (option.mode === 'webgpu' && !browserWebGpuAvailable)"
+          @click="openSceneEditor(option.mode)"
+        >
+          <strong>{{ option.label }}</strong>
+          <span>{{ option.mode === 'webgpu' && !browserWebGpuAvailable ? '当前浏览器或页面环境不支持 WebGPU' : option.configured ? option.description : '尚未配置，暂不可进入' }}</span>
+        </button>
+      </div>
+    </el-dialog>
+
     <!-- 发布流程复用管理端弹窗容器；最终提交调用新版场景发布接口。 -->
     <el-dialog
       v-model="publishDialog.visible"
@@ -460,6 +477,7 @@ import {
   installTabAuthResponder,
 } from '@/auth/tabAuthHandoff'
 import { ElMessage } from 'element-plus'
+import { isUnityRenderModeConfigured, type UnityRenderMode } from '@/unity-runtime/renderMode'
 import AddDialog from './AddDialog.vue'
 import manageCardPublishIcon from '@/assets/icons/manage-card-publish.svg'
 import manageCardWriteIcon from '@/assets/icons/manage-card-write.svg'
@@ -522,6 +540,13 @@ type SceneListQueryParams = import('@/servers/manual/dim3d/api/scene').Dim3dScen
 
 const router = useRouter()
 installTabAuthResponder()
+const enterDialog = reactive<{ visible: boolean; record: TransferListItem | null }>({ visible: false, record: null })
+const browserWebGpuAvailable = typeof navigator !== 'undefined' && 'gpu' in navigator && window.isSecureContext
+const renderModeOptions = [
+  { mode: 'cloud' as const, label: 'Unity 云渲染', description: '由服务器渲染并传输画面', configured: isUnityRenderModeConfigured('cloud') },
+  { mode: 'webgpu' as const, label: 'Unity WebGPU', description: '在当前浏览器加载 Unity Web 构建', configured: isUnityRenderModeConfigured('webgpu') },
+  { mode: null, label: '现有编辑模式', description: '继续使用当前场景配置编辑器', configured: true },
+]
 
 /**
  * 场景卡片只消费认证上下文转换后的能力快照，不直接读取 iframe 消息或平台字段。
@@ -1289,45 +1314,54 @@ const selectProjectCategory = (value: string) => {
   void getList()
 }
 
+const openSceneEditor = (mode: UnityRenderMode | null) => {
+  const record = enterDialog.record
+  if (!record || (mode && !isUnityRenderModeConfigured(mode)) || (mode === 'webgpu' && !browserWebGpuAvailable)) return
+  const sceneId = String(record.id ?? '').trim()
+  /**
+   * 新场景接口的路径编号按字符串契约传递，不能先转换为 Number。
+   * 这里仅校验非空，避免大整数精度丢失或把有效业务编号转换成 NaN；
+   * 编辑器和预览页均继续按字符串保存该编号，避免长整型在路由链路中失真。
+   */
+  if (!sceneId || sceneId === 'undefined' || sceneId === 'null' || sceneId === 'NaN') {
+    ElMessage.warning('当前场景缺少有效编号，暂不能进入编辑器')
+    return
+  }
+  /**
+   * 锁申请必须由编辑器页自己完成。内嵌管理页先申请锁再 window.open 存在不可恢复竞态：
+   * 页签创建或跨来源导航失败时，管理页无法可靠释放刚申请的锁，最终造成“无人编辑但场景被占用”。
+   * 这里先打开编辑页，再由编辑器初始化阶段申请锁；锁定时编辑器会自行关闭当前页签。
+   */
+  const { href } = router.resolve({
+    path: '/sceneEdit',
+    query: {
+      id: sceneId,
+      name: record.name,
+      sceneType: record.sceneType === 'GisScene' ? 'gis' : 'local3d',
+      ...(mode ? { renderMode: mode } : {}),
+      // 独立预览页不能读取父页面内存上下文，平台类型必须写入 URL。
+      platformType: authContext.getPlatformType() || 'operation',
+    },
+  })
+  const targetHref = withTabAuthHandoff(href)
+  const editorWindow = window.open(targetHref, '_blank')
+  if (!editorWindow) {
+    ElMessage.warning('编辑器页签打开失败，请允许浏览器弹窗后重试')
+    return
+  }
+  try {
+    const context = authContext.get()
+    if (context) editorWindow.name = createTabAuthWindowName(context)
+  } catch {
+    // 新页签已经开始加载时，鉴权走地址上的 authHandoff。
+  }
+  enterDialog.visible = false
+}
+
 const OperateActionMap = {
   [OperateEnum.Enter]: (record: TransferListItem) => {
-    const sceneId = String(record.id ?? '').trim()
-    /**
-     * 新场景接口的路径编号按字符串契约传递，不能先转换为 Number。
-     * 这里仅校验非空，避免大整数精度丢失或把有效业务编号转换成 NaN；
-     * 编辑器和预览页均继续按字符串保存该编号，避免长整型在路由链路中失真。
-     */
-    if (!sceneId || sceneId === 'undefined' || sceneId === 'null' || sceneId === 'NaN') {
-      ElMessage.warning('当前场景缺少有效编号，暂不能进入编辑器')
-      return
-    }
-    /**
-     * 锁申请必须由编辑器页自己完成。内嵌管理页先申请锁再 window.open 存在不可恢复竞态：
-     * 页签创建或跨来源导航失败时，管理页无法可靠释放刚申请的锁，最终造成“无人编辑但场景被占用”。
-     * 这里先打开编辑页，再由编辑器初始化阶段申请锁；锁定时编辑器会自行关闭当前页签。
-     */
-    const { href } = router.resolve({
-      path: '/sceneEdit',
-      query: {
-        id: sceneId,
-        name: record.name,
-        sceneType: record.sceneType === 'GisScene' ? 'gis' : 'local3d',
-        // 独立预览页不能读取父页面内存上下文，平台类型必须写入 URL。
-        platformType: authContext.getPlatformType() || 'operation',
-      },
-    })
-    const targetHref = withTabAuthHandoff(href)
-    const editorWindow = window.open(targetHref, '_blank')
-    if (!editorWindow) {
-      ElMessage.warning('编辑器页签打开失败，请允许浏览器弹窗后重试')
-      return
-    }
-    try {
-      const context = authContext.get()
-      if (context) editorWindow.name = createTabAuthWindowName(context)
-    } catch {
-      // 新页签已经开始加载时，鉴权走地址上的 authHandoff。
-    }
+    enterDialog.record = record
+    enterDialog.visible = true
   },
   [OperateEnum.Preview]: (record: TransferListItem) => {
     const sceneId = String(record.id ?? '').trim()
@@ -1896,4 +1930,10 @@ const handleMediaPreview = (record: TransferListItem) => {
     max-width: 608px;
   }
 }
+.manage-scene-render-choice__scene { margin: 0 0 16px; color: #606b70; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.manage-scene-render-choice__options { display: grid; gap: 10px; }
+.manage-scene-render-choice__option { display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 14px 16px; text-align: left; color: #263b40; background: #f5faf9; border: 1px solid #d4e7e3; border-radius: 8px; cursor: pointer; }
+.manage-scene-render-choice__option:hover:not(:disabled), .manage-scene-render-choice__option:focus-visible { border-color: #51a195; background: #edf7f5; }
+.manage-scene-render-choice__option span { font-size: 12px; color: #758587; }
+.manage-scene-render-choice__option:disabled { opacity: .55; cursor: not-allowed; }
 </style>

@@ -39,7 +39,7 @@ const isRuntimeFallbackImageryLayer = (layer: SceneLayer): boolean => {
     layerName.includes('natural earth')
 
   /**
-   * 只有 Cesium 运行时兜底底图才需要被替换。
+   * 只移除旧浏览器 GIS 运行时写入的兜底底图，保留用户配置的 Unity GIS 图层。
    * 本地 local 图层即使来自编辑器默认选择，也是公司内网真实切片，不能当作兜底删除；
    * 否则接口短暂不可用时，已保存的本地底图也会被清空，页面又回到星空背景。
    */
@@ -355,7 +355,7 @@ const applyTileOrigin = (scene: SceneDefinition, tile: GisTileRecord): SceneDefi
   /**
    * 旧 GIS 面板在选择影像后会飞到影像记录的经纬度。
    * 新平台没有直接操作旧 sceneApi，因此这里把该经纬度写入默认坐标系统，
-   * 让 Runtime 工厂创建 Cesium 默认相机时直接定位到本地切片区域。
+   * 让 Unity GIS 的地理原点与默认相机直接定位到本地切片区域。
    */
   return {
     ...scene,
@@ -370,7 +370,7 @@ const applyTileOrigin = (scene: SceneDefinition, tile: GisTileRecord): SceneDefi
 /**
  * 规范化 GIS 场景影像配置。
  *
- * 空 GIS 场景不主动请求或选择本地切片，交给 Cesium Runtime 使用在线默认影像；
+ * 空 GIS 场景不主动请求或选择本地切片，由 Unity 创建椭球地表；
  * 本地切片只有在用户主动配置并保存到场景定义后，才允许通过 GIS 数据接口补齐层级和范围。
  * 这样可避免把某一条临时本地数据误当成所有新场景的默认底图。
  */
@@ -398,7 +398,7 @@ export const ensureEditorGisDefaultImageryLayer = async (
 
     return sceneWithEnrichedLocalImagery
   } catch (error) {
-    appLogger.warn('editorGisDefaultLayerAdapter', '加载默认本地 GIS 影像失败，保留 Runtime 内置降级底图', error)
+    appLogger.warn('editorGisDefaultLayerAdapter', '补齐本地 GIS 影像配置失败，保留已保存图层配置', error)
     return sceneWithoutRuntimeFallback
   }
 }

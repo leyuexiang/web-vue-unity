@@ -1,7 +1,10 @@
 import { BusinessPacketDecoder } from './BusinessPacketDecoder'
-import { inputDescriptors, LegacyInputEncoder } from './LegacyInputEncoder'
+import { inputDescriptors } from './LegacyInputEncoder'
+import { CloudInputSender } from './CloudInputSender'
+import { CloudStreamStats, type CloudStreamPerformance } from './cloudStreamStats'
 import type { UnityEditorEventType, UnityEditorMethod, UnityEventEnvelope, UnityRequestEnvelope, UnityResponseEnvelope } from '@/unity-runtime/protocol/types'
 import type { UnityTransport } from './UnityTransport'
+import { decodeUnityRpcResponse } from './decodeUnityRpcResponse'
 
 export type RenderConnectionState = 'connecting' | 'waiting-renderer' | 'negotiating' | 'connected' | 'reconnecting' | 'failed' | 'closed'
 export interface LegacySessionConfig {
@@ -23,6 +26,7 @@ export interface LegacyConnectionSnapshot {
   rpcReady: boolean
   runtimeReady: boolean
   peerState: RTCPeerConnectionState | 'new'
+  performance?: CloudStreamPerformance
 }
 type LegacySignal = { type?: string; name?: string; code?: string; data?: Record<string, unknown>; message?: string; from?: string; connectionId?: string; candidate?: string; sdpMLineIndex?: number; sdpMid?: string }
 type SnapshotListener = (snapshot: LegacyConnectionSnapshot) => void
@@ -53,7 +57,10 @@ export class LegacyUnityTransport implements UnityTransport {
   private rpcChannel: RTCDataChannel | null = null
   private stream = new MediaStream()
   private readonly decoder = new BusinessPacketDecoder()
-  private readonly inputEncoder = new LegacyInputEncoder()
+  private readonly inputSender = new CloudInputSender(() => this.inputChannel)
+  private readonly streamStats = new CloudStreamStats()
+  private statsTimer: number | null = null
+  private statsPoll = 0
   private readonly pending = new Map<string, { resolve: (response: UnityResponseEnvelope<unknown>) => void; reject: (error: Error) => void; timer: number; generation: number }>()
   private readonly subscribers = new Map<string, Set<(event: UnityEventEnvelope<unknown>) => void>>()
   private readonly snapshotListeners = new Set<SnapshotListener>()
@@ -66,6 +73,7 @@ export class LegacyUnityTransport implements UnityTransport {
   private disconnectTimer = 0
   private connectionTimer = 0
   private pendingCandidates: RTCIceCandidateInit[] = []
+  private descriptionQueue = Promise.resolve()
   private cancelConnect: (() => void) | null = null
   private connectionGeneration = 0
   private activeGeneration = 0
@@ -112,9 +120,12 @@ export class LegacyUnityTransport implements UnityTransport {
     if (this.config.connectionId !== undefined && !this.config.connectionId.trim()) throw new Error('固定 ClientID 不能为空')
     if (globalThis.location?.protocol === 'https:' && url.protocol === 'ws:') throw new Error('HTTPS 页面不能连接明文 WS，请配置 WSS')
     this.stopped = false
+    this.descriptionQueue = Promise.resolve()
     this.activeGeneration = ++this.connectionGeneration
     const generation = this.activeGeneration
-    this.inputEncoder.reset()
+    this.inputSender.reset()
+    this.streamStats.reset()
+    delete this.video.dataset.cloudStats
     this.startPromise = this.openSignaling(generation)
     try { await this.startPromise } catch (error) { if (this.isCurrent(generation)) this.fail(error instanceof Error ? error.message : '连接失败'); throw error }
   }
@@ -180,12 +191,12 @@ export class LegacyUnityTransport implements UnityTransport {
     }
     if (type === 'answer') {
       const data = asRecord(message.data)
-      void this.applyDescription(generation, String(message.from ?? data.connectionId ?? ''), { type: 'answer', sdp: String(data.sdp ?? '') })
+      this.enqueueDescription(generation, String(message.from ?? data.connectionId ?? ''), { type: 'answer', sdp: String(data.sdp ?? '') })
       return
     }
     if (type === 'offer') {
       const data = asRecord(message.data)
-      void this.applyDescription(generation, String(message.from ?? data.connectionId ?? ''), { type: 'offer', sdp: String(data.sdp ?? '') })
+      this.enqueueDescription(generation, String(message.from ?? data.connectionId ?? ''), { type: 'offer', sdp: String(data.sdp ?? '') })
       return
     }
     if (type === 'candidate' || type === 'iceCandidate') {
@@ -230,7 +241,7 @@ export class LegacyUnityTransport implements UnityTransport {
     peer.onconnectionstatechange = () => {
       if (!this.isCurrent(generation) || this.peer !== peer) return
       this.update({ peerState: peer.connectionState })
-      if (peer.connectionState === 'connected') { window.clearTimeout(this.disconnectTimer); window.clearTimeout(this.connectionTimer); this.update({ state: 'connected', message: 'WebRTC 已连接；编辑协议仍需单独验证' }) }
+      if (peer.connectionState === 'connected') { window.clearTimeout(this.disconnectTimer); window.clearTimeout(this.connectionTimer); this.startPerformanceStats(peer, generation); this.update({ state: 'connected', message: 'WebRTC 已连接；编辑协议仍需单独验证' }) }
       else if (peer.connectionState === 'failed') this.fail('WebRTC Peer 连接失败')
       else if (peer.connectionState === 'disconnected') { window.clearTimeout(this.disconnectTimer); this.disconnectTimer = window.setTimeout(() => { if (peer.connectionState === 'disconnected') this.fail('WebRTC 网络断开') }, 5000) }
     }
@@ -263,6 +274,12 @@ export class LegacyUnityTransport implements UnityTransport {
     this.socket.send(JSON.stringify({ type, from, name: 'Client', data }))
   }
 
+  private enqueueDescription(generation: number, from: string, description: RTCSessionDescriptionInit): void {
+    this.descriptionQueue = this.descriptionQueue
+      .catch(() => undefined)
+      .then(() => this.applyDescription(generation, from, description))
+  }
+
   private async applyDescription(generation: number, from: string, description: RTCSessionDescriptionInit): Promise<void> {
     const peer = this.peer
     if (!this.isCurrent(generation) || !peer || !from || from !== this.connectionId) return
@@ -279,26 +296,39 @@ export class LegacyUnityTransport implements UnityTransport {
   }
 
   sendPointerInput(event: MouseEvent | WheelEvent, rect: DOMRect): void {
-    const channel = this.inputChannel
-    if (!channel || channel.readyState !== 'open' || channel.bufferedAmount > 256 * 1024) return
-    const packet = this.inputEncoder.pointer(event, rect, this.video.videoWidth, this.video.videoHeight)
-    if (packet) channel.send(packet)
+    this.inputSender.pointer(event, rect, this.video.videoWidth, this.video.videoHeight)
   }
 
   sendKeyboardInput(event: KeyboardEvent): void {
-    const channel = this.inputChannel
-    if (!channel || channel.readyState !== 'open' || channel.bufferedAmount > 256 * 1024) return
-    const packet = this.inputEncoder.keyboard(event)
-    if (packet) channel.send(packet)
+    this.inputSender.keyboard(event)
   }
 
   sendReleaseInput(): void {
-    if (this.inputChannel?.readyState === 'open') this.inputEncoder.release().forEach((packet) => this.inputChannel?.send(packet))
+    this.inputSender.release()
   }
 
   markVideoPlaying(): void { if (!this.stopped) this.update({ videoReady: true }) }
   markRuntimeReady(): void { if (!this.stopped) this.update({ runtimeReady: true, message: 'Unity editor.v1 Runtime 已就绪' }) }
 
+  private startPerformanceStats(peer: RTCPeerConnection, generation: number): void {
+    if (this.statsTimer !== null) window.clearTimeout(this.statsTimer)
+    const poll = ++this.statsPoll
+    const active = () => this.isCurrent(generation) && this.peer === peer && this.statsPoll === poll
+    const sample = async () => {
+      this.statsTimer = null
+      try {
+        const report = await peer.getStats()
+        if (!active()) return
+        const performance = this.streamStats.read(report, this.inputChannel?.bufferedAmount ?? 0)
+        if (performance) {
+          this.video.dataset.cloudStats = JSON.stringify(performance)
+          this.update({ performance })
+        }
+      } catch { /* Diagnostic sampling must not interrupt the session. */ }
+      if (active()) this.statsTimer = window.setTimeout(() => { void sample() }, 1000)
+    }
+    this.statsTimer = window.setTimeout(() => { void sample() }, 1000)
+  }
 
   private onRpcMessage(generation: number, data: unknown): void {
     if (!this.isCurrent(generation)) return
@@ -326,16 +356,7 @@ export class LegacyUnityTransport implements UnityTransport {
       if (pending.generation !== generation) return
       this.pending.delete(id)
       window.clearTimeout(pending.timer)
-      if (value.error) {
-        const rpcError = asRecord(value.error)
-        pending.resolve({ protocolVersion: 1, requestId: id, success: false, error: { code: String(rpcError.code ?? 'RPC_ERROR'), message: String(rpcError.message ?? 'Unity RPC 失败') } })
-      } else {
-        const rpcResult = asRecord(value.result)
-        const innerResult = asRecord(rpcResult.result)
-        const payload = innerResult.Result ?? rpcResult.Result ?? rpcResult.payload ?? value.result
-        const normalizedPayload = typeof payload === 'string' ? (() => { try { return JSON.parse(payload) } catch { return payload } })() : payload
-        pending.resolve({ protocolVersion: Number(rpcResult.protocolVersion ?? 1), requestId: String(rpcResult.requestId ?? id), success: rpcResult.success !== false, payload: normalizedPayload as unknown, error: rpcResult.error as UnityResponseEnvelope['error'] })
-      }
+      pending.resolve(decodeUnityRpcResponse(value, id))
       return
     }
     const method = String(value.method ?? '')
@@ -343,6 +364,9 @@ export class LegacyUnityTransport implements UnityTransport {
       const event = parseUnityRuntimeEvent(method, value)
       if (event) this.subscribers.get(method)?.forEach((listener) => listener(event))
       if (method === 'editor.v1.runtime.ready') this.update({ runtimeReady: true, message: 'Unity Runtime 已就绪' })
+      if (method === 'editor.v1.runtime.error' && asRecord(event?.payload).fatal === true) {
+        this.fail(String(asRecord(event?.payload).message ?? 'Unity 业务初始化失败，请检查播放器日志'))
+      }
     }
   }
 
@@ -387,6 +411,10 @@ export class LegacyUnityTransport implements UnityTransport {
     this.activeGeneration = ++this.connectionGeneration
     window.clearTimeout(this.disconnectTimer)
     window.clearTimeout(this.connectionTimer)
+    if (this.statsTimer !== null) window.clearTimeout(this.statsTimer)
+    this.statsTimer = null
+    this.statsPoll++
+    delete this.video.dataset.cloudStats
     this.cancelConnect?.()
     this.cancelConnect = null
     this.sendReleaseInput()
@@ -424,7 +452,7 @@ export class LegacyUnityTransport implements UnityTransport {
       this.pending.clear()
       this.startPromise = null
       socket?.close()
-      this.update({ state: 'closed', message, videoReady: false, inputReady: false, rpcReady: false, runtimeReady: false, peerState: 'new' })
+      this.update({ state: 'closed', message, videoReady: false, inputReady: false, rpcReady: false, runtimeReady: false, peerState: 'new', performance: undefined })
     })()
     this.teardownPromise = teardownPromise
     try { await teardownPromise } finally { if (this.teardownPromise === teardownPromise) this.teardownPromise = null }

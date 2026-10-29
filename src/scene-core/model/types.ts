@@ -2,13 +2,30 @@ export type SceneType = 'local3d' | 'gis'
 export type SceneObjectType = 'model' | 'image' | 'primitive' | 'light' | 'camera' | 'group'
 
 export interface SceneTransform {
-  space: 'local'
+  /** wgs84: position is [longitude degrees, latitude degrees, ellipsoid height metres]; rotation is ENU. */
+  space: 'local' | 'wgs84'
   position: [number, number, number]
   rotation: {
     kind: 'quaternion'
     value: [number, number, number, number]
   }
   scale: [number, number, number]
+}
+
+export interface UnityGeospatialScene {
+  origin: [number, number, number]
+  terrainEnabled: boolean
+  layers: Array<{
+    id: string
+    name: string
+    type: 'imagery' | 'terrain' | 'tileset' | 'vector'
+    provider?: string
+    url?: string
+    visible: boolean
+    opacity?: number
+    order: number
+    options?: Record<string, unknown>
+  }>
 }
 
 export interface SceneObject {
@@ -44,6 +61,7 @@ export interface SceneDefinition {
   objects: SceneObject[]
   resources: SceneResource[]
   settings: Record<string, unknown>
+  geospatial?: UnityGeospatialScene
   twoD: {
     canvas: Record<string, unknown>
     components: unknown[]

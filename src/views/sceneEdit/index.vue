@@ -92,6 +92,7 @@
     <SceneCanvas
       ref="sceneCanvasRef"
       v-if="sceneLockReady && !sceneLockLost && splitPanesReady"
+      :render-mode="renderMode"
       @scene-load-state-change="handleSceneLoadStateChange"
     />
   </Teleport>
@@ -185,11 +186,13 @@ import { SCENE_PANEL_ENUM as RIGHT_SCENE_PANEL_ENUM } from '@/enums/scenePanelEn
 import { getCurrentManagementCapabilities } from '@/auth/capabilities'
 import './theme.scss'
 import { beginEditorSceneOperation, editorSceneOperation } from '@/integrations/scene/editorSceneOperationGate'
+import { isUnityRenderMode } from '@/unity-runtime/renderMode'
 
 defineOptions({ name: 'SceneEdit' })
 
 const store = useSceneStore()
 const route = useRoute()
+const renderMode = computed(() => isUnityRenderMode(route.query.renderMode) ? route.query.renderMode : null)
 const router = useRouter()
 /**
  * 编辑器只消费能力快照，不判断消息来源、路由参数或平台字符串。

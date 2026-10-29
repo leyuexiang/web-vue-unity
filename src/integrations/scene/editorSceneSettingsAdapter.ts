@@ -43,7 +43,7 @@ const isFiniteTuple = (value: unknown): value is [number, number, number] =>
  * 复制相机纯数据快照。
  *
  * 相机快照会进入 SceneDefinition.settings 并参与四包序列化，不能直接保留 Runtime 返回的
- * 可变数组或姿态对象引用。这里同时限定有限数字，避免 Cesium 相机异常值污染保存数据。
+ * 可变数组或姿态对象引用。这里同时限定有限数字，避免相机异常值污染保存数据。
  */
 const cloneSceneCameraState = (camera: SceneCameraState): SceneCameraState | null => {
   if (camera.kind === 'unknown') return { kind: 'unknown' }
@@ -193,7 +193,7 @@ export const mergeEditorSceneSettingsSnapshot = (
   }
 
   /**
-   * GIS 主视口的相机只由 Cesium Runtime 管理，必须使用保存瞬间的经纬高和姿态覆盖旧快照。
+   * GIS 相机快照可用时，用保存瞬间的经纬高和姿态覆盖旧快照；kind 保持旧存档的判别值。
    * 非 GIS 继续沿用 editor.scenePanel，避免改变现有 Three 场景的保存协议。
    */
   if (scene.type === 'gis' && runtimeCamera?.kind === 'cesium') {

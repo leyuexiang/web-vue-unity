@@ -3,6 +3,7 @@ import type {
   CameraPath,
   GeoCameraPathWaypoint,
   SceneDefinition,
+  SceneLayer,
   SceneObject,
   SceneSettings,
   SceneStreamingConfig,
@@ -185,6 +186,8 @@ export interface SceneRuntime {
    * 已接入的 Runtime 必须避免把单个表单输入退化为完整 loadScene。
    */
   updateSceneSettings?: (settings: SceneSettings) => Promise<void>
+  /** GIS 数据图层变更；对象分组仍通过对象增量投影。 */
+  updateSceneLayers?: (layers: SceneLayer[]) => Promise<void>
   /**
    * 增量更新场景流式区块索引。
    *

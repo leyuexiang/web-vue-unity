@@ -8,6 +8,7 @@ export interface UnityRuntimeEventMap {
   sceneProgress: { progress: number; stage?: string }
   sceneLoaded: { sceneId: string }
   sceneFailed: { code: string; message: string }
+  runtimeError: { code: string; message: string; fatal?: boolean }
 }
 
 export interface UnityCloudRuntime {

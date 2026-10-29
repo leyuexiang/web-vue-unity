@@ -1,4 +1,4 @@
-import type { SceneObject, SceneResource } from '@/scene-core'
+import type { SceneObject, SceneResource, UnityGeospatialScene } from '@/scene-core'
 
 export const UNITY_EDITOR_PROTOCOL_VERSION = 1 as const
 export const UNITY_EDITOR_CLIENT = 'web-unity' as const
@@ -19,7 +19,7 @@ export type UnityEditorErrorCode = typeof UNITY_EDITOR_ERROR_CODES[keyof typeof 
 
 export type UnityRuntimeMode = 'edit' | 'preview'
 export type UnityGizmoMode = 'select' | 'translate' | 'rotate' | 'scale'
-export type UnityTransformSpace = 'local'
+export type UnityTransformSpace = 'local' | 'wgs84'
 export type UnityRotationKind = 'quaternion'
 
 export interface UnityTransformDto {
@@ -46,6 +46,7 @@ export interface UnitySceneSnapshotDto {
   sceneType: 'local3d' | 'gis'
   objects: SceneObject[]
   resources: SceneResource[]
+  geospatial?: UnityGeospatialScene
 }
 
 export interface UnityRequestEnvelope<T = unknown> {

@@ -154,7 +154,7 @@ export {
   VEGETATION_DYNAMIC_TILE_WINDOW_TILE_COUNT,
 } from './core/vegetationDynamicTiles'
 export type {
-  CesiumVegetationShadowMode,
+  VegetationShadowMode,
   VegetationQualityRenderingProfile,
 } from './core/vegetationRendering'
 export {

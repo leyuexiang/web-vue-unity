@@ -209,8 +209,8 @@ export type Vector3Tuple = [number, number, number]
 /**
  * 相机状态的最小抽象。
  *
- * Three Runtime 使用 kind=three 保存相机位置、控制器目标点和透视相机参数；
- * 其他 Runtime 可继续返回 unknown，避免泄漏具体引擎对象。
+ * `three`、`cesium` 是旧场景保存的相机数据判别值，仅用于兼容存档，不选择浏览器渲染引擎。
+ * Unity 运行时尚未提供相机快照时返回 unknown，保留原有配置。
  */
 export type SceneCameraState =
   | { kind: 'unknown' }

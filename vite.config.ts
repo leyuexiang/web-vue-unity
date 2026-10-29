@@ -51,7 +51,12 @@ export default defineConfig(({ mode, command }) => {
     host: '0.0.0.0',
     port: 5180,
     strictPort: true,
-    headers: { 'Cache-Control': 'no-store' },
+    headers: {
+      'Cache-Control': 'no-store',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      // Unity GIS 的原生线程需要 SharedArrayBuffer；credentialless 也允许二维外部图片无凭据加载。
+      'Cross-Origin-Embedder-Policy': 'credentialless',
+    },
     // 保留来源业务请求契约，只有配置了目标地址才创建代理，避免空地址导致启动失败。
     proxy: {
       // 同源部署时业务与独立鉴权均走 /api；配置为空时由部署网关负责转发。
@@ -60,6 +65,12 @@ export default defineConfig(({ mode, command }) => {
         [env.VITE_DATA_MIDDLEWARE_PREFIX]: { target: env.VITE_DATA_MIDDLEWARE_URL, changeOrigin: true,
           rewrite: (requestPath: string) => requestPath.slice(env.VITE_DATA_MIDDLEWARE_PREFIX.length) || '/' },
       } : {}),
+    },
+  },
+  preview: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
     },
   },
   build: {

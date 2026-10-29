@@ -93,12 +93,6 @@ export const createDefaultProjectSceneConfigInfo = ({
           defaultLatitude: DEFAULT_GIS_SCENE_LATITUDE,
           defaultHeight: 0,
         },
-        settings: {
-          cesium: {
-            terrain: false,
-            shadows: false,
-          },
-        },
       }),
     )
   }

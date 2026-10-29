@@ -17,6 +17,7 @@ const capabilities: UnityRuntimeCapabilities = {
 type EventListener = (event: UnityEventEnvelope<unknown>) => void
 
 type TransportOptions = {
+  capabilities?: UnityRuntimeCapabilities
   responseProtocolVersion?: number
   responseRequestId?: string
   initializeSuccess?: boolean
@@ -34,7 +35,7 @@ const createTransport = (options: TransportOptions = {}) => {
     payload: method === 'editor.v1.session.initialize'
       ? {
           protocolVersion: UNITY_EDITOR_PROTOCOL_VERSION,
-          capabilities,
+          capabilities: options.capabilities ?? capabilities,
         }
       : {},
     error: options.initializeSuccess === false
@@ -78,6 +79,29 @@ const createEvent = (
 }
 
 describe('JsonRpcUnityCloudRuntime', () => {
+  it('sends geographic origins and layers to a GIS-capable player', async () => {
+    const { transport, request } = createTransport({ capabilities: { ...capabilities, sceneTypes: ['local3d', 'gis'] } })
+    const runtime = new JsonRpcUnityCloudRuntime(transport)
+    await runtime.connect()
+    const scene = createEmptyScene('geo')
+    scene.type = 'gis'
+    scene.geospatial = { origin: [110, 19, 0], terrainEnabled: false, layers: [] }
+    await runtime.loadScene(scene)
+    expect(request).toHaveBeenLastCalledWith('editor.v1.scene.loadDraft', expect.objectContaining({
+      payload: expect.objectContaining({ sceneType: 'gis', geospatial: scene.geospatial }),
+    }))
+  })
+
+  it('rejects a GIS scene before sending it to an older local-only player', async () => {
+    const { transport, request } = createTransport()
+    const runtime = new JsonRpcUnityCloudRuntime(transport)
+    await runtime.connect()
+    const scene = createEmptyScene('geo')
+    scene.type = 'gis'
+    await expect(runtime.loadScene(scene)).rejects.toThrow('请更新对应端的播放器')
+    expect(request).toHaveBeenCalledTimes(1)
+  })
+
   it('negotiates capabilities and sends a versioned scene load', async () => {
     const { transport, request } = createTransport()
     const runtime = new JsonRpcUnityCloudRuntime(transport)

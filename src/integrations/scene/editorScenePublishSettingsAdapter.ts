@@ -4,7 +4,7 @@ export const EDITOR_SCENE_PUBLISH_SETTINGS_KEY = 'publish'
 export const EDITOR_SCENE_VERSION_SETTINGS_KEY = 'version'
 export const EDITOR_SCENE_RUNTIME_SETTINGS_KEY = 'runtime'
 
-export type EditorSceneRuntimeEngine = 'cesium' | 'three'
+export type EditorSceneRuntimeEngine = 'unity'
 
 export interface EditorScenePublishSettings extends Record<string, unknown> {
   status: string
@@ -57,9 +57,6 @@ const getSettingsRecord = (settings: SceneSettings, key: string): PlainRecord =>
   return isPlainRecord(value) ? value : {}
 }
 
-const resolveRuntimeEngine = (sceneType: SceneType): EditorSceneRuntimeEngine =>
-  sceneType === 'gis' ? 'cesium' : 'three'
-
 const createPublishSettings = (settings: SceneSettings): EditorScenePublishSettings => {
   const previousPublishSettings = getSettingsRecord(settings, EDITOR_SCENE_PUBLISH_SETTINGS_KEY)
 
@@ -96,14 +93,14 @@ const createRuntimeSettings = (scene: SceneDefinition): EditorSceneRuntimeSettin
 
   return {
     /**
-     * 运行态配置只记录发布预览所需的可序列化描述，不保存 Three / Cesium 实例。
-     * sceneType、runtimeType 和 runtimeEngine 从当前场景类型派生，避免已有宿主字段过期后误导预览分流。
+     * GIS 与普通三维均交由 Unity 渲染；sceneType 只描述坐标体系。
+     * 覆盖旧快照中的浏览器引擎标识，避免发布配置把 GIS 分流到已移除的浏览器渲染器。
      */
     ...previousRuntimeSettings,
     entry: toStringOrDefault(previousRuntimeSettings.entry, 'scenePreview'),
     sceneType: scene.type,
     runtimeType: scene.type,
-    runtimeEngine: resolveRuntimeEngine(scene.type),
+    runtimeEngine: 'unity',
     readonly: toBooleanOrDefault(previousRuntimeSettings.readonly, true),
     mode: toStringOrDefault(previousRuntimeSettings.mode, 'preview'),
   }

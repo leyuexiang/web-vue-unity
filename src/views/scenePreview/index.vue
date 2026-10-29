@@ -363,11 +363,6 @@ const registerPreviewWidgetPorts = (
   setWidgetOverlayHostPort(createReadonlyPreviewWidgetOverlayHostPort(() => renderSceneApi))
 }
 
-/**
- * 发布 GIS 场景的 Cesium 画布没有旧 Three 交互模块，必须在页面边界补上同等事件入口。
- * 这里只接收真正来自 Cesium canvas 的点击，二维 DOM 点击仍由 LayerDOM 自己处理，避免一次点击
- * 同时被解释为三维对象事件和二维部件事件。
- */
 /** 二维预览无三维拾取入口；三维事件将在 Unity 适配阶段绑定。 */
 const registerPreviewGisObjectInteraction = (
   _runtime: SceneRuntime, _controller: ScenePreviewRuntimeController,
@@ -420,7 +415,7 @@ const mountSceneDefinitionPreview = async (
     renderSceneStoreBridge: createReadonlyPreviewRenderSceneStoreBridge(),
     // 使用无图形运行时，严禁从预览路由恢复旧浏览器三维渲染器。
     /**
-     * 运行态容器与二维 DOM 叠加层分离；Three 和 Cesium 都只使用独立运行态容器。
+     * 运行态容器与二维 DOM 叠加层分离，为 Unity 播放器保留独立容器。
      */
     renderSelector: '#preview-runtime',
     /** 当前公开会话固定使用 publishedPublicationId + ticket 的预览数据源，禁止切换正式发布接口。 */
@@ -763,13 +758,6 @@ watch(
   inset: 0;
   z-index: 0;
   overflow: hidden;
-}
-.scene-preview-runtime :deep(.cesium-widget),
-.scene-preview-runtime :deep(.cesium-widget canvas),
-.scene-preview-runtime :deep(.cesium-viewer),
-.scene-preview-runtime :deep(.cesium-viewer-cesiumWidgetContainer) {
-  width: 100%;
-  height: 100%;
 }
 .scene-preview-runtime :deep(canvas) {
   display: block;

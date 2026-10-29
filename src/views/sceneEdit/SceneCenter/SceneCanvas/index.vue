@@ -10,6 +10,7 @@ import { MITT_ON_KEY_ENUM, DRAG_MODEL_ENUM } from '@/enums'
 import type { WidgetModel } from '@/types/threeScene'
 import { calculateSceneStageLayout } from '@/utils/sceneStage'
 import { loadEditorSceneDefinition, loadEditorSceneDefinitionIntoHost } from '@/integrations/scene/editorSceneLoadAdapter'
+import { ensureEditorGisDefaultImageryLayer } from '@/integrations/scene/editorGisDefaultLayerAdapter'
 import { setActiveSceneViewportHost, clearActiveSceneViewportHost } from '@/integrations/scene/editorScenePlatformHost'
 import { createEditorSceneDataPollingController, type EditorSceneDataPollingController } from '@/integrations/scene/editorSceneDataPollingController'
 import { createCommandBusWidgetCommandPort, createSceneApiWidgetRuntimePort,
@@ -20,17 +21,25 @@ import { releaseOriginalScenePackages, retainOriginalScenePackages } from '@/int
 import { serializeSceneDefinitionToFourPackages } from '@/integrations/scene/sceneFourPackage'
 import { appLogger } from '@/utils/logger'
 import { beginEditorSceneOperation } from '@/integrations/scene/editorSceneOperationGate'
+import { UnityEditorSceneRuntime } from '@/unity-runtime/runtime/UnityEditorSceneRuntime'
+import { isUnityRenderModeConfigured, unityRenderConfig, type UnityRenderMode } from '@/unity-runtime/renderMode'
 
 /** 画布只承担二维宿主编排。来源叠加层保留拖拽、层级、配置和子项全部交互。 */
 const emit = defineEmits<{ sceneLoadStateChange: [state: 'loading' | 'ready' | 'failed'] }>()
+const props = defineProps<{ renderMode: UnityRenderMode | null }>()
 const route = useRoute()
 const widgetStore = useSceneWidgetStore()
 const sceneStore = useSceneStore()
 const eventBus = getCurrentInstance()?.proxy?.$eventBus
 const viewport = ref<HTMLElement>()
 const stage = ref<HTMLElement>()
+const renderSurface = ref<HTMLElement>()
 const dimensions = ref({ width: 0, height: 0 })
 const loading = ref(true)
+const runtimeMessage = ref('')
+const runtimeWarnings = ref<string[]>([])
+const loadError = ref('')
+const reloadScene = () => window.location.reload()
 let host: ViewportHost | null = null
 let polling: EditorSceneDataPollingController | null = null
 let disposed = false
@@ -129,9 +138,33 @@ onMounted(async () => {
   try {
     const result = await loadEditorSceneDefinition(sceneId)
     // 请求晚于卸载完成时，仓储刚保留的原始四包也必须释放。
-    if (disposed || !stage.value) { releaseOriginalScenePackages(sceneId); return }
-    const scene = result.scene ?? createSceneDefinition({ id: sceneId, name: '未命名场景', type: 'local3d', coordinateSystem: { kind: 'local', unit: 'meter', upAxis: 'Y', gridEnabled: true } })
-    host = createViewportHost({ container: stage.value, scene })
+    if (disposed || !stage.value || !renderSurface.value) { releaseOriginalScenePackages(sceneId); return }
+    const isGis = route.query.sceneType === 'gis'
+    let scene = result.scene ?? createSceneDefinition({ id: sceneId, name: '未命名场景', type: isGis ? 'gis' : 'local3d',
+      coordinateSystem: isGis ? { kind: 'wgs84', defaultLongitude: 104.0668, defaultLatitude: 30.5728, defaultHeight: 0, terrainEnabled: false }
+        : { kind: 'local', unit: 'meter', upAxis: 'Y', gridEnabled: true } })
+    if (props.renderMode && scene.type === 'gis') scene = await ensureEditorGisDefaultImageryLayer(scene)
+    if (disposed) return
+    if (props.renderMode && !isUnityRenderModeConfigured(props.renderMode)) {
+      throw new Error('所选 Unity 渲染方式尚未完成部署配置')
+    }
+    host = createViewportHost({
+      container: renderSurface.value,
+      scene,
+      ...(props.renderMode ? { runtimeFactory: (definition: typeof scene) => new UnityEditorSceneRuntime(definition.type, {
+        mode: props.renderMode!,
+        cloudConfig: props.renderMode === 'cloud' ? {
+          signalUrl: unityRenderConfig.cloud.signalUrl,
+          appId: unityRenderConfig.cloud.appId,
+          sceneKey: unityRenderConfig.cloud.sceneKey,
+          ...(unityRenderConfig.cloud.connectionId ? { connectionId: unityRenderConfig.cloud.connectionId } : {}),
+        } : undefined,
+        webBootstrapUrl: props.renderMode === 'webgpu' ? unityRenderConfig.webgpu.bootstrapUrl : undefined,
+        getHost: () => host,
+        onStatus: (message) => { runtimeMessage.value = message },
+        onWarnings: (messages) => { runtimeWarnings.value = messages },
+      }) } : {}),
+    })
     await host.mount()
     if (disposed) { host.dispose(); return }
     setActiveSceneViewportHost(host)
@@ -149,8 +182,12 @@ onMounted(async () => {
     refreshLayout()
   } catch (error) {
     if (disposed) return
-    appLogger.error('SceneCanvas', '二维场景加载失败', error)
-    ElMessage.error(error instanceof Error ? error.message : '二维场景加载失败')
+    clearActiveSceneViewportHost(host)
+    host?.dispose()
+    host = null
+    appLogger.error('SceneCanvas', '场景加载失败', error)
+    loadError.value = error instanceof Error ? error.message : '场景加载失败'
+    ElMessage.error(loadError.value)
     emit('sceneLoadStateChange', 'failed')
   } finally { if (!disposed) loading.value = false }
 })
@@ -178,11 +215,29 @@ defineExpose({ stopSceneDataPolling, restartSceneDataPolling })
 </script>
 <template>
   <div ref="viewport" class="scene-edit-canvas-viewport" @drop="drop" @dragover.prevent>
-    <div id="scene-render" ref="stage" class="scene-edit-canvas-stage" :style="stageStyle"><LayerDOM /></div>
+    <div id="scene-render" ref="stage" class="scene-edit-canvas-stage" :style="stageStyle">
+      <div ref="renderSurface" class="scene-edit-render-surface" />
+      <LayerDOM />
+      <div v-if="props.renderMode && runtimeMessage && !loadError" class="scene-edit-render-status">{{ runtimeMessage }}</div>
+      <div v-if="props.renderMode && runtimeWarnings.length && !loadError" class="scene-edit-render-warning" role="status">
+        <div v-for="message in runtimeWarnings" :key="message">{{ message }}</div>
+      </div>
+      <div v-if="loadError" class="scene-edit-render-error" role="alert">
+        <strong>场景未能加载</strong>
+        <p>{{ loadError }}</p>
+        <button type="button" @click="reloadScene">重新加载</button>
+      </div>
+    </div>
   </div>
   <Loading :loading="loading" :percentage="loading ? 0 : 100" />
 </template>
 <style scoped>
 .scene-edit-canvas-viewport { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--scene-edit-canvas-bg, #17191d); }
 .scene-edit-canvas-stage { position: absolute; overflow: hidden; background: #1f2937; }
+.scene-edit-render-surface { position: absolute; inset: 0; }
+.scene-edit-render-status { position: absolute; z-index: 2; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 8px 14px; color: #fff; background: rgb(0 0 0 / 68%); border-radius: 6px; pointer-events: none; }
+.scene-edit-render-warning { position: absolute; z-index: 2; top: 12px; left: 50%; transform: translateX(-50%); max-width: 80%; padding: 8px 14px; color: #ffda8a; background: rgb(48 37 15 / 92%); border: 1px solid #806126; border-radius: 6px; pointer-events: none; }
+.scene-edit-render-error { position: absolute; z-index: 3; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; background: rgb(20 28 31 / 92%); text-align: center; }
+.scene-edit-render-error p { max-width: 520px; margin: 12px 20px 20px; color: #d5e3e2; }
+.scene-edit-render-error button { padding: 8px 18px; color: #fff; background: #51a195; border: 0; border-radius: 4px; cursor: pointer; }
 </style>

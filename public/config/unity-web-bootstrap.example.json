@@ -1,0 +1,23 @@
+{
+  "build": {
+    "threadsRequired": true,
+    "loaderUrl": "/threeWeb/unity-web/Build/player.loader.js",
+    "dataUrl": "/threeWeb/unity-web/Build/player.data",
+    "frameworkUrl": "/threeWeb/unity-web/Build/player.framework.js",
+    "codeUrl": "/threeWeb/unity-web/Build/player.wasm",
+    "streamingAssetsUrl": "/threeWeb/unity-web/StreamingAssets"
+  },
+  "art": {
+    "projectId": "<项目编号>",
+    "descriptorBase64": "<服务端固定发布描述的 Base64>",
+    "descriptorSha256": "sha256:<发布描述的 SHA-256 十六进制摘要>",
+    "releaseBaseUrl": "https://example.invalid/art/releases/<hash>/",
+    "allowedOrigins": ["https://example.invalid"]
+  },
+  "business": {
+    "projectName": "<项目名称>",
+    "apiBaseUrl": "https://example.invalid/api",
+    "userId": "<已授权用户编号>",
+    "allowedApiOrigins": ["https://example.invalid"]
+  }
+}

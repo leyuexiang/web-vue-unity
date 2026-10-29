@@ -17,7 +17,7 @@ import {
 export interface EditorSceneDefinitionSaveSourceOptions {
   scene: SceneDefinition
   sceneApi?: LegacyScenePanelStateProvider | null
-  /** 保存瞬间的活动 Runtime；GIS 场景用它读取 Cesium 当前经纬高和姿态。 */
+  /** 保存瞬间的活动 Runtime；有相机快照能力时读取当前经纬高和姿态。 */
   runtime?: Pick<SceneRuntime, 'getCamera'> | null
   widgetSceneFragment: WidgetSceneFragment | null
   sceneGlobalState?: EditorSceneGlobalStateSnapshot | null

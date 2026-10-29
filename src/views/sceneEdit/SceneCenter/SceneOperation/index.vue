@@ -111,6 +111,7 @@ import type {
   EditorDim3dSceneSaveContext,
 } from '@/integrations/scene/editorDim3dSceneSaveService'
 import { subscribeActiveSceneViewportHost } from '@/integrations/scene/editorScenePlatformHost'
+import { UnityEditorSceneRuntime } from '@/unity-runtime/runtime/UnityEditorSceneRuntime'
 import { createEditorSceneSaveStateTracker } from '@/integrations/scene/editorSceneSaveState'
 import {
   clearEditorHistory,
@@ -123,10 +124,6 @@ import {
   filterEditorSceneMeasureTools,
   getEditorSceneRuntimeCapabilities,
 } from '@/integrations/scene/editorSceneToolCapabilityAdapter'
-import type {
-  CesiumGizmoInteractionRuntime,
-  CesiumGizmoMode,
-} from '@/types/viewportInteractionPort'
 
 const { $eventBus } = getCurrentInstance()?.proxy || {}
 const store = useSceneStore()
@@ -161,13 +158,8 @@ const scenePlatformCommandBus = ref<CommandBus | null>(null)
 const scenePlatformHistoryRevision = ref(0)
 const runtimeCapabilities = ref<RuntimeCapabilities | null>(null)
 const scenePlatformStore = ref<SceneStore | null>(null)
-/**
- * 顶部三枚变换图标在 GIS 场景中复用同一套入口，但实际执行者改为 Cesium 操控器（Gizmo）运行时。
- *
- * 这里只缓存最小交互接口，不缓存 Viewer、Entity 或 Model，防止工具栏跨场景切换后持有已销毁的
- * Cesium 引擎对象。
- */
-const cesiumGizmoRuntime = ref<CesiumGizmoInteractionRuntime | null>(null)
+/** GIS 与普通三维共用 Unity 的变换接口。 */
+const unityGizmoRuntime = ref<UnityEditorSceneRuntime | null>(null)
 const editorSceneSaveStateTracker = createEditorSceneSaveStateTracker((snapshot) => {
   sceneSaveState.value = snapshot
   emit('saveStateChange', snapshot.saving)
@@ -193,15 +185,9 @@ const syncTransformTypeAfterSceneStoreEvent = (event?: SceneStoreEvent) => {
   const nextType = coerceTransformTypeForCurrentSelection(transformType.value, selectedObjectId)
   if (nextType === transformType.value) return
 
-  /**
-   * GIS 看板的 Gizmo 由 Cesium Runtime 创建，而非 Three TransformControls。
-   *
-   * 选中看板时若工具栏仍停在旋转，必须同步通知 Runtime 重建为平移轴；否则按钮已变为“移动”，
-   * 画布仍会保留旧的旋转环，形成状态不一致。普通 Three 场景继续沿用既有原生控件入口。
-   */
-  if (cesiumGizmoRuntime.value) {
-    cesiumGizmoRuntime.value.setGizmoMode(transformControlModeToCesiumMode[nextType])
-    transformType.value = nextType
+  if (unityGizmoRuntime.value) {
+    void unityGizmoRuntime.value.setGizmoMode(nextType).then(() => { transformType.value = nextType })
+      .catch((error: unknown) => ElMessage.error(error instanceof Error ? error.message : 'Unity 变换模式切换失败'))
     return
   }
 
@@ -249,22 +235,6 @@ const isRedoDisabled = computed(() => {
 
 const transformType = ref<TRANSFORM_CONTROLS_ENUM>(TRANSFORM_CONTROLS_ENUM.Translate)
 
-/** 顶部 Three 图标枚举与 Cesium Gizmo 模式的显式映射，避免依赖字符串巧合造成跨引擎回归。 */
-const transformControlModeToCesiumMode: Readonly<Record<TRANSFORM_CONTROLS_ENUM, CesiumGizmoMode>> =
-  {
-    [TRANSFORM_CONTROLS_ENUM.Translate]: 'translate',
-    [TRANSFORM_CONTROLS_ENUM.Rotate]: 'rotate',
-    [TRANSFORM_CONTROLS_ENUM.Scale]: 'scale',
-  }
-
-/** Cesium 返回模式转回顶部图标状态，使切换场景后高亮图标与实际操控器保持一致。 */
-const cesiumModeToTransformControlMode: Readonly<Record<CesiumGizmoMode, TRANSFORM_CONTROLS_ENUM>> =
-  {
-    translate: TRANSFORM_CONTROLS_ENUM.Translate,
-    rotate: TRANSFORM_CONTROLS_ENUM.Rotate,
-    scale: TRANSFORM_CONTROLS_ENUM.Scale,
-  }
-
 /** Three TransformControls 返回字符串模式；工具栏内部统一转回项目枚举，避免响应式状态被放宽成字符串。 */
 const normalizeTransformControlsMode = (mode: string): TRANSFORM_CONTROLS_ENUM => {
   if (mode === TRANSFORM_CONTROLS_ENUM.Rotate) return TRANSFORM_CONTROLS_ENUM.Rotate
@@ -296,37 +266,18 @@ const coerceTransformTypeForCurrentSelection = (
   return sceneObject?.billboard ? TRANSFORM_CONTROLS_ENUM.Translate : type
 }
 
-/**
- * 将通用场景运行时安全收窄为 Cesium Gizmo 能力。
- *
- * 不能只判断 type 为 gis：GIS 运行时在初始化、销毁或测试替身阶段可能尚未具备完整操控器接口；同时
- * 校验三个方法可确保顶部图标不会在半初始化状态触发异常。
- */
-const isCesiumGizmoInteractionRuntime = (
-  runtime: unknown,
-): runtime is CesiumGizmoInteractionRuntime => {
-  if (!runtime || typeof runtime !== 'object') return false
-  const candidate = runtime as Partial<CesiumGizmoInteractionRuntime>
-  return (
-    candidate.type === 'gis' &&
-    typeof candidate.setGizmoMode === 'function' &&
-    typeof candidate.getGizmoMode === 'function'
-  )
-}
-
-const handleTransformType = (type: TRANSFORM_CONTROLS_ENUM) => {
+const handleTransformType = async (type: TRANSFORM_CONTROLS_ENUM) => {
   // 二维宿主不具备三维操控器，入口保留但不能伪造激活状态。
   if (!runtimeCapabilities.value?.editing.gizmo) { ElMessage.info('三维变换待 Unity 云渲染接入'); return }
 
   const nextType = coerceTransformTypeForCurrentSelection(type)
-  const gisRuntime = cesiumGizmoRuntime.value
-  if (gisRuntime) {
-    /**
-     * GIS 场景不再调用旧 Three TransformControls。顶部图标直接切换 Cesium 的临时操控器，同时更新
-     * 同一个图标高亮状态；模型选中后会按该模式创建对应的轴线、圆环或缩放端点。
-     */
-    gisRuntime.setGizmoMode(transformControlModeToCesiumMode[nextType])
-    transformType.value = nextType
+  if (unityGizmoRuntime.value) {
+    try {
+      await unityGizmoRuntime.value.setGizmoMode(nextType)
+      transformType.value = nextType
+    } catch (error) {
+      ElMessage.error(error instanceof Error ? error.message : 'Unity 变换模式切换失败')
+    }
     return
   }
 
@@ -475,15 +426,7 @@ onMounted(() => {
     subscribeScenePlatformHistory(scenePlatformCommandBus.value)
     runtimeCapabilities.value = getEditorSceneRuntimeCapabilities(host)
     const runtime = host?.getRuntime() ?? null
-    cesiumGizmoRuntime.value = isCesiumGizmoInteractionRuntime(runtime) ? runtime : null
-    /**
-     * 进入 GIS 场景时将顶部蓝色图标同步到运行时当前模式。这样不依赖已移除的画布内文字工具栏，且不会
-     * 在切回 Three 场景时覆盖用户上一次使用的本地 TransformControls 模式。
-     */
-    if (cesiumGizmoRuntime.value) {
-      transformType.value =
-        cesiumModeToTransformControlMode[cesiumGizmoRuntime.value.getGizmoMode()]
-    }
+    unityGizmoRuntime.value = runtime instanceof UnityEditorSceneRuntime ? runtime : null
     const nextStore = host?.getStore() ?? null
     scenePlatformStore.value = nextStore
     subscribeScenePlatformStore(nextStore)
@@ -502,7 +445,7 @@ onBeforeUnmount(() => {
   scenePlatformCommandBus.value = null
   runtimeCapabilities.value = null
   scenePlatformStore.value = null
-  cesiumGizmoRuntime.value = null
+  unityGizmoRuntime.value = null
   editorSceneSaveStateTracker.dispose()
 })
 </script>

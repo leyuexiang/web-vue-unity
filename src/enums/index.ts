@@ -12,7 +12,7 @@ export enum MITT_ON_KEY_ENUM {
   /** 模板拖拽结束后立即释放卡片载荷，避免下一次普通拖拽误应用旧模板。 */
   TEMPLATE_DRAG_CANCEL = 'templateDragCancel',
   HISTORY_APPLIED = 'historyApplied',
-  /** Q/W/E 只传递统一变换语义，具体由工具栏路由到 Three 或 Cesium 操控器。 */
+  /** Q/W/E 只传递统一变换语义，工具栏通过 Unity 接口切换操控器。 */
   TRANSFORM_MODE_SHORTCUT = 'transformModeShortcut',
 }
 

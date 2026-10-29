@@ -1,5 +1,6 @@
 import type {
   SceneDefinition,
+  SceneLayer,
   SceneObject,
   SceneSettings,
   SceneStreamingConfig,
@@ -184,6 +185,7 @@ export function createRuntimeBridge(
   let hasSceneLoad = false
   /** 场景设置采用独立增量通道，滑杆输入不会触发全场景对象重建。 */
   let pendingSceneSettings: SceneSettings | null = null
+  let pendingSceneLayers: SceneLayer[] | null = null
   /** 待增量替换的流式配置；独立布尔值用于区分“删除 streaming”与“尚未收到事件”。 */
   let pendingSceneStreaming: SceneStreamingConfig | undefined
   let hasPendingSceneStreaming = false
@@ -237,6 +239,7 @@ export function createRuntimeBridge(
     while (true) {
       const sceneToLoad = hasSceneLoad ? pendingScene : null
       const sceneSettings = sceneToLoad ? null : pendingSceneSettings
+      const sceneLayers = sceneToLoad ? null : pendingSceneLayers
       const sceneStreaming = pendingSceneStreaming
       const shouldUpdateSceneStreaming =
         !sceneToLoad && hasPendingSceneStreaming && runtime.updateSceneStreaming
@@ -268,6 +271,7 @@ export function createRuntimeBridge(
 
       hasSceneLoad = false
       pendingSceneSettings = null
+      pendingSceneLayers = null
       pendingSceneStreaming = undefined
       hasPendingSceneStreaming = false
       upsertMap.clear()
@@ -284,6 +288,7 @@ export function createRuntimeBridge(
       if (
         !sceneToLoad &&
         !sceneSettings &&
+        !sceneLayers &&
         !shouldUpdateSceneStreaming &&
         !pendingCameraPaths &&
         !shouldUpdateVegetation &&
@@ -338,6 +343,10 @@ export function createRuntimeBridge(
       /** 场景加载已携带完整设置；只有纯增量事件才调用更新接口，避免重复加载模型。 */
       if (sceneSettings && runtime.updateSceneSettings) {
         await applySafely(() => runtime.updateSceneSettings?.(sceneSettings))
+        if (stopped || currentVersion !== lifecycleVersion) return
+      }
+      if (sceneLayers && runtime.updateSceneLayers) {
+        await applySafely(() => runtime.updateSceneLayers?.(sceneLayers))
         if (stopped || currentVersion !== lifecycleVersion) return
       }
 
@@ -510,6 +519,7 @@ export function createRuntimeBridge(
   const handleEvent = (event: SceneStoreEvent) => {
     switch (event.type) {
       case 'sceneLoaded': {
+        pendingSceneLayers = null
         pendingScene = event.scene
         hasSceneLoad = true
         pendingSceneSettings = null
@@ -609,6 +619,7 @@ export function createRuntimeBridge(
         return
       }
       case 'layerUpserted': {
+        if (event.layer.type !== 'object' && runtime.updateSceneLayers) pendingSceneLayers = store.getScene().layers
         /** 对象图层是视觉管理数据；只重新投影其成员，不在 Runtime 创建分组节点。 */
         if (event.layer.type === 'object') {
           store.getObjects().forEach((object) => {
@@ -619,6 +630,7 @@ export function createRuntimeBridge(
         return
       }
       case 'layerRemoved': {
+        if (runtime.updateSceneLayers) pendingSceneLayers = store.getScene().layers
         /** 删除组命令会先把成员移回根级，对象事件已携带最终归属；这里只保证队列被刷新。 */
         schedule()
         return
@@ -662,6 +674,7 @@ export function createRuntimeBridge(
 
   return {
     start: () => {
+      pendingSceneLayers = null
       if (unsubscribe) return
       stopped = false
       started = true
@@ -678,6 +691,7 @@ export function createRuntimeBridge(
       unsubscribe = store.subscribe(handleEvent)
     },
     stop: () => {
+      pendingSceneLayers = null
       unsubscribe?.()
       unsubscribe = null
       lifecycleVersion += 1
