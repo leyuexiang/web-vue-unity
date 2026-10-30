@@ -1,10 +1,12 @@
 import type { SceneDefinition, SceneObject } from '@/scene-core'
+import type { PickWorldPoint, ScreenPoint } from '@/scene-platform'
 import type { UnityTransport } from '@/unity-runtime/connection/UnityTransport'
 import {
   UNITY_EDITOR_CLIENT,
   UNITY_EDITOR_PROTOCOL_VERSION,
   type UnityGizmoMode,
   type UnityRuntimeCapabilities,
+  type UnityInteractionActionDto,
   type UnitySessionInitializePayload,
   type UnitySessionInitializeResponse,
   type UnitySceneSnapshotDto,
@@ -80,6 +82,21 @@ export class JsonRpcUnityCloudRuntime implements UnityCloudRuntime {
     this.assertSuccess(response)
   }
 
+  /** 将画布逻辑像素归一化后交给 Unity 相机射线，读取 GIS 拖放点的地理落点。 */
+  async pickWorldPosition(point: ScreenPoint, viewportSize: { width: number; height: number }): Promise<PickWorldPoint | null> {
+    if (this.capabilities?.features['scene.pickWorldPosition'] !== true) return null
+    if (viewportSize.width <= 0 || viewportSize.height <= 0) return null
+    const x = point.x / viewportSize.width
+    const y = point.y / viewportSize.height
+    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) return null
+
+    const response = await this.send<{ x: number; y: number }, PickWorldPoint>(
+      'editor.v1.scene.pickWorldPosition', { x, y },
+    )
+    this.assertSuccess(response)
+    return response.payload?.kind === 'geo' ? response.payload : null
+  }
+
   async clearScene(): Promise<void> {
     // 清场也开启新代次，使尚未结束的加载和主动事件立即过期。
     this.sceneGeneration += 1
@@ -117,7 +134,22 @@ export class JsonRpcUnityCloudRuntime implements UnityCloudRuntime {
   }
 
   async setMode(mode: 'edit' | 'preview'): Promise<void> {
+    if (this.capabilities?.features['runtime.mode.set'] === false) {
+      throw new Error('当前 Unity 播放器尚未支持编辑与预览模式切换')
+    }
     const response = await this.send<{ mode: 'edit' | 'preview' }, unknown>('editor.v1.runtime.mode.set', { mode })
+    this.assertSuccess(response)
+  }
+
+  /** 交互动作使用请求确认，避免事件动作未到达引擎就开始执行下一步。 */
+  async executeInteractionAction(action: UnityInteractionActionDto): Promise<void> {
+    if (this.capabilities?.features['interaction.action'] !== true) {
+      throw new Error('当前 Unity 播放器尚未支持三维交互动作')
+    }
+    const response = await this.send<UnityInteractionActionDto, unknown>(
+      'editor.v1.interaction.action',
+      action,
+    )
     this.assertSuccess(response)
   }
 
@@ -143,6 +175,9 @@ export class JsonRpcUnityCloudRuntime implements UnityCloudRuntime {
     this.unsubscribeEvents.push(
       this.transport.subscribe<{ instanceId: string | null }>('editor.v1.selection.changed', (event) => {
         if (this.acceptEvent(event)) this.emit('selectionChanged', event.payload)
+      }),
+      this.transport.subscribe<UnityRuntimeEventMap['objectInteraction']>('editor.v1.object.interaction', (event) => {
+        if (this.acceptEvent(event)) this.emit('objectInteraction', event.payload)
       }),
       this.transport.subscribe<UnityRuntimeEventMap['transformPreview']>('editor.v1.transform.preview', (event) => {
         if (this.acceptEvent(event)) this.emit('transformPreview', event.payload)

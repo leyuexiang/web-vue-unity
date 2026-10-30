@@ -1,7 +1,7 @@
 import { readonly, shallowRef } from 'vue'
 
-/** 编辑器内共享的短期操作门禁，避免保存与整场景替换交叉读取不同快照。 */
-export type EditorSceneOperation = 'importJson' | 'template' | 'save' | 'publish' | 'saveTemplate'
+/** 编辑器内共享的短期操作门禁，避免异步创建、保存与整场景替换交叉读取不同快照。 */
+export type EditorSceneOperation = 'importJson' | 'template' | 'createObject' | 'save' | 'publish' | 'saveTemplate'
 const activeOperation = shallowRef<EditorSceneOperation | null>(null)
 export const editorSceneOperation = readonly(activeOperation)
 

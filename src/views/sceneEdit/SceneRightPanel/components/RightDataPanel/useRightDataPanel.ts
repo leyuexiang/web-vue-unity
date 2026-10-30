@@ -35,7 +35,7 @@ import {
   getWidgetPanelLockState,
   runWidgetPanelHistoryChange,
 } from '@/integrations/scene/widgetPanels'
-import type { SceneStore } from '@/scene-platform'
+import type { CommandBus, SceneStore } from '@/scene-platform'
 import { DRAG_MODEL_ENUM } from '@/enums'
 import { resolveWidgetPanelSelection } from '@/integrations/scene/widgetPanels'
 import {
@@ -135,6 +135,8 @@ interface UseRightDataPanelOptions {
    * auto 保留旧入口的兼容策略。
    */
   targetKind?: RightDataPanelTargetKind
+  /** 三维目标由命令总线写入领域元数据，保证会话内可撤销和重做。 */
+  commandBus?: Pick<CommandBus, 'execute'> | null
 }
 
 /**
@@ -588,6 +590,7 @@ export const useRightDataPanel = (options: UseRightDataPanelOptions = {}) => {
        */
       setEditorSceneObjectDataConfig({
         store: scenePlatformStore.value,
+        commandBus: options.commandBus,
         objectId: selectedSceneObject.value.id,
         dataConfig,
       })

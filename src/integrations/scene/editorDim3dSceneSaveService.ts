@@ -122,7 +122,7 @@ export const saveEditorSceneToDim3d = async (
     ...(context.baseRevisionNo === undefined ? {} : { baseRevisionNo: context.baseRevisionNo }),
     ...(options.changeSummary?.trim() ? { changeSummary: options.changeSummary.trim() } : {}),
   })
-  // 正式接口仍一次提交四包；二维编辑不能重建或清空尚未接入的三维域。
+  // 一次提交四包：合并当前二维与新建三维对象，同时保全尚未接入编辑的原三维域。
   const protectedBody = { ...body, ...preserveUneditedThreeDDomain(sceneId, body) }
   const response = await (options.saveAll ?? saveAllDim3dScene)(protectedBody)
   const result = assertSaveSucceeded(response, sceneId)

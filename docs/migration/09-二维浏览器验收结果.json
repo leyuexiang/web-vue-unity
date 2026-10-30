@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "testedAt": "2026-10-20T03:50:47.273Z",
-  "durationMs": 16032,
+  "testedAt": "2026-10-30T03:57:44.567Z",
+  "durationMs": 20858,
   "backend": "隔离模拟接口",
   "viewport": {
     "width": 1920,

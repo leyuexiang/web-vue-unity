@@ -1,28 +1,123 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { SCENE_PANEL_ENUM } from '@/enums/scenePanelEnum'
+import { useSceneStore, useSceneWidgetStore } from '@/stores/sceneEditStore'
+import type { CommandBus, SceneStore } from '@/scene-platform'
+import { subscribeActiveSceneViewportHost } from '@/integrations/scene/editorScenePlatformHost'
+import { bindEditorSceneSelectionToLegacyState } from '@/integrations/scene/editorSceneSelectionAdapter'
 import { resolveWidgetPanelSelection } from '@/integrations/scene/widgetPanels'
+import InteractionPanel from './components/InteractionPanel/index.vue'
+import RightDataPanel from './components/RightDataPanel/index.vue'
+import SceneObjectBasePanel from './components/WidgetPanels/SceneObjectBasePanel/index.vue'
 import WidgetBasePanel from './components/WidgetPanels/WidgetBasePanel/index.vue'
 import WidgetDataPanel from './components/WidgetPanels/WidgetDataPanel/index.vue'
 import WidgetAnimationPanel from './components/WidgetPanels/WidgetAnimationPanel/index.vue'
 import WidgetEventPanel from './components/WidgetPanels/WidgetEventPanel/index.vue'
 import StageSizePanel from './components/ScenePanel/StageSizePanel.vue'
 import SceneMediaServerPanel from './components/ScenePanel/SceneMediaServerPanel.vue'
-/** 沿用来源选择路由和各专用面板，二维配置不依赖三维对象或旧渲染器。 */
+/** 统一使用领域选中态路由三维属性，Pinia 编号仅作为顶部页签和旧面板的兼容镜像。 */
 const inspectorPanel = defineModel<SCENE_PANEL_ENUM>('inspectorPanel', { default: SCENE_PANEL_ENUM.Base })
+const sceneStore = useSceneStore()
+const widgetStore = useSceneWidgetStore()
 const selection = computed(() => resolveWidgetPanelSelection())
 const isWidget = computed(() => ['widget', 'widgetChild', 'widgetGroup'].includes(selection.value.kind))
-watch(() => selection.value.kind, () => { inspectorPanel.value = SCENE_PANEL_ENUM.Base })
+const selectedSceneObjectId = computed(() => sceneStore.currentTransformMaterialUuid)
+const isSceneObject = computed(() => !isWidget.value && Boolean(selectedSceneObjectId.value))
+const scenePlatformStore = shallowRef<SceneStore | null>(null)
+const scenePlatformCommandBus = shallowRef<CommandBus | null>(null)
+const scenePlatformStoreRevision = ref(0)
+let stopScenePlatformHostSubscription: (() => void) | null = null
+let stopScenePlatformStoreSubscription: (() => void) | null = null
+let stopSceneSelectionBinding: (() => void) | null = null
+
+/** 仅在目标类别改变时回到基础页；同类模型之间切换时保留用户正在使用的属性页。 */
+watch(() => [selection.value.kind, isSceneObject.value], () => { inspectorPanel.value = SCENE_PANEL_ENUM.Base })
+
+/**
+ * Unity 画布回传的选择先进入 SceneStore；在右侧检查器边界同步兼容编号并排空二维选择，
+ * 让顶部页签、结构树和属性内容消费同一个对象身份。宿主替换时先释放旧订阅。
+ */
+const bindSceneSelection = (store: SceneStore | null) => {
+  stopScenePlatformStoreSubscription?.()
+  stopSceneSelectionBinding?.()
+  scenePlatformStore.value = store
+  if (!store) return
+
+  stopSceneSelectionBinding = bindEditorSceneSelectionToLegacyState(store, {
+    getLegacySelectedObjectId: () => sceneStore.currentTransformMaterialUuid,
+    setLegacySelectedObjectId: (objectId) => {
+      sceneStore.setCurrentTransformMaterialUuid(objectId)
+      sceneStore.setSelectedThreeMapObjectId(objectId?.startsWith('three-map-') ? objectId : null)
+    },
+    clearWidgetSelectionWhenObjectSelected: () => widgetStore.clearCurrentWidgetSelection(),
+  })
+  stopScenePlatformStoreSubscription = store.subscribe((event) => {
+    if (
+      event.type === 'selectionChanged' ||
+      event.type === 'effectSelectionChanged' ||
+      event.type === 'objectUpserted' ||
+      event.type === 'objectRemoved'
+    ) {
+      scenePlatformStoreRevision.value += 1
+    }
+    if (event.type === 'selectionChanged') {
+      sceneStore.setSelectedThreeMapObjectId(event.objectId?.startsWith('three-map-') ? event.objectId : null)
+    }
+  })
+  scenePlatformStoreRevision.value += 1
+}
+
+onMounted(() => {
+stopScenePlatformHostSubscription = subscribeActiveSceneViewportHost((host) => {
+    scenePlatformCommandBus.value = host?.getCommandBus() ?? null
+    bindSceneSelection(host?.getStore() ?? null)
+  })
+})
+
+onBeforeUnmount(() => {
+  stopScenePlatformHostSubscription?.()
+  stopScenePlatformHostSubscription = null
+  stopScenePlatformStoreSubscription?.()
+  stopScenePlatformStoreSubscription = null
+  stopSceneSelectionBinding?.()
+  stopSceneSelectionBinding = null
+  scenePlatformStore.value = null
+  scenePlatformCommandBus.value = null
+})
 </script>
 <template>
   <div class="scene-edit-right-shell" data-scene-right-panel="true">
     <div class="scene-edit-right-panel scene-edit-panel-surface h-full" data-scene-right-panel="true">
-      <el-scrollbar v-if="!isWidget" class="scene-edit-scene-inspector">
+      <el-scrollbar v-if="!isWidget && !isSceneObject" class="scene-edit-scene-inspector">
         <div v-if="inspectorPanel === SCENE_PANEL_ENUM.Base" class="scene-edit-scene-panel p-3 text-[14px]">
           <StageSizePanel /><SceneMediaServerPanel />
         </div>
         <el-empty v-else description="三维运行能力将在二维验收后接入" />
       </el-scrollbar>
+      <div v-else-if="isSceneObject" class="scene-edit-inspector-shell">
+        <el-scrollbar class="scene-edit-property-inspector">
+          <div class="scene-edit-property-inspector__content">
+            <SceneObjectBasePanel
+              v-if="inspectorPanel === SCENE_PANEL_ENUM.Base"
+              :store="scenePlatformStore"
+              :command-bus="scenePlatformCommandBus"
+              :store-revision="scenePlatformStoreRevision"
+              :object-id="selectedSceneObjectId"
+            />
+            <RightDataPanel
+              v-else-if="inspectorPanel === SCENE_PANEL_ENUM.Data"
+              target-kind="sceneObject"
+              :command-bus="scenePlatformCommandBus"
+            />
+            <InteractionPanel
+              v-else-if="inspectorPanel === SCENE_PANEL_ENUM.Interaction || inspectorPanel === SCENE_PANEL_ENUM.Status"
+              :panel-type="inspectorPanel"
+              target-kind="sceneObject"
+              :command-bus="scenePlatformCommandBus"
+            />
+          </div>
+        </el-scrollbar>
+      </div>
       <div v-else class="scene-edit-inspector-shell">
         <el-scrollbar class="scene-edit-property-inspector">
           <div class="scene-edit-property-inspector__content">

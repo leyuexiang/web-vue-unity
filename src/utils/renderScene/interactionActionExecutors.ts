@@ -1,7 +1,9 @@
 import type * as THREE from '@/types/legacyObjectPort'
-import { ACTION_TYPE_ENUM } from '@/enums/scenePanelEnum'
+import { ACTION_TYPE_ENUM, VIEW_TYPE_ENUM } from '@/enums/scenePanelEnum'
 import type { ActionItem } from '@/types/threeScene'
 import type BaseWidgetConfig from '@/packages/components/BaseWidgetConfig'
+import type { ComponentDataConfig } from '@/types/data-config'
+import type { SceneRuntime } from '@/scene-platform'
 import type { SceneRuntimeBridge } from './sceneRuntimeBridge'
 import { appLogger } from '@/utils/logger'
 import {
@@ -34,22 +36,37 @@ import {
  */
 export interface InteractionActionExecutionContext {
   sceneApi: SceneRuntimeBridge['sceneApi']
+  /** 三维领域动作只经当前 Runtime 执行，不回退到旧 Three 场景。 */
+  sceneRuntime?: SceneRuntime | null
+  /** 模型事件来源的最新请求快照，用于按数据映射读取动作参数。 */
+  sourceDataConfig?: ComponentDataConfig | null
   /** 触发动作的二维部件；未指定来源组件时从其数据快照读取字段。 */
   sourceWidget?: BaseWidgetConfig
   /** 来源稳定编号用于读取实时输入；逐条翻页也据此恢复历史回放后的当前记录。 */
   sourceWidgetId?: string
   /** 触发动作的三维对象；用于兼容三维对象自身的数据配置。 */
   sourceObject?: THREE.Object3D
+  /** 三维显隐动作确认后同步本次预览的规则快照，不回写场景 Store 或保存数据。 */
+  onSceneObjectVisibilityChanged?: (objectId: string, visible: boolean) => void
   /** 场景卸载或退出预览后，排队动作不得再访问旧目标。 */
   isActive?: () => boolean
 }
 
-/** 只执行二维动作；三维配置保留原样，执行时明确报告能力尚未接入。 */
+/** 统一编排二维部件动作与当前三维 Runtime 已接管的模型、相机动作。 */
 const executePreparedInteractionAction = (action: ActionItem, context: InteractionActionExecutionContext): ActionCompletion => {
   switch (action.actionType) {
+    case ACTION_TYPE_ENUM.HighlightModel:
+      return executeSceneObjectHighlight(action, context)
+    case ACTION_TYPE_ENUM.MoveCamera:
+      return executeSceneObjectCameraMove(action, context)
+    case ACTION_TYPE_ENUM.SwitchView:
+      return executeSceneCameraViewSwitch(action, context)
     case ACTION_TYPE_ENUM.PassParameters:
-      if (action.parameterTargetKind !== 'widget') throw new Error('三维传参待 Unity 接入')
       return executeRequestParameterAction(action, context)
+    case ACTION_TYPE_ENUM.ModelVisibilityWithValue:
+      return executeRequestParameterAction(action, context)
+    case ACTION_TYPE_ENUM.ModelVisibility:
+      return executeSceneObjectVisibility(action, context)
     case ACTION_TYPE_ENUM.SetWidgetProperty: return executeSetWidgetPropertyAction(action)
     case ACTION_TYPE_ENUM.JumpLink: return executeJumpLink(action)
     case ACTION_TYPE_ENUM.SwitchScene: return executeSwitchScene(action)
@@ -77,6 +94,8 @@ const executeInteractionAction = (
   action: ActionItem,
   context: InteractionActionExecutionContext,
 ): ActionCompletion => {
+  // Unity 草稿对象由 SceneRuntime 直接按稳定编号操作，不经过旧 Three 目标预加载入口。
+  if (context.sceneRuntime) return executePreparedInteractionAction(action, context)
   const preparation = prepareInteractionObjectTarget(action)
   if (isActionPending(preparation))
     return preparation.then(() => {
@@ -109,6 +128,112 @@ const executeSetWidgetPropertyAction = (action: ActionItem) => {
   }
 
   return setWidgetPropertiesByIds(targetIds, propertyValues)
+}
+
+/** 模型显隐等待引擎确认；只有同步能力的旧 Runtime 才走兼容入口。 */
+const executeSceneObjectVisibility = (
+  action: ActionItem,
+  context: InteractionActionExecutionContext,
+) => {
+  const objectId = action.actionTargetUuid?.trim()
+  if (!objectId || typeof action.modelVisibility !== 'boolean') {
+    throw new Error('模型显隐动作缺少目标对象或可见状态')
+  }
+  const visible = action.modelVisibility
+  const runtime = context.sceneRuntime
+  if (runtime?.setObjectVisibleAsync) {
+    return runtime.setObjectVisibleAsync(objectId, visible).then((applied) => {
+      if (!applied) throw new Error('当前三维运行时未接入模型显隐动作')
+      context.onSceneObjectVisibilityChanged?.(objectId, visible)
+    })
+  }
+  if (!runtime?.setObjectVisible(objectId, visible)) {
+    throw new Error('当前三维运行时未接入模型显隐动作')
+  }
+  context.onSceneObjectVisibilityChanged?.(objectId, visible)
+}
+
+/** 高亮动作只调用当前三维 Runtime，颜色状态由引擎保存并在关闭时恢复原外观。 */
+const executeSceneObjectHighlight = (
+  action: ActionItem,
+  context: InteractionActionExecutionContext,
+): ActionCompletion => {
+  const objectId = action.actionTargetUuid?.trim()
+  const enabled = action.highlightStatus ?? true
+  const color = action.highlightColor?.trim()
+  const runtime = context.sceneRuntime
+  if (!objectId) throw new Error('模型高亮动作缺少目标对象')
+  if (enabled && !color) throw new Error('模型高亮动作缺少高亮颜色')
+  if (!runtime || runtime.isDisposed || !runtime.hasObject(objectId) || !runtime.setObjectInteractionHighlight) {
+    throw new Error('当前三维运行时未接入模型高亮动作')
+  }
+
+  return requireSceneRuntimeAction('模型高亮', runtime.setObjectInteractionHighlight(objectId, {
+    enabled,
+    ...(color ? { color } : {}),
+  }))
+}
+
+/** 镜头聚焦交给 Runtime 按目标包围盒或地理实体实现，前端不转换引擎坐标。 */
+const executeSceneObjectCameraMove = (
+  action: ActionItem,
+  context: InteractionActionExecutionContext,
+): ActionCompletion => {
+  const objectId = action.observationTargetUuid?.trim()
+  const runtime = context.sceneRuntime
+  if (!objectId) throw new Error('移动相机动作缺少观察目标')
+  if (!runtime || runtime.isDisposed || !runtime.hasObject(objectId) || !runtime.moveCameraToObject) {
+    throw new Error('当前三维运行时未接入移动相机动作')
+  }
+
+  const transitionTime = Number.isFinite(action.transitionTime)
+    ? Math.max(action.transitionTime ?? 1, 0)
+    : 1
+  const smoothFactor = Number.isFinite(action.smoothFactor)
+    ? Math.min(Math.max(action.smoothFactor ?? 1, 0), 2)
+    : 1
+  return requireSceneRuntimeAction('移动相机', runtime.moveCameraToObject(objectId, {
+    transitionTime,
+    smoothFactor,
+  }))
+}
+
+/** 视图类型与过渡时间沿用二维组件动作配置，实际朝向由当前引擎 Runtime 负责。 */
+const executeSceneCameraViewSwitch = (
+  action: ActionItem,
+  context: InteractionActionExecutionContext,
+): ActionCompletion => {
+  const runtime = context.sceneRuntime
+  const viewType = action.viewType ?? VIEW_TYPE_ENUM.Front
+  if (viewType !== VIEW_TYPE_ENUM.Front && viewType !== VIEW_TYPE_ENUM.Side && viewType !== VIEW_TYPE_ENUM.Top) {
+    throw new Error(`不支持的视图类型：${String(viewType)}`)
+  }
+  if (!runtime || runtime.isDisposed || !runtime.switchCameraView) {
+    throw new Error('当前三维运行时未接入切换视图动作')
+  }
+
+  const runtimeViewType =
+    viewType === VIEW_TYPE_ENUM.Front ? 'front' :
+    viewType === VIEW_TYPE_ENUM.Side ? 'side' : 'top'
+  const transitionTime = Number.isFinite(action.transitionTime)
+    ? Math.max(action.transitionTime ?? 0, 0)
+    : 0
+  return requireSceneRuntimeAction('切换视图', runtime.switchCameraView({ viewType: runtimeViewType, transitionTime }))
+}
+
+/** 把引擎确认值收敛为动作序列承诺，false 必须作为未执行处理并阻断错误的成功链路。 */
+const requireSceneRuntimeAction = (
+  actionName: string,
+  completion: boolean | Promise<boolean>,
+): ActionCompletion => {
+  const assertApplied = (applied: boolean) => {
+    if (!applied) throw new Error(`当前三维运行时未执行${actionName}动作`)
+  }
+  if (typeof completion === 'boolean') {
+    assertApplied(completion)
+    return
+  }
+  return completion.then(assertApplied)
 }
 
 /** 沿用来源二维动作语义，异步任务由统一生命周期守卫取消。 */
@@ -144,7 +269,7 @@ const executeRequestParameterAction = (
         // 没有显式数据配置的输入框同样复用面板推导，避免候选可选但执行时被判为缺失。
         (sourceWidget?.info
           ? getWidgetDataConfig(sourceWidget)
-          : sourceObject?.userData?.dataConfig)
+          : context.sourceDataConfig || sourceObject?.userData?.dataConfig)
   const readSource = createParameterSourceReader(
     normalizeDataConfig(sourceConfig),
     getRecordPaginationSelection(sourceWidget, source?.id || context.sourceWidgetId),
@@ -256,7 +381,9 @@ const executeWidgetVisibilityWithValue = (
   }
 
   const sourceDataConfig =
-    context.sourceWidget?.dataConfig || context.sourceObject?.userData?.dataConfig
+    context.sourceWidget?.dataConfig ||
+    context.sourceDataConfig ||
+    context.sourceObject?.userData?.dataConfig
   const readSource = createParameterSourceReader(
     normalizeDataConfig(sourceDataConfig),
     getRecordPaginationSelection(context.sourceWidget, context.sourceWidgetId),

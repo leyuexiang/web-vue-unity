@@ -18,6 +18,10 @@ export interface EditorSceneDataPollingController {
 export interface EditorSceneDataPollingControllerOptions {
   getViewportHost: () => ViewportHost | null
   getLegacySceneApi?: () => renderScene | null
+  /** 引擎回写前叠加仅存在于预览内存中的临时状态，不修改请求调度器或领域 Store 快照。 */
+  projectSceneObjectForRuntime?: (object: SceneObject) => SceneObject
+  /** 三维对象数据应用到当前 Runtime 后，交给会话级规则服务评估该对象的状态。 */
+  onSceneObjectUpdated?: (object: SceneObject) => void | Promise<void>
   /** 测试可缩短防抖窗口；生产默认合并同一轮表单和 Store 更新。 */
   refreshDelayMs?: number
 }
@@ -88,11 +92,8 @@ const createPollingSignature = (
 /**
  * 创建编辑场景级数据请求控制器。
  *
- * 当前二维阶段统一编排组件请求，不执行保全的三维配置，也不接管配置持久化：
- * - 二维结果继续由部件运行服务增量刷新当前组件；
- * - 保留三维结果写入端口供后续适配，本阶段不登记任何三维任务；
- * - 公共接口定义和全局配置仍由 sceneJson 对应的请求仓库管理；
- * - 实例请求绑定仍来自各实例依赖，不在这里复制数据。
+ * 二维部件和三维领域对象共用请求调度器；三维响应只投影到当前 Runtime，不改写 SceneStore，
+ * 因此实时数据不会进入配置命令历史。公共接口和全局请求参数仍由场景请求仓库统一提供。
  */
 export const createEditorSceneDataPollingController = (
   options: EditorSceneDataPollingControllerOptions,
@@ -115,14 +116,18 @@ export const createEditorSceneDataPollingController = (
     getRuntimeContext: () => ({
       sceneId: options.getViewportHost()?.getStore().getScene().id,
     }),
-    // 二维阶段只调度部件，三维配置只保全不执行。
-    getSceneObjects: () => [],
+    // 模型配置存放在领域对象 metadata 中；只读当前场景快照，不复制整场或扫描旧引擎对象。
+    getSceneObjects: () => options.getViewportHost()?.getStore().getScene().objects ?? [],
     applySceneObject: async (object) => {
       /**
        * 数据结果属于运行时状态，直接交给当前引擎中立 Runtime。GIS 与本地三维在各自适配器中
        * 应用经纬高或本地变换；绝不调用 SceneStore.upsertObject，避免轮询数据进入保存和撤销栈。
        */
-      await options.getViewportHost()?.getRuntime().upsertObject(object)
+      const host = options.getViewportHost()
+      if (!host) return
+      const runtimeObject = options.projectSceneObjectForRuntime?.(object) ?? object
+      await host.getRuntime().upsertObject(runtimeObject)
+      await options.onSceneObjectUpdated?.(runtimeObject)
     },
   })
 
@@ -130,7 +135,7 @@ export const createEditorSceneDataPollingController = (
     // 保留响应式代理，签名读取才能追踪面板内原位修改的配置；结果数据已由投影排除。
     return createPollingSignature(
       widgetStore.totalWidgets ?? [],
-      [],
+      options.getViewportHost()?.getStore().getScene().objects ?? [],
       requestStore.scenePublicRequestList,
       requestStore.sceneRequestGlobalConfig,
     )

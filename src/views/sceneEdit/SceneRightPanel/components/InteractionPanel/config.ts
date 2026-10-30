@@ -10,6 +10,7 @@ import {
 import { ACTION_TYPE_ENUM } from '@/enums/scenePanelEnum'
 import type { FixedValueLocation } from './type'
 
+/** 状态与事件共用二维已有的四种触发语义，Unity 预览运行时也回传同一枚举值。 */
 export const eventTypeOptions = [
   {
     label: '单击左键时',
@@ -48,6 +49,7 @@ export const actionFieldRules = {
   sceneUrl: [{ required: true, message: '请输入场景链接', trigger: 'blur' }],
 }
 
+/** 三维状态和事件沿用二维的动作表单与动作类型，由各自 Runtime 按能力执行。 */
 export const actionTypeOptions = [
   {
     label: '高亮模型',

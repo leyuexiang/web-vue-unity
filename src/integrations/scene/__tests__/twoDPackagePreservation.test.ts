@@ -46,4 +46,36 @@ describe('二维编辑的三维无损保存保护', () => {
     expect(preserveUneditedThreeDDomain(sceneId, generated)).toBe(generated)
     expect(() => retainOriginalScenePackages(sceneId, { ...generated, threeDJson: '[' })).toThrow()
   })
+
+  it('追加新模型、几何体和共享依赖，同时原样保留旧三维目标与未知配置', () => {
+    const oldOwner = { domain: 'threeD', instanceId: '三维模型' }
+    const newOwner = { domain: 'threeD', instanceId: '新增模型' }
+    const twoDOwner = { domain: 'twoD', instanceId: '二维图片' }
+    const before = payload({ resources: [{ resourceKey: '共享资源', assetId: '编号', unknown: true, owners: [oldOwner] }] })
+    retainOriginalScenePackages(sceneId, before)
+    const generated = { ...payload({
+      resources: [{ resourceKey: '共享资源', assetId: '编号', owners: [oldOwner, newOwner, twoDOwner] }],
+      behaviors: [{ owner: newOwner, eventType: 'click' }],
+    }), threeDJson: JSON.stringify({ objects: [
+      { instanceId: '三维模型', unknownFutureField: false },
+      { instanceId: '新增模型', layerKey: '新图层', transform: { position: [1, 2, 3] } },
+    ], components: [{ instanceId: '新增几何体' }], layers: [{ layerKey: '新图层', name: '分组' }], customRenderer: {} }) }
+    const saved = preserveUneditedThreeDDomain(sceneId, generated)
+    const threeD = JSON.parse(saved.threeDJson)
+    expect(threeD.objects).toEqual([
+      { instanceId: '三维模型', unknownFutureField: true },
+      { instanceId: '新增模型', layerKey: '新图层', transform: { position: [1, 2, 3] } },
+    ])
+    expect(threeD.components).toEqual([{ instanceId: '新增几何体' }])
+    expect(threeD.layers).toEqual([{ layerKey: '新图层', name: '分组' }])
+    expect(threeD.customRenderer).toEqual({ version: 9 })
+    expect(JSON.parse(saved.dependenciesJson).resources).toEqual([
+      { resourceKey: '共享资源', assetId: '编号', unknown: true, owners: [oldOwner, newOwner, twoDOwner] },
+    ])
+    expect(JSON.parse(saved.dependenciesJson).behaviors).toEqual([{ owner: newOwner, eventType: 'click' }])
+    // 所有新增实例撤销后恢复原三维原文，且不会把已撤销实例的依赖带回下次保存。
+    const undone = preserveUneditedThreeDDomain(sceneId, payload({ resources: [] }))
+    expect(undone.threeDJson).toBe(before.threeDJson)
+    expect(JSON.parse(undone.dependenciesJson).resources[0].owners).toEqual([oldOwner])
+  })
 })

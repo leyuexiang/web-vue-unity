@@ -55,6 +55,24 @@ describe('dual Unity render contract', () => {
       properties: { primitiveType: 'cube' }, transform: { rotation: { value: [0, 0, 0, 1] } } })
   })
 
+  it('把拾取状态和设备编号投影到 Unity，且拾取状态独立于锁定状态', () => {
+    const object = {
+      id: 'box', name: '模型', type: 'primitive' as const, visible: true, locked: true, order: 0,
+      transform: { kind: 'local' as const, position: [0, 0, 0] as [number, number, number],
+        rotation: [0, 0, 0] as [number, number, number], scale: 1 },
+      metadata: { editorGeometryType: 'BoxGeometry', pickable: false, deviceId: '设备-001' },
+    }
+
+    expect(projectObjectForUnity(object)).toMatchObject({
+      locked: true,
+      properties: { primitiveType: 'cube', pickable: false, deviceId: '设备-001' },
+    })
+    expect(projectObjectForUnity({ ...object, locked: false })).toMatchObject({
+      locked: false,
+      properties: { pickable: false },
+    })
+  })
+
   it('unwraps the response shape emitted by Unity BusinessChannel', () => {
     const envelope = { protocolVersion: 1, requestId: 'req-1', success: true,
       payload: { protocolVersion: 1, capabilities: { sceneTypes: ['local3d'] } } }

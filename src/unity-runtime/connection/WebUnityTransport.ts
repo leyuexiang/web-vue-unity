@@ -58,6 +58,8 @@ export class WebUnityTransport implements UnityTransport {
     this.canvas.className = 'unity-web-canvas'
     this.canvas.tabIndex = 0
     this.canvas.style.cssText = 'width:100%;height:100%;display:block;outline:none'
+    // 与云端视频保持一致，仅禁用当前画布的默认右键菜单，不阻断Unity接收右键旋转事件。
+    this.canvas.addEventListener('contextmenu', (event) => event.preventDefault())
   }
 
   connect(): Promise<void> {

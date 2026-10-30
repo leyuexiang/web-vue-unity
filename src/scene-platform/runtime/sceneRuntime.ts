@@ -87,6 +87,12 @@ export interface ObjectInteractionSwitchViewOptions {
   transitionTime?: number
 }
 
+/** 运行时回传的三维业务交互；编辑态的模型拾取仍由 selectionChanged 单独处理。 */
+export interface SceneObjectInteractionEvent {
+  objectId: string
+  eventType: 'click' | 'dblclick' | 'mouseenter' | 'mouseleave'
+}
+
 /** 相机路径点三维操控器只开放位置移动和姿态旋转两种明确模式。 */
 export type CameraPathWaypointGizmoMode = 'translate' | 'rotate'
 
@@ -178,7 +184,7 @@ export interface SceneRuntime {
    * 发布预览在加载场景前调用此入口，Runtime 必须关闭并清理所有编辑辅助器（Gizmo）。
    * 该能力是可选的，以兼容尚未接入编辑工具的轻量 Runtime。
    */
-  setEditingEnabled?: (enabled: boolean) => void
+  setEditingEnabled?: (enabled: boolean) => void | Promise<void>
 
   loadScene: (scene: SceneDefinition) => Promise<void>
   /**
@@ -281,6 +287,12 @@ export interface SceneRuntime {
    * 返回 true 表示当前 Runtime 已实际接管目标；返回 false 时调用方必须保留旧执行器回退。
    */
   setObjectVisible: (objectId: string, visible: boolean) => boolean
+  /** 可等待地应用真实引擎显隐；仅实现该能力的运行时可供三维业务动作调用。 */
+  setObjectVisibleAsync?: (objectId: string, visible: boolean) => Promise<boolean>
+  /** 发布预览中的用户交互通知；没有业务事件能力的运行时保持未实现。 */
+  subscribeObjectInteraction?: (
+    listener: (event: SceneObjectInteractionEvent) => void,
+  ) => () => void
   /**
    * 可恢复的交互规则高亮能力。
    *
@@ -291,7 +303,7 @@ export interface SceneRuntime {
   setObjectInteractionHighlight?: (
     objectId: string,
     options: ObjectInteractionHighlightOptions,
-  ) => boolean
+  ) => boolean | Promise<boolean>
   /**
    * 将当前相机临时聚焦到指定对象。
    *
@@ -299,7 +311,10 @@ export interface SceneRuntime {
    * 对象对应的实体。返回 true 表示动作已被接管，false 表示调用方必须完整回退旧执行器，
    * 不能部分执行两套镜头运动。
    */
-  moveCameraToObject?: (objectId: string, options?: ObjectInteractionMoveCameraOptions) => boolean
+  moveCameraToObject?: (
+    objectId: string,
+    options?: ObjectInteractionMoveCameraOptions,
+  ) => boolean | Promise<boolean>
   /**
    * 将当前相机切换为正视、侧视或顶视。
    *
@@ -307,7 +322,7 @@ export interface SceneRuntime {
    * 坐标切换朝向。只有 Runtime 能保证对应引擎的相机和补间语义时才能返回 true；否则必须
    * 完整回退旧执行器。
    */
-  switchCameraView?: (options?: ObjectInteractionSwitchViewOptions) => boolean
+  switchCameraView?: (options?: ObjectInteractionSwitchViewOptions) => boolean | Promise<boolean>
   setSelectedObject: (objectId: string | null) => void
   /**
    * 接收编辑器发出的对象临时交互意图。

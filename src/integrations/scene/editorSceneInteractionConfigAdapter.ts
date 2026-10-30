@@ -1,5 +1,5 @@
 import { cloneDeep, isEqual } from 'lodash-es'
-import type { SceneStore } from '@/scene-platform'
+import { createUpdateObjectExtensionsCommand, type CommandBus, type SceneStore } from '@/scene-platform'
 import type { InteractionEvent } from '@/types/threeScene'
 
 export const EDITOR_SCENE_OBJECT_INTERACTIVE_EVENT_METADATA_KEY = 'interactiveEvent'
@@ -34,6 +34,8 @@ export interface GetEditorSceneObjectEventConfigOptions {
 
 export interface SetEditorSceneObjectEventConfigOptions {
   store?: SceneStore | null
+  /** 编辑器面板传入命令总线后，配置可在当前会话撤销和重做。 */
+  commandBus?: Pick<CommandBus, 'execute'> | null
   objectId?: string | null
   eventList: InteractionEvent[]
 }
@@ -142,6 +144,7 @@ const getEditorSceneObjectEventList = ({
  */
 const setEditorSceneObjectEventList = ({
   store,
+  commandBus,
   objectId,
   eventList,
   metadataKey,
@@ -158,13 +161,20 @@ const setEditorSceneObjectEventList = ({
     return { status: 'skipped', reason: 'unchanged-config' }
   }
 
-  store.upsertObject({
-    ...sceneObject,
-    metadata: {
-      ...(sceneObject.metadata ?? {}),
-      [metadataKey]: normalized,
-    },
-  })
+  if (commandBus) {
+    // 当前会话命令历史保存完整旧快照，撤销时恢复事件配置及对象其它元数据。
+    commandBus.execute(createUpdateObjectExtensionsCommand(objectId, {
+      metadata: { [metadataKey]: normalized },
+    }))
+  } else {
+    store.upsertObject({
+      ...sceneObject,
+      metadata: {
+        ...(sceneObject.metadata ?? {}),
+        [metadataKey]: normalized,
+      },
+    })
+  }
 
   return {
     status: 'applied',

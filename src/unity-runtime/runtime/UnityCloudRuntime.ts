@@ -1,8 +1,10 @@
 import type { SceneDefinition, SceneObject, SceneTransform } from '@/scene-core'
 import type { UnityGizmoMode, UnityRuntimeCapabilities } from '@/unity-runtime/protocol/types'
+import type { UnityInteractionActionDto } from '@/unity-runtime/protocol/types'
 
 export interface UnityRuntimeEventMap {
   selectionChanged: { instanceId: string | null }
+  objectInteraction: { instanceId: string; eventType: 'click' | 'dblclick' | 'mouseenter' | 'mouseleave' }
   transformPreview: { instanceId: string; transform: SceneTransform }
   transformCommitted: { instanceId: string; transform: SceneTransform }
   sceneProgress: { progress: number; stage?: string }
@@ -23,6 +25,8 @@ export interface UnityCloudRuntime {
   setSelection(instanceId: string | null): void
   setGizmoMode(mode: UnityGizmoMode): Promise<void>
   setMode(mode: 'edit' | 'preview'): Promise<void>
+  /** 在 Unity 草稿模型上执行相机或临时高亮动作，结果确认后才继续动作序列。 */
+  executeInteractionAction?(action: UnityInteractionActionDto): Promise<void>
   on<TKey extends keyof UnityRuntimeEventMap>(
     type: TKey,
     listener: (payload: UnityRuntimeEventMap[TKey]) => void,

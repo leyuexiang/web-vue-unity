@@ -18,6 +18,7 @@ import {
   type WidgetOverlayHostPort,
   type WidgetRuntimePort,
 } from './ports'
+import { appLogger } from '@/utils/logger'
 
 type SceneApiGetter = () => renderModel | null
 type SceneRuntimeGetter = () => SceneRuntime | null
@@ -34,6 +35,7 @@ const getCurrentSceneApi = () => useSceneStore().sceneApi
 export const createSceneApiWidgetRuntimePort = (
   getSceneApi: SceneApiGetter = getCurrentSceneApi,
   widgetEventRuntime: WidgetEventRuntimePort = getWidgetEventRuntimeService(),
+  getSceneRuntime?: SceneRuntimeGetter,
 ): WidgetRuntimePort => {
   /** GIS 编辑器没有旧状态模块，因此由当前二维端口自行合并状态扫描帧。 */
   let widgetStatusFrame = 0
@@ -43,7 +45,11 @@ export const createSceneApiWidgetRuntimePort = (
    * 新格式模型显隐优先读取活动 SceneRuntime，旧动作仍在真正命中时才读取 sceneApi；
    * 因此既不会缓存已销毁实例，也保持历史部件联动的旧执行语义。
    */
-  const actionRuntime = createEditorSceneInteractionActionRuntimePort({ getSceneApi })
+  const actionRuntime = createEditorSceneInteractionActionRuntimePort({
+    getSceneApi,
+    // 三维编辑页中的二维部件事件也可操作 Unity 模型；旧页面未传 Runtime 时继续沿用原 sceneApi。
+    ...(getSceneRuntime ? { getRuntime: getSceneRuntime } : {}),
+  })
 
   /**
    * 立即结算二维状态规则。
@@ -103,12 +109,17 @@ export const createSceneApiWidgetRuntimePort = (
     executeAllStatusEvents: executeAllWidgetStatusEvents,
     clearSceneObjectSelection: () => {
       /**
-       * 二维部件选中前统一清掉三维选中态。
-       * 这样 DOM 画布和 Three 视口不会同时显示两个编辑焦点。
+       * 二维部件选中前统一清除领域选中、三维兼容编号和旧引擎控制器。
+       * 领域 Store 的清选会通过 RuntimeBridge 同步到 Unity / 网页 Runtime，保证同一时刻只有
+       * 一个画布对象处于编辑焦点；旧 sceneApi 调用仅负责清理尚未迁移对象的即时视觉状态。
        */
       const sceneStore = useSceneStore()
+      const platformStore = getActiveSceneViewportHost()?.getStore()
+      platformStore?.setSelectedObjectId(null)
+      platformStore?.setSelectedEffectId(null)
       getSceneApi()?.transformControlsModules.clearCurrentSelection()
       sceneStore.setCurrentTransformMaterialUuid(null)
+      sceneStore.setSelectedThreeMapObjectId(null)
     },
     /** 场景卸载时取消 GIS 端口自行排队的状态扫描，防止动作落到已离开的画布。 */
     dispose: () => {
@@ -216,7 +227,7 @@ export const createSceneApiWidgetOverlayHostPort = (
        * 顶部入口不判断具体引擎，底层差异由 Runtime 自身处理。
        */
       const runtime = getRuntime()
-      runtime?.setEditingEnabled?.(false)
+       await runtime?.setEditingEnabled?.(false)
       /**
        * Store 中保留进入预览前的选中编号，便于退出时恢复；Runtime 侧单独清选，
        * 可立即移除 GIS 模型高亮、包围盒和 Gizmo，又不会污染对象树的编辑态记忆。
@@ -245,7 +256,9 @@ export const createSceneApiWidgetOverlayHostPort = (
           restorePreviewState()
           restoreEditorSelectionAfterPreview()
           restoreWidgetPreviewState()
-          runtime?.setEditingEnabled?.(true)
+          void Promise.resolve(runtime?.setEditingEnabled?.(true)).catch((restoreError) => {
+            appLogger.error('SceneApiWidgetRuntimeAdapter', '恢复 Unity 编辑模式失败', restoreError)
+          })
         } else {
           /** 退出方保留了快照，迟到失败仍需完成最后一次二维状态回滚。 */
           restoreWidgetPreviewState()
@@ -260,7 +273,9 @@ export const createSceneApiWidgetOverlayHostPort = (
       setWidgetPreviewState(false)
       getSceneApi()?.scenePreviewModules.exitScenePreview()
       const runtime = getRuntime()
-      runtime?.setEditingEnabled?.(true)
+      void Promise.resolve(runtime?.setEditingEnabled?.(true)).catch((error) => {
+        appLogger.error('SceneApiWidgetRuntimeAdapter', '退出预览后恢复 Unity 编辑模式失败', error)
+      })
       restorePreviewState()
       restoreEditorSelectionAfterPreview()
       // 预览初始化尚未完成时保留快照，待迟到 Promise settle 后再做一次兜底恢复。

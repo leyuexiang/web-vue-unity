@@ -82,8 +82,7 @@
           <div
             v-if="activeStructureCategory !== 'widget'"
             class="scene-edit-structure-group scene-edit-structure-group--scene-objects"
-            inert
-            title="三维结构在二维验收阶段只读，后续接入 Unity 编辑"
+            title="选择模型以编辑其三维属性"
           >
             <draggable
               item-key="id"
@@ -99,7 +98,7 @@
                 <div
                   data-structure-item="true"
                   :class="['scene-edit-structure-item', { 'is-active': item.isActive }]"
-                  @click="selectItem(item)"
+                  @click.stop="selectItem(item)"
                   @dblclick.stop="focusItem(item)"
                 >
                   <div class="scene-edit-structure-item__name">
@@ -236,7 +235,7 @@
                         <div
                           data-structure-item="true"
                           :class="['scene-edit-structure-item', { 'is-active': item.isActive }]"
-                          @click="selectItem(item)"
+                          @click.stop="selectItem(item)"
                           @dblclick.stop="focusItem(item)"
                         >
                           <div class="scene-edit-structure-item__name">

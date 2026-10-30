@@ -106,7 +106,7 @@ export abstract class BaseSceneRuntime implements SceneRuntime {
    *
    * 基类只保存统一状态，具体 Runtime 在关闭编辑能力时负责摘除自身引擎辅助器。
    */
-  setEditingEnabled(enabled: boolean): void {
+  setEditingEnabled(enabled: boolean): void | Promise<void> {
     this.editingEnabled = enabled
   }
 

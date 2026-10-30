@@ -249,4 +249,36 @@ describe('JsonRpcUnityCloudRuntime', () => {
     expect(listener).toHaveBeenCalledOnce()
     expect(listener).toHaveBeenCalledWith({ instanceId: 'object-1' })
   })
+
+  it('routes only current-session Unity preview clicks to the object interaction event', async () => {
+    const { transport, request, subscribers } = createTransport()
+    const runtime = new JsonRpcUnityCloudRuntime(transport)
+    const listener = vi.fn()
+    runtime.on('objectInteraction', listener)
+    await runtime.connect()
+    await runtime.loadScene(createEmptyScene('scene-1'))
+
+    const clickListener = subscribers.get('editor.v1.object.interaction')
+    expect(clickListener).toBeDefined()
+    const current = createEvent(request)
+    clickListener?.({ ...current, type: 'editor.v1.object.interaction', payload: { instanceId: 'object-1', eventType: 'click' } })
+    clickListener?.({ ...current, type: 'editor.v1.object.interaction', sceneGeneration: 0, payload: { instanceId: 'object-1', eventType: 'click' } })
+
+    expect(listener).toHaveBeenCalledOnce()
+    expect(listener).toHaveBeenCalledWith({ instanceId: 'object-1', eventType: 'click' })
+  })
+
+  it('sends edit and preview mode changes through the negotiated Unity command channel', async () => {
+    const { transport, request } = createTransport()
+    const runtime = new JsonRpcUnityCloudRuntime(transport)
+    await runtime.connect()
+    await runtime.loadScene(createEmptyScene('scene-1'))
+    await runtime.setMode('preview')
+
+    expect(request).toHaveBeenLastCalledWith('editor.v1.runtime.mode.set', expect.objectContaining({
+      sceneId: 'scene-1',
+      sceneGeneration: 1,
+      payload: { mode: 'preview' },
+    }))
+  })
 })

@@ -448,6 +448,7 @@ import ScenePropertyMappingList from '@/components/ScenePropertyMappingList/inde
 import ScenePropertyRichTextBlock from '@/components/ScenePropertyRichTextBlock/index.vue'
 import { ArrowDown, Delete } from '@element-plus/icons-vue'
 import { computed } from 'vue'
+import type { CommandBus } from '@/scene-platform'
 import type {
   ScenePropertyMappingListItem,
   ScenePropertyMappingListVariant,
@@ -463,6 +464,8 @@ const props = withDefaults(
      * 二维部件入口传 widget，三维对象入口传 sceneObject，旧入口默认 auto。
      */
     targetKind?: RightDataPanelTargetKind
+    /** 三维配置经命令总线写入会话历史；二维旧入口不需要该参数。 */
+    commandBus?: Pick<CommandBus, 'execute'> | null
   }>(),
   {
     targetKind: 'auto',
@@ -557,7 +560,7 @@ const {
   handleImportFile,
   downloadCurrentJson,
   persistSoon,
-} = useRightDataPanel({ targetKind: props.targetKind })
+} = useRightDataPanel({ targetKind: props.targetKind, commandBus: props.commandBus })
 
 type ThreeMapRole = import('@/types/data-config').ThreeMapDatasetRole
 type ThreeMapTarget = import('@/types/data-config').ThreeMapTargetField

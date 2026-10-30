@@ -47,6 +47,14 @@ export const OBJECT_INSPECTOR_PANEL_ITEMS: SceneInspectorPanelItem[] = [
   { value: SCENE_PANEL_ENUM.Interaction, label: '事件' },
 ]
 
+/** 三维场景对象使用独立页签集合；动画仅属于二维组件配置。 */
+export const SCENE_OBJECT_INSPECTOR_PANEL_ITEMS: SceneInspectorPanelItem[] = [
+  { value: SCENE_PANEL_ENUM.Base, label: '基础' },
+  { value: SCENE_PANEL_ENUM.Data, label: '数据' },
+  { value: SCENE_PANEL_ENUM.Status, label: '状态' },
+  { value: SCENE_PANEL_ENUM.Interaction, label: '事件' },
+]
+
 export const GROUP_INSPECTOR_PANEL_ITEMS: SceneInspectorPanelItem[] = [
   { value: SCENE_PANEL_ENUM.Base, label: '基础' },
 ]
@@ -75,10 +83,11 @@ export const getSceneInspectorPanelItems = (
   routeKind: SceneInspectorRouteKind,
 ): SceneInspectorPanelItem[] => {
   if (routeKind === 'scene') return SYSTEM_INSPECTOR_PANEL_ITEMS
-  if (routeKind === 'widget' || routeKind === 'sceneObject') return OBJECT_INSPECTOR_PANEL_ITEMS
+  if (routeKind === 'widget') return OBJECT_INSPECTOR_PANEL_ITEMS
+  if (routeKind === 'sceneObject' || routeKind === 'effect') {
+    return SCENE_OBJECT_INSPECTOR_PANEL_ITEMS
+  }
   if (routeKind === 'widgetChild') return WIDGET_CHILD_INSPECTOR_PANEL_ITEMS
-  // 体积热力场属于三维组件，右侧页签必须与三维看板保持一致；基础页再承载热力场专属参数。
-  if (routeKind === 'effect') return OBJECT_INSPECTOR_PANEL_ITEMS
   return GROUP_INSPECTOR_PANEL_ITEMS
 }
 

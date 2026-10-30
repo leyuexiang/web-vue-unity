@@ -84,6 +84,7 @@
       ref="addEditEventDrawerRef"
       :panel-type="panelType"
       :target-kind="targetKind"
+      :command-bus="commandBus"
     />
   </div>
 </template>
@@ -93,7 +94,7 @@ import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from
 import { Plus } from '@element-plus/icons-vue'
 import type { InteractionEvent } from '@/types/threeScene'
 import { useSceneStore } from '@/stores/sceneEditStore'
-import type { SceneStore } from '@/scene-platform'
+import type { CommandBus, SceneStore } from '@/scene-platform'
 import {
   getInteractiveEventConfig,
   getStatusListConfig,
@@ -137,6 +138,8 @@ interface Props {
    * widget 只读写二维部件配置，sceneObject 只读写三维对象配置，auto 保留旧兼容策略。
    */
   targetKind?: InteractionPanelTargetKind
+  /** 三维规则写入领域命令历史；二维部件仍由其现有历史适配器管理。 */
+  commandBus?: Pick<CommandBus, 'execute'> | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -306,6 +309,7 @@ const setSceneObjectEventList = (uuid: string | null, nextList: InteractionEvent
     if (props.panelType === SCENE_PANEL_ENUM.Status) {
       setEditorSceneObjectStatusList({
         store: scenePlatformStore.value,
+        commandBus: props.commandBus,
         objectId,
         eventList: nextList,
       })
@@ -313,6 +317,7 @@ const setSceneObjectEventList = (uuid: string | null, nextList: InteractionEvent
     }
     setEditorSceneObjectInteractiveEventList({
       store: scenePlatformStore.value,
+      commandBus: props.commandBus,
       objectId,
       eventList: nextList,
     })
@@ -323,6 +328,7 @@ const setSceneObjectEventList = (uuid: string | null, nextList: InteractionEvent
     updateStatusListConfig(uuid, nextList)
     setEditorSceneObjectStatusList({
       store: scenePlatformStore.value,
+      commandBus: props.commandBus,
       objectId: uuid,
       eventList: nextList,
     })
@@ -332,6 +338,7 @@ const setSceneObjectEventList = (uuid: string | null, nextList: InteractionEvent
   updateInteractiveEventConfig(uuid, nextList)
   setEditorSceneObjectInteractiveEventList({
     store: scenePlatformStore.value,
+    commandBus: props.commandBus,
     objectId: uuid,
     eventList: nextList,
   })

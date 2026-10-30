@@ -80,6 +80,7 @@ export interface UnityEventEnvelope<T = unknown> {
 export type UnityEditorMethod =
   | 'editor.v1.session.initialize'
   | 'editor.v1.scene.loadDraft'
+  | 'editor.v1.scene.pickWorldPosition'
   | 'editor.v1.scene.clear'
   | 'editor.v1.object.create'
   | 'editor.v1.object.update'
@@ -88,6 +89,22 @@ export type UnityEditorMethod =
   | 'editor.v1.selection.set'
   | 'editor.v1.gizmo.mode.set'
   | 'editor.v1.runtime.mode.set'
+  | 'editor.v1.interaction.action'
+
+/** 只传递可序列化动作参数；Unity 运行时根据稳定实例编号解析草稿对象。 */
+export type UnityInteractionActionDto =
+  | { actionType: 'highlightModel'; instanceId: string; enabled: boolean; color?: string }
+  | {
+      actionType: 'moveCamera'
+      instanceId: string
+      transitionTime?: number
+      smoothFactor?: number
+    }
+  | {
+      actionType: 'switchView'
+      viewType?: 'front' | 'side' | 'top'
+      transitionTime?: number
+    }
 
 export type UnityEditorEventType =
   | 'editor.v1.runtime.ready'
@@ -95,6 +112,7 @@ export type UnityEditorEventType =
   | 'editor.v1.scene.loaded'
   | 'editor.v1.scene.failed'
   | 'editor.v1.selection.changed'
+  | 'editor.v1.object.interaction'
   | 'editor.v1.transform.preview'
   | 'editor.v1.transform.committed'
   | 'editor.v1.runtime.warning'

@@ -92,6 +92,8 @@ export const projectObjectForUnity = (object: EditorObject): UnityObject => {
   if (object.type === 'primitive' && !primitiveType) {
     throw new Error(`当前 Unity 渲染暂不支持几何体：${geometryName || object.name}`)
   }
+  const pickable = object.metadata?.pickable
+  const deviceId = object.metadata?.deviceId
   return {
     instanceId: object.id, objectType: object.type as UnityObject['objectType'], name: object.name,
     visible: object.visible, locked: object.locked,
@@ -102,7 +104,12 @@ export const projectObjectForUnity = (object: EditorObject): UnityObject => {
         : toQuaternion(transform.rotation) },
       scale: typeof transform.scale === 'number' ? [transform.scale, transform.scale, transform.scale] : transform.scale },
     resourceRefKeys: resourceKey ? [resourceKey] : [],
-    properties: primitiveType ? { primitiveType } : {},
+    // 拾取状态与编辑锁分开传输；没有历史字段的对象默认允许画布拾取。
+    properties: {
+      ...(primitiveType ? { primitiveType } : {}),
+      pickable: typeof pickable === 'boolean' ? pickable : true,
+      ...(typeof deviceId === 'string' ? { deviceId } : {}),
+    },
   }
 }
 

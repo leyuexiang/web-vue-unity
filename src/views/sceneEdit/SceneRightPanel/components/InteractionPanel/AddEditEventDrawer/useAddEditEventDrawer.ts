@@ -60,6 +60,7 @@ import {
 } from '@/integrations/scene/widgetPanels'
 import { collectWidgetGroupWidgetIds } from '@/utils/widgetLayer'
 import { getActiveSceneViewportHost } from '@/integrations/scene/editorScenePlatformHost'
+import type { CommandBus } from '@/scene-platform'
 import { getEditorSceneObjectTargetCandidates } from '@/integrations/scene/editorSceneObjectTargetCandidates'
 import { resolveEditorSceneObjectIdFromLegacyEngineId } from '@/integrations/scene/editorSceneRuntimeObjectIdResolver'
 import {
@@ -84,6 +85,7 @@ interface Props {
    * widget 只写二维部件配置，sceneObject 只写三维对象配置，auto 保留旧兼容策略。
    */
   targetKind: 'auto' | 'widget' | 'sceneObject'
+  commandBus?: Pick<CommandBus, 'execute'> | null
 }
 
 /**
@@ -134,6 +136,7 @@ export const useAddEditEventDrawer = (props: Props) => {
   const createAction = (): ActionItem => ({
     // 动作、条件组和事件都属于编辑器运行时结构，统一复用工具层 UUID 出口。
     id: createUuid(),
+    // 状态与事件统一沿用二维默认高亮动作；三维由 Unity 原生描边接口执行。
     actionType: ACTION_TYPE_ENUM.HighlightModel,
     // 默认向模型传参，切换类别时保留两类目标各自已填写的映射。
     parameterTargetKind: 'model',
@@ -661,6 +664,7 @@ export const useAddEditEventDrawer = (props: Props) => {
       if (!sceneObjectId) updateStatusListConfig(uuid, nextList)
       setEditorSceneObjectStatusList({
         store: scenePlatformStore,
+        commandBus: props.commandBus,
         objectId: sceneObjectId ?? uuid,
         eventList: nextList,
       })
@@ -670,6 +674,7 @@ export const useAddEditEventDrawer = (props: Props) => {
     if (!sceneObjectId) updateInteractiveEventConfig(uuid, nextList)
     setEditorSceneObjectInteractiveEventList({
       store: scenePlatformStore,
+      commandBus: props.commandBus,
       objectId: sceneObjectId ?? uuid,
       eventList: nextList,
     })

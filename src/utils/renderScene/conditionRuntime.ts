@@ -10,6 +10,7 @@ import {
   CONDITION_RULE_TYPE_ENUM,
 } from '@/enums/scenePanelEnum'
 import type BaseWidgetConfig from '@/packages/components/BaseWidgetConfig'
+import type { SceneObject, SceneStore } from '@/scene-platform'
 import type {
   ConditionItem,
   ConditionBlokList,
@@ -40,12 +41,27 @@ export type WidgetConditionRuntimeContext = {
   widget: BaseWidgetConfig
 }
 
-export type ConditionRuntimeContext = THREE.Object3D | WidgetConditionRuntimeContext
+/** 三维平台对象用领域快照求值，避免 Unity 规则再查询不存在的旧 Three 场景。 */
+export type SceneObjectConditionRuntimeContext = {
+  kind: 'sceneObject'
+  sceneObject: SceneObject
+  store: Pick<SceneStore, 'getObject'>
+}
+
+export type ConditionRuntimeContext =
+  | THREE.Object3D
+  | WidgetConditionRuntimeContext
+  | SceneObjectConditionRuntimeContext
 
 const isWidgetRuntimeContext = (
   context: ConditionRuntimeContext,
 ): context is WidgetConditionRuntimeContext =>
   typeof context === 'object' && context !== null && 'kind' in context && context.kind === 'widget'
+
+const isSceneObjectRuntimeContext = (
+  context: ConditionRuntimeContext,
+): context is SceneObjectConditionRuntimeContext =>
+  typeof context === 'object' && context !== null && 'kind' in context && context.kind === 'sceneObject'
 
 /**
  * 统一执行条件块判断。
@@ -123,7 +139,7 @@ const resolveConditionValue = (
     case OBJECT_TYPE_ENUM.FixedValue:
       return resolveFixedValue(condition, fieldConfig)
     case OBJECT_TYPE_ENUM.ModelValue:
-      return resolveModelValue(condition, fieldConfig)
+      return resolveModelValue(condition, fieldConfig, contextObject)
     case OBJECT_TYPE_ENUM.UrlParamValue:
       return resolveUrlParamValue(condition, fieldConfig)
     case OBJECT_TYPE_ENUM.DomValue:
@@ -189,6 +205,7 @@ const resolveFixedValue = (
 const resolveModelValue = (
   condition: ConditionItem,
   fieldConfig: ConditionSideFieldConfig,
+  contextObject: ConditionRuntimeContext,
 ): ConditionSideValue | null => {
   const targetOnlyUuid = condition[fieldConfig.modelValueKey] as string | undefined
   const modelValueType = condition[fieldConfig.modelValueTypeKey] as
@@ -196,9 +213,18 @@ const resolveModelValue = (
     | undefined
   if (!targetOnlyUuid || !modelValueType) return null
 
+  if (isSceneObjectRuntimeContext(contextObject)) {
+    const targetObject =
+      targetOnlyUuid === contextObject.sceneObject.id
+        ? contextObject.sceneObject
+        : contextObject.store.getObject(targetOnlyUuid)
+    if (!targetObject) return null
+    const value = resolveSceneObjectModelValue(targetObject, modelValueType)
+    return value === undefined ? null : { objectType: OBJECT_TYPE_ENUM.ModelValue, value }
+  }
+
   const targetObject = getTargetObjectByUuid(targetOnlyUuid)
   if (!targetObject) return null
-
   let value: unknown
   switch (modelValueType) {
     case MODEL_VALUE_TYPE_ENUM.Visibility:
@@ -354,6 +380,18 @@ const getComponentDataConfig = (
     return normalizeDataConfig(contextObject.widget.dataConfig || null)
   }
 
+  if (isSceneObjectRuntimeContext(contextObject)) {
+    const metadata = contextObject.sceneObject.metadata ?? {}
+    const existing = (metadata.dataConfig as ComponentDataConfig | undefined) || null
+    const upgraded =
+      existing ||
+      upgradeLegacyDataPanelConfigList(
+        metadata.datasetConfigList as DataPanelConfig[] | undefined,
+        metadata.type as string | undefined,
+      )
+    return normalizeDataConfig(upgraded)
+  }
+
   const existing = (contextObject.userData?.dataConfig as ComponentDataConfig | undefined) || null
   const upgraded =
     existing ||
@@ -363,6 +401,33 @@ const getComponentDataConfig = (
     )
 
   return normalizeDataConfig(upgraded)
+}
+
+/** 将领域模型属性转为规则比较使用的稳定三轴快照。 */
+const resolveSceneObjectModelValue = (
+  object: SceneObject,
+  valueType: MODEL_VALUE_TYPE_ENUM,
+) => {
+  const transform = object.transform
+  switch (valueType) {
+    case MODEL_VALUE_TYPE_ENUM.Visibility:
+      return object.visible
+    case MODEL_VALUE_TYPE_ENUM.Position:
+      return transform.kind === 'geo'
+        ? { x: transform.longitude, y: transform.latitude, z: transform.height }
+        : vectorToPlain({ x: transform.position[0], y: transform.position[1], z: transform.position[2] })
+    case MODEL_VALUE_TYPE_ENUM.Rotation:
+      return transform.kind === 'geo'
+        ? { x: transform.heading, y: transform.pitch, z: transform.roll }
+        : vectorToPlain({ x: transform.rotation[0], y: transform.rotation[1], z: transform.rotation[2] })
+    case MODEL_VALUE_TYPE_ENUM.Scale: {
+      const scale = transform.scale
+      const vector = typeof scale === 'number' ? [scale, scale, scale] : scale
+      return vectorToPlain({ x: vector[0], y: vector[1], z: vector[2] })
+    }
+    default:
+      return undefined
+  }
 }
 
 const compareValues = (

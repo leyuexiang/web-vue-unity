@@ -11,6 +11,7 @@ declare module 'vue' {
     CommonChart: typeof import('./components/CommonChart/index.vue')['default']
     CommonPagination: typeof import('./components/CommonPagination/index.vue')['default']
     DirectiveLoading: typeof import('./components/Loading/DirectiveLoading.vue')['default']
+    ElAlert: typeof import('element-plus/es')['ElAlert']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElCollapse: typeof import('element-plus/es')['ElCollapse']

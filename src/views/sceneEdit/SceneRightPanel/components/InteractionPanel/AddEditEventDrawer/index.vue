@@ -932,6 +932,7 @@ import {
 } from '../utils'
 import { useAddEditEventDrawer } from './useAddEditEventDrawer'
 import type { ActionItem } from '@/types/threeScene'
+import type { CommandBus } from '@/scene-platform'
 import ScenePropertyColorPicker from '../../PropertyControls/ScenePropertyColorPicker/index.vue'
 import ScenePropertySlider from '../../PropertyControls/ScenePropertySlider/index.vue'
 import ScenePropertySwitch from '../../PropertyControls/ScenePropertySwitch/index.vue'
@@ -954,6 +955,8 @@ const actionMenuPopperOptions = {
 interface Props {
   panelType?: SCENE_PANEL_ENUM.Status | SCENE_PANEL_ENUM.Interaction
   targetKind?: 'auto' | 'widget' | 'sceneObject'
+  /** 三维事件与状态配置走当前编辑会话的命令历史。 */
+  commandBus?: Pick<CommandBus, 'execute'> | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -1840,4 +1843,5 @@ defineExpose({
 :deep([class~='text-[14px]']) {
   color: rgb(255 255 255 / 80%) !important;
 }
+
 </style>

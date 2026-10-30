@@ -1,6 +1,6 @@
 import { cloneDeep, isEqual } from 'lodash-es'
 import { DATA_CONFIG_VERSION, type ComponentDataConfig } from '@/types/data-config'
-import type { SceneStore } from '@/scene-platform'
+import { createUpdateObjectExtensionsCommand, type CommandBus, type SceneStore } from '@/scene-platform'
 
 export const EDITOR_SCENE_OBJECT_DATA_CONFIG_METADATA_KEY = 'dataConfig'
 
@@ -29,6 +29,8 @@ export interface GetEditorSceneObjectDataConfigOptions {
 
 export interface SetEditorSceneObjectDataConfigOptions {
   store?: SceneStore | null
+  /** 提供时通过领域命令写入当前会话历史；未提供时保留旧调用方的直接 Store 兼容路径。 */
+  commandBus?: Pick<CommandBus, 'execute'> | null
   objectId?: string | null
   dataConfig: ComponentDataConfig | null
 }
@@ -105,6 +107,7 @@ export const getEditorSceneObjectDataConfig = ({
  */
 export const setEditorSceneObjectDataConfig = ({
   store,
+  commandBus,
   objectId,
   dataConfig,
 }: SetEditorSceneObjectDataConfigOptions): SetEditorSceneObjectDataConfigResult => {
@@ -120,20 +123,21 @@ export const setEditorSceneObjectDataConfig = ({
     return { status: 'skipped', reason: 'unchanged-config' }
   }
 
-  const nextMetadata = {
-    ...(sceneObject.metadata ?? {}),
-  }
-
-  if (normalized) {
-    nextMetadata[EDITOR_SCENE_OBJECT_DATA_CONFIG_METADATA_KEY] = normalized
+  if (commandBus) {
+    // 领域命令负责撤销前快照；空配置以 null 标记，读取端与删除键语义一致。
+    commandBus.execute(createUpdateObjectExtensionsCommand(objectId, {
+      metadata: { [EDITOR_SCENE_OBJECT_DATA_CONFIG_METADATA_KEY]: normalized },
+    }))
   } else {
-    delete nextMetadata[EDITOR_SCENE_OBJECT_DATA_CONFIG_METADATA_KEY]
-  }
+    const nextMetadata = { ...(sceneObject.metadata ?? {}) }
+    if (normalized) {
+      nextMetadata[EDITOR_SCENE_OBJECT_DATA_CONFIG_METADATA_KEY] = normalized
+    } else {
+      delete nextMetadata[EDITOR_SCENE_OBJECT_DATA_CONFIG_METADATA_KEY]
+    }
 
-  store.upsertObject({
-    ...sceneObject,
-    metadata: nextMetadata,
-  })
+    store.upsertObject({ ...sceneObject, metadata: nextMetadata })
+  }
 
   return {
     status: 'applied',

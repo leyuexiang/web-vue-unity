@@ -3,8 +3,9 @@
   <div
     ref="sceneEditRootRef"
     class="scene-edit scene-edit-theme"
-    :inert="editorSceneOperation === 'importJson' || editorSceneOperation === 'template'"
+    :inert="editorSceneOperation === 'importJson' || editorSceneOperation === 'template' || editorSceneOperation === 'createObject'"
   >
+    <!-- 模型异步创建期间停用编辑交互，防止其他历史命令打断失败补偿；门禁结束后自动恢复。 -->
     <SceneHeader
       v-model:left-panel="activeLeftPanel"
       v-model:inspector-panel="activeInspectorPanel"
@@ -94,6 +95,7 @@
       v-if="sceneLockReady && !sceneLockLost && splitPanesReady"
       :render-mode="renderMode"
       @scene-load-state-change="handleSceneLoadStateChange"
+      @renderer-disconnected="handleRendererDisconnected"
     />
   </Teleport>
   <div id="preview" class="scene-edit-theme scene-edit-preview-layer" v-show="isPreviewScene">
@@ -187,6 +189,7 @@ import { getCurrentManagementCapabilities } from '@/auth/capabilities'
 import './theme.scss'
 import { beginEditorSceneOperation, editorSceneOperation } from '@/integrations/scene/editorSceneOperationGate'
 import { isUnityRenderMode } from '@/unity-runtime/renderMode'
+import { createEditorSceneExitController } from '@/integrations/scene/editorSceneExitController'
 
 defineOptions({ name: 'SceneEdit' })
 
@@ -589,6 +592,8 @@ const stopSceneLockHeartbeat = async () => {
     await unlockDim3dScene(sceneId, clientKey)
   } catch (error) {
     appLogger.warn('SceneEdit', '退出编辑时释放场景锁失败', sceneId, error)
+    // 普通解锁请求失败后再用页面保活请求兜底，沿用原页签身份，避免立即关页中止重试。
+    unlockDim3dSceneOnUnload(sceneId, clientKey)
   } finally {
     clearStoredSceneLockToken(sceneId, clientKey, lockToken)
     activeSceneLock = undefined
@@ -1180,21 +1185,20 @@ const handlePreviewScene = () => {
 }
 
 /**
- * 退出按钮沿用管理页打开编辑器时的既有返回规则：优先关闭当前标签页；
- * 浏览器不允许关闭时再回退到场景管理页，避免纯图标改版破坏原有导航语义。
+ * 主动退出和渲染器意外断开共用一个退出任务：停止心跳、等待解锁，再关闭当前页签。
+ * 不依赖 opener 是否存在；浏览器拒绝关页时替换到管理页，避免回退到失效编辑会话。
  */
-const handleBackToPreviousPage = async () => {
-  // 退出按钮必须先等待普通 DELETE 解锁完成，再关闭窗口，避免浏览器提前终止请求。
-  await stopSceneLockHeartbeat()
-  if (window.opener && !window.opener.closed) {
-    window.close()
-    window.setTimeout(() => {
-      if (!window.closed) router.push({ name: 'sceneManage' })
-    }, 100)
-    return
-  }
+const handleBackToPreviousPage = createEditorSceneExitController({
+  releaseSceneLock: stopSceneLockHeartbeat,
+  returnToManagement: () => router.replace({ name: 'sceneManage' }),
+})
 
-  router.push({ name: 'sceneManage' })
+/** 断开后立即停用编辑画布和保存入口，但不标记失锁，确保仍执行当前页签的真实解锁请求。 */
+const handleRendererDisconnected = (message: string) => {
+  if (renderMode.value !== 'cloud') return
+  sceneLockReady.value = false
+  appLogger.warn('SceneEdit', '云渲染连接意外断开，正在释放场景锁并关闭编辑页签', message)
+  void handleBackToPreviousPage()
 }
 
 // 发布

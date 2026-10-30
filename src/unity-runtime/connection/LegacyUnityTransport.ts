@@ -405,7 +405,7 @@ export class LegacyUnityTransport implements UnityTransport {
     this.snapshotListeners.forEach((listener) => listener(this.snapshot))
   }
 
-  private async stopInternal(message = '会话已关闭', notifyServer = true): Promise<void> {
+  private async stopInternal(message = '会话已关闭', notifyServer = true, finalState: 'closed' | 'failed' = 'closed'): Promise<void> {
     if (this.teardownPromise) return this.teardownPromise
     this.stopped = true
     this.activeGeneration = ++this.connectionGeneration
@@ -452,7 +452,8 @@ export class LegacyUnityTransport implements UnityTransport {
       this.pending.clear()
       this.startPromise = null
       socket?.close()
-      this.update({ state: 'closed', message, videoReady: false, inputReady: false, rpcReady: false, runtimeReady: false, peerState: 'new', performance: undefined })
+      // 直接发布最终状态：异常断开不能先发 closed，否则初始化等待器会提前销毁订阅，漏掉后续失败通知。
+      this.update({ state: finalState, message, videoReady: false, inputReady: false, rpcReady: false, runtimeReady: false, peerState: 'new', performance: undefined })
     })()
     this.teardownPromise = teardownPromise
     try { await teardownPromise } finally { if (this.teardownPromise === teardownPromise) this.teardownPromise = null }
@@ -461,7 +462,7 @@ export class LegacyUnityTransport implements UnityTransport {
   private fail(message: string): void {
     if (this.stopped) return
     // 连接协商失败也要通知信令端释放固定 ClientID 对应的旧 Peer，避免下一次重连收到迟到的 SDP。
-    void this.stopInternal(message, true).then(() => this.update({ state: 'failed', message }))
+    void this.stopInternal(message, true, 'failed')
   }
   async disconnect(): Promise<void> {
     await this.stopInternal()

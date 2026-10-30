@@ -232,7 +232,7 @@ export function createUpdateObjectNameCommand(objectId: string, name: string): S
   }
 }
 
-/** 更新对象自身锁定；组锁定仅参与有效状态计算，不覆盖该字段。 */
+/** 更新对象自身锁定；锁定只限制编辑能力，不覆盖独立的可拾取配置。 */
 export function createUpdateObjectLockCommand(objectId: string, locked: boolean): SceneCommand {
   let previousObject: SceneObject | null = null
   return {
@@ -244,7 +244,6 @@ export function createUpdateObjectLockCommand(objectId: string, locked: boolean)
       store.upsertObject({
         ...current,
         locked,
-        metadata: { ...current.metadata, pickable: !locked },
       })
     },
     undo: (store) => {

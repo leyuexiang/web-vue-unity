@@ -6,13 +6,17 @@ import LayerDOM from './LayerDOM/index.vue'
 import Loading from '@/components/Loading/index.vue'
 import { useSceneStore, useSceneWidgetStore } from '@/stores/sceneEditStore'
 import { createSceneDefinition, createViewportHost, type ViewportHost } from '@/scene-platform'
+import { getStagePointerCoordinate } from '@/utils/renderScene/pointerCoordinate'
 import { MITT_ON_KEY_ENUM, DRAG_MODEL_ENUM } from '@/enums'
-import type { WidgetModel } from '@/types/threeScene'
+import type { EditorCreationModel } from '@/integrations/scene/editorCreationRouter'
+import { createEditorUnityObject } from '@/integrations/scene/editorUnityCreationAdapter'
+import { clearEditorSceneSelection } from '@/integrations/scene/editorSceneSelectionAdapter'
 import { calculateSceneStageLayout } from '@/utils/sceneStage'
 import { loadEditorSceneDefinition, loadEditorSceneDefinitionIntoHost } from '@/integrations/scene/editorSceneLoadAdapter'
 import { ensureEditorGisDefaultImageryLayer } from '@/integrations/scene/editorGisDefaultLayerAdapter'
 import { setActiveSceneViewportHost, clearActiveSceneViewportHost } from '@/integrations/scene/editorScenePlatformHost'
 import { createEditorSceneDataPollingController, type EditorSceneDataPollingController } from '@/integrations/scene/editorSceneDataPollingController'
+import { createEditorSceneObjectBehaviorRuntime, type EditorSceneObjectBehaviorRuntime } from '@/integrations/scene/editorSceneObjectBehaviorRuntime'
 import { createCommandBusWidgetCommandPort, createSceneApiWidgetRuntimePort,
   createSceneApiWidgetOverlayHostPort, setWidgetCommandPort, setWidgetRuntimePort,
   setWidgetOverlayHostPort, resetWidgetRuntimePorts, isWidgetPreview } from '@/integrations/scene/widgetRuntime'
@@ -20,12 +24,16 @@ import { applyEditorDim3dTemplate, type ApplyEditorDim3dTemplateInput } from '@/
 import { releaseOriginalScenePackages, retainOriginalScenePackages } from '@/integrations/scene/twoDPackagePreservation'
 import { serializeSceneDefinitionToFourPackages } from '@/integrations/scene/sceneFourPackage'
 import { appLogger } from '@/utils/logger'
-import { beginEditorSceneOperation } from '@/integrations/scene/editorSceneOperationGate'
+import { beginEditorSceneOperation, editorSceneOperation } from '@/integrations/scene/editorSceneOperationGate'
 import { UnityEditorSceneRuntime } from '@/unity-runtime/runtime/UnityEditorSceneRuntime'
 import { isUnityRenderModeConfigured, unityRenderConfig, type UnityRenderMode } from '@/unity-runtime/renderMode'
 
-/** 画布只承担二维宿主编排。来源叠加层保留拖拽、层级、配置和子项全部交互。 */
-const emit = defineEmits<{ sceneLoadStateChange: [state: 'loading' | 'ready' | 'failed'] }>()
+/** 画布编排二维覆盖层与双端三维运行时，资源创建统一进入各自的命令链路。 */
+const emit = defineEmits<{
+  sceneLoadStateChange: [state: 'loading' | 'ready' | 'failed']
+  /** 仅转发当前画布的异常断开，由持锁的编辑页统一解锁并关闭页签。 */
+  rendererDisconnected: [message: string]
+}>()
 const props = defineProps<{ renderMode: UnityRenderMode | null }>()
 const route = useRoute()
 const widgetStore = useSceneWidgetStore()
@@ -42,13 +50,15 @@ const loadError = ref('')
 const reloadScene = () => window.location.reload()
 let host: ViewportHost | null = null
 let polling: EditorSceneDataPollingController | null = null
+let objectBehaviorRuntime: EditorSceneObjectBehaviorRuntime | null = null
 let disposed = false
 let layoutFrame = 0
-let drag: WidgetModel | null = null
+// 使用资源面板的完整载荷联合，避免把文件模型错误收窄成二维部件。
+let drag: EditorCreationModel | null = null
 let template: ApplyEditorDim3dTemplateInput | null = null
 let observer: ResizeObserver | null = null
-// 模板覆盖期间沿用共享操作门禁；卸载时立即释放，迟到任务不能阻塞下一编辑页。
-let releaseTemplateOperation: (() => void) | null = null
+// 模板覆盖与模型创建共用操作门禁；卸载时立即释放，迟到任务不能阻塞下一编辑页。
+let releaseCanvasOperation: (() => void) | null = null
 const sceneId = String(route.query.id ?? '')
 const layout = computed(() => calculateSceneStageLayout(dimensions.value.width, dimensions.value.height, widgetStore.getWidgetCanvasConfig()))
 const stageStyle = computed(() => ({ width: `${layout.value.width}px`, height: `${layout.value.height}px`,
@@ -67,17 +77,44 @@ const refreshLayout = () => {
 const stopSceneDataPolling = () => { polling?.dispose(); polling = null }
 const restartSceneDataPolling = async () => {
   if (disposed || !host) return
-  if (!polling) polling = createEditorSceneDataPollingController({ getViewportHost: () => host })
+  if (!polling) polling = createEditorSceneDataPollingController({
+    getViewportHost: () => host,
+    projectSceneObjectForRuntime: (object) =>
+      objectBehaviorRuntime?.applyPreviewOverridesToSceneObject(object) ?? object,
+    onSceneObjectUpdated: (object) => objectBehaviorRuntime?.observeSceneObject(object),
+  })
   await polling.start()
 }
 
+/**
+ * 等比画布外的留白不属于视频，无法发送引擎拾取事件，因此在前端统一清选。
+ * 模板的 self 限定只处理视口自身：视频、二维覆盖层及操作控件仍使用各自的点击链路，
+ * 避免模型命中后又因事件冒泡被取消；预览、加载及编辑事务期间不改变选择。
+ */
+const clearSelectionFromViewportBlank = (event: MouseEvent) => {
+  if (event.button !== 0 || disposed || !host || loading.value || isWidgetPreview() || editorSceneOperation.value) return
+  sceneStore.setCurrentObjectLayerId(null)
+  sceneStore.setSelectedThreeMapObjectId(null)
+  // 领域选择同时驱动结构、属性面板及引擎操控器，不能只清空旧界面编号。
+  void clearEditorSceneSelection({
+    store: host.getStore(),
+    bridge: host.getBridge(),
+    setLegacySelectedObjectId: (objectId) => sceneStore.setCurrentTransformMaterialUuid(objectId),
+    clearWidgetSelection: () => widgetStore.clearCurrentWidgetSelection(),
+  }).catch((error) => {
+    appLogger.warn('SceneCanvas', '画布留白清选同步失败', error)
+    if (!disposed) ElMessage.error('取消选择同步失败，请重试')
+  })
+}
+
 /** 事件总线保留来源资源卡片载荷，三维资源不得误创建为空白二维节点。 */
-const startDrag = (value: unknown) => { drag = value as WidgetModel; template = null }
+const startDrag = (value: unknown) => { drag = value as EditorCreationModel; template = null }
 const cancelDrag = () => { drag = null; template = null }
 const startTemplateDrag = (value: unknown) => { template = value as ApplyEditorDim3dTemplateInput; drag = null }
 const drop = async (event: DragEvent) => {
   event.preventDefault()
-  if (!host || isWidgetPreview() || loading.value) return
+  // 创建完成前禁止再次放置，保证异步失败时仍能精确补偿刚写入的那条命令。
+  if (!host || disposed || isWidgetPreview() || loading.value || editorSceneOperation.value) { cancelDrag(); return }
   const bounds = stage.value?.getBoundingClientRect()
   if (!bounds || event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) return
   const item = drag
@@ -88,7 +125,7 @@ const drop = async (event: DragEvent) => {
     if (templateItem) {
       if (templateItem.saveScope !== 'twoD') { ElMessage.warning('含三维内容的模板待 Unity 接入后应用'); return }
       releaseOperation = beginEditorSceneOperation('template')
-      releaseTemplateOperation = releaseOperation
+      releaseCanvasOperation = releaseOperation
       await ElMessageBox.confirm('应用二维模板将按来源规则覆盖当前场景，并清空原有三维内容，是否继续？', '应用模板', { type: 'warning' })
       stopSceneDataPolling()
       const appliedScene = await applyEditorDim3dTemplate(templateItem, { host, isActive: () => !disposed })
@@ -98,14 +135,33 @@ const drop = async (event: DragEvent) => {
       return
     }
     if (!item) return
-    if (item.modelType !== DRAG_MODEL_ENUM.Widget) { ElMessage.warning('三维资源将在二维验收后接入 Unity'); return }
+    if (item.modelType !== DRAG_MODEL_ENUM.Widget) {
+      if (!props.renderMode) { ElMessage.warning('请先选择三维渲染方式'); return }
+      releaseOperation = beginEditorSceneOperation('createObject')
+      releaseCanvasOperation = releaseOperation
+      const activeHost = host
+      const id = await createEditorUnityObject(item, { clientX: event.clientX, clientY: event.clientY }, {
+        host: activeHost, isActive: () => !disposed && host === activeHost,
+        // 舞台会按编辑区缩放居中；先还原成舞台逻辑像素，再由 Runtime 按 Unity 画布尺寸归一化。
+        toRuntimeScreenPoint: (point) => renderSurface.value
+          ? getStagePointerCoordinate(point.clientX, point.clientY, renderSurface.value)
+          : null,
+      })
+      // 二维选中与三维选中互斥；必须等待模型同步完成，失败时保留用户原有二维选择。
+      if (id && !disposed) {
+        widgetStore.setCurrentWidgetsIds([])
+        widgetStore.setCurrentWidgetGroupId(null)
+        ElMessage.success('三维资源已添加至场景')
+      }
+      return
+    }
     const id = await widgetStore.createWidget(item, { clientX: event.clientX, clientY: event.clientY })
     if (id) widgetStore.setCurrentWidgetsIds([id])
   } catch (error) {
-    if (!disposed && error !== 'cancel' && error !== 'close') ElMessage.error(error instanceof Error ? error.message : '创建部件失败')
+    if (!disposed && error !== 'cancel' && error !== 'close') ElMessage.error(error instanceof Error ? error.message : '创建资源失败')
   } finally {
     releaseOperation?.()
-    if (releaseTemplateOperation === releaseOperation) releaseTemplateOperation = null
+    if (releaseCanvasOperation === releaseOperation) releaseCanvasOperation = null
     if (templateItem && templateItem.templateSceneId !== sceneId) releaseOriginalScenePackages(templateItem.templateSceneId)
     // 模板加载失败时也恢复数据调度，不能让一次失败覆盖操作永久停止已有二维请求。
     if (templateItem && !disposed) await restartSceneDataPolling()
@@ -114,7 +170,8 @@ const drop = async (event: DragEvent) => {
 
 /** 文本输入不抢占快捷键；选中组件的编辑事务继续交给来源仓库记录唯一历史。 */
 const handleKey = (event: KeyboardEvent) => {
-  if (isWidgetPreview() || disposed || !host || loading.value) return
+  // 门禁期间不允许快捷键穿插历史，否则创建失败补偿可能撤销到用户的其他操作。
+  if (isWidgetPreview() || disposed || !host || loading.value || editorSceneOperation.value) return
   const target = event.target as HTMLElement | null
   if (target?.closest('input, textarea, select, [contenteditable="true"], .monaco-editor, .el-dialog, .el-drawer')) return
   const modifier = event.ctrlKey || event.metaKey
@@ -163,16 +220,47 @@ onMounted(async () => {
         getHost: () => host,
         onStatus: (message) => { runtimeMessage.value = message },
         onWarnings: (messages) => { runtimeWarnings.value = messages },
+        onDisconnected: (message) => {
+          // 卸载后的迟到通知不得影响后续编辑页；先停业务轮询，再交给父组件退出。
+          if (disposed) return
+          stopSceneDataPolling()
+          emit('rendererDisconnected', message)
+        },
       }) } : {}),
     })
     await host.mount()
     if (disposed) { host.dispose(); return }
     setActiveSceneViewportHost(host)
+    objectBehaviorRuntime = createEditorSceneObjectBehaviorRuntime({ getViewportHost: () => host })
     sceneStore.setSceneApi(null)
     setWidgetCommandPort(createCommandBusWidgetCommandPort(() => host?.getCommandBus()))
-    setWidgetRuntimePort(createSceneApiWidgetRuntimePort(() => null))
+    // 二维部件事件与三维模型事件共用当前 Runtime，保证跨二维/三维目标的动作能抵达真实引擎。
+    setWidgetRuntimePort(
+      createSceneApiWidgetRuntimePort(
+        () => null,
+        undefined,
+        () => host?.getRuntime() ?? null,
+      ),
+    )
     const overlay = createSceneApiWidgetOverlayHostPort(() => null, () => host?.getRuntime() ?? null)
-    setWidgetOverlayHostPort({ ...overlay, refreshViewportLayout: refreshLayout })
+    setWidgetOverlayHostPort({
+      ...overlay,
+      refreshViewportLayout: refreshLayout,
+      enterPreview: async () => {
+        objectBehaviorRuntime?.preparePreview()
+        try {
+          await overlay.enterPreview()
+          await objectBehaviorRuntime?.startPreview()
+        } catch (error) {
+          objectBehaviorRuntime?.exitPreview()
+          throw error
+        }
+      },
+      exitPreview: () => {
+        objectBehaviorRuntime?.exitPreview()
+        overlay.exitPreview()
+      },
+    })
     await loadEditorSceneDefinitionIntoHost(sceneId, { host, preloadedResult: result, skipSceneReplace: true, isActive: () => !disposed })
     if (disposed) return
     await restartSceneDataPolling()
@@ -182,6 +270,8 @@ onMounted(async () => {
     refreshLayout()
   } catch (error) {
     if (disposed) return
+    objectBehaviorRuntime?.dispose()
+    objectBehaviorRuntime = null
     clearActiveSceneViewportHost(host)
     host?.dispose()
     host = null
@@ -194,8 +284,8 @@ onMounted(async () => {
 watch(() => [widgetStore.widgetCanvasSize, layout.value.scale], refreshLayout, { deep: true })
 onBeforeUnmount(() => {
   disposed = true
-  releaseTemplateOperation?.()
-  releaseTemplateOperation = null
+  releaseCanvasOperation?.()
+  releaseCanvasOperation = null
   stopSceneDataPolling()
   observer?.disconnect()
   cancelAnimationFrame(layoutFrame)
@@ -205,6 +295,8 @@ onBeforeUnmount(() => {
   eventBus?.off(MITT_ON_KEY_ENUM.TEMPLATE_DRAG_START, startTemplateDrag)
   eventBus?.off(MITT_ON_KEY_ENUM.TEMPLATE_DRAG_CANCEL, cancelDrag)
   resetWidgetRuntimePorts()
+  objectBehaviorRuntime?.dispose()
+  objectBehaviorRuntime = null
   clearActiveSceneViewportHost(host)
   host?.dispose()
   host = null
@@ -214,7 +306,7 @@ onBeforeUnmount(() => {
 defineExpose({ stopSceneDataPolling, restartSceneDataPolling })
 </script>
 <template>
-  <div ref="viewport" class="scene-edit-canvas-viewport" @drop="drop" @dragover.prevent>
+  <div ref="viewport" class="scene-edit-canvas-viewport" @mousedown.self="clearSelectionFromViewportBlank" @drop="drop" @dragover.prevent>
     <div id="scene-render" ref="stage" class="scene-edit-canvas-stage" :style="stageStyle">
       <div ref="renderSurface" class="scene-edit-render-surface" />
       <LayerDOM />

@@ -3,13 +3,15 @@ import { nextTick, reactive } from 'vue'
 import type { ViewportHost } from '@/scene-platform'
 import type { WidgetConfig } from '@/stores/sceneEditStore'
 import TextConfig from '@/packages/components/Widget/TextCommon/config'
-import { createEmptyDataConfig, createEmptyRequestGlobalConfig, type StaticRequestConfig, type PublicRequestConfig, type RequestGlobalConfig } from '@/types/data-config'
+import { createEmptyDataConfig, createEmptyRequestGlobalConfig, type ComponentDataConfig, type StaticRequestConfig, type PublicRequestConfig, type RequestGlobalConfig } from '@/types/data-config'
 import { createEditorSceneDataPollingController } from '../editorSceneDataPollingController'
 
 /** 隔离网络执行，只检验真实响应式配置是否触发唯一调度器，避免把结果回填误判成配置修改。 */
 const fixture = vi.hoisted(() => ({
   widgets: {} as { totalWidgets: WidgetConfig[] },
   requests: {} as { scenePublicRequestList: PublicRequestConfig[]; sceneRequestGlobalConfig: RequestGlobalConfig },
+  scene: {} as { id: string; objects: Array<{ id: string; metadata?: Record<string, unknown> }> },
+  getSceneObjects: null as (() => readonly unknown[]) | null,
   start: vi.fn(), dispose: vi.fn(),
 }))
 vi.mock('@/stores/sceneEditStore', () => ({ useSceneWidgetStore: () => fixture.widgets }))
@@ -18,6 +20,9 @@ vi.mock('@/stores/sceneAuxiliaryStores', () => ({
   useSceneRequestStore: () => fixture.requests,
 }))
 vi.mock('../widgetRuntime', () => ({ SceneDataPollingRuntime: class {
+  constructor(options: { getSceneObjects?: () => readonly unknown[] }) {
+    fixture.getSceneObjects = options.getSceneObjects ?? (() => [])
+  }
   start = fixture.start
   dispose = fixture.dispose
 } }))
@@ -32,7 +37,15 @@ describe('二维编辑器数据配置监听', () => {
     component.dataConfig = createEmptyDataConfig([{ value: '初始' }])
     fixture.widgets = reactive({ totalWidgets: [{ id: 'text-1', component }] })
     fixture.requests = reactive({ scenePublicRequestList: [], sceneRequestGlobalConfig: createEmptyRequestGlobalConfig() })
-    const host = { getStore: () => ({ getScene: () => ({ id: 'scene-1' }), subscribe: () => () => {} }) } as unknown as ViewportHost
+    const modelConfig = createEmptyDataConfig([{ value: '模型初始值' }])
+    fixture.scene = reactive({
+      id: 'scene-1',
+      objects: [{ id: 'model-1', metadata: { dataConfig: modelConfig } }],
+    })
+    const host = {
+      getStore: () => ({ getScene: () => fixture.scene, subscribe: () => () => {} }),
+      getRuntime: () => ({ upsertObject: vi.fn() }),
+    } as unknown as ViewportHost
     controller = createEditorSceneDataPollingController({ getViewportHost: () => host, refreshDelayMs: 10 })
     await controller.start()
     expect(fixture.start).toHaveBeenCalledTimes(1)
@@ -64,5 +77,19 @@ describe('二维编辑器数据配置监听', () => {
     await vi.advanceTimersByTimeAsync(10)
     expect(fixture.start).toHaveBeenCalledTimes(1)
     expect(fixture.dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('三维对象的数据配置参与任务签名并触发调度', async () => {
+    await setup()
+    expect(fixture.getSceneObjects?.()).toHaveLength(1)
+
+    // 三维请求修改必须重启共享调度器，保证响应映射到当前 Unity Runtime。
+    const dataConfig = fixture.scene.objects[0]!.metadata!.dataConfig as ComponentDataConfig
+    const request = dataConfig.requests![0]!.request
+    ;(request.config as StaticRequestConfig).data = [{ value: '模型更新值' }]
+    await nextTick()
+    await vi.advanceTimersByTimeAsync(10)
+
+    expect(fixture.start).toHaveBeenCalledTimes(2)
   })
 })
